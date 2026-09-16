@@ -1,191 +1,390 @@
-# AI Resume Screening Agent
+# HireAI — AI Resume Screening & Recruiter Dashboard
 
 [![Python 3](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Backend-Flask-black.svg)](https://flask.palletsprojects.com/)
+[![Tests](https://img.shields.io/badge/tests-33%20passing-brightgreen.svg)](#testing)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![AI Agent Demo](https://img.shields.io/badge/Project-AI%20Agent%20Demo-orange.svg)](https://github.com/MuthuVarshith/AI-Resume-Screening-Agent)
 
-Public GitHub repository: https://github.com/MuthuVarshith/AI-Resume-Screening-Agent
+HireAI screens resumes against a job description, gives every candidate an explainable 0–100 score, and gives recruiters a dashboard to track candidates through the hiring pipeline.
 
-This project is a resume screening agent built for the AI agent challenge. It reads a job description, evaluates a folder of resumes, and produces a ranked shortlist with explainable scoring.
+It started as a command-line screening agent. The original parsing and scoring engine is unchanged; a Flask API, a SQLite database, and a web dashboard were built on top of it. The CLI still works.
 
-## Submission Readiness Checklist
+Repository: https://github.com/MuthuVarshith/Hire-AI
 
-This repository is structured to satisfy the challenge requirements in a clear and review-friendly order:
+---
 
-- Public GitHub repository URL: https://github.com/MuthuVarshith/AI-Resume-Screening-Agent
-- README with setup instructions: installation, configuration, and end-to-end execution steps are documented below
-- Runnable agent: the project can be executed locally through a simple CLI command
-- Sample inputs and outputs: the repository includes sample job data, resumes, and generated output files
-- Tradeoff notes: the model and scoring approach are explained below, along with future improvements
-- Agent-specific deliverables: job description, resume corpus, ranking logic, and output files are all included
+## Demo
 
-## What This Agent Does
+![HireAI demo: creating a job, uploading a resume and reviewing the scored candidate](docs/demo.gif)
 
-This agent is built to:
-- parse resumes and extract skills, experience, and education,
-- compare them against a job description,
-- compute a relevance score using NLP similarity and structured heuristics,
-- rank candidates and generate a shortlist,
-- save the results as CSV and JSON for review.
+The demo walks through the core recruiter loop: create a job from a pasted job description, upload a resume against it, and see the candidate appear with a score, matched skills and missing skills.
 
-### Expected Capabilities
+---
 
-- Parse 10+ resumes in a single run
-- Score each resume against the job description
-- Output an ordered shortlist with reasoning
-- Provide a transparent, explainable ranking instead of a black-box result
+## Screenshots
 
-## How the AI Agent Works
+### Dashboard
 
-The agent follows a simple Input → Think → Act → Output loop:
-1. Read the job description.
-2. Discover the resumes in the sample folder.
-3. Extract candidate signals from each resume.
-4. Score and rank the candidates.
-5. Save the ranked results for human review.
+![Dashboard with pipeline metrics, recruiter summary, recent candidates and active jobs](docs/screenshots/dashboard.png)
 
-This makes the system easy to understand, reproduce, and explain.
+The landing page gives a recruiter the state of hiring at a glance:
 
-## How to Run the Agent
+- **Metric cards** for total candidates screened, shortlisted, in interview and hired.
+- **Recruiter Summary**, a plain-language sentence built from the live database: number of candidates and jobs, average screening score, shortlist rate, and offers and hires made.
+- **Recent Candidates**, the five most recent candidates, showing the job each applied to, their pipeline status badge and their score.
+- **Active Jobs**, each job with its candidate count and status.
 
-The default run is fully local and does not require an API key:
+### Jobs
 
-```bash
-python main.py --jd sample_jd/jd.txt --resumes sample_resumes --output output --no-llm
+![Jobs page listing every job with description, candidate count, status and created date](docs/screenshots/jobs.png)
+
+Every job posting in one table: title, a preview of the description, number of candidates, status, and creation date.
+
+- **+ Create New Job** opens a form where you paste a full job description. The backend extracts required skills, preferred skills, minimum experience and education from it.
+- **View** opens the Candidates page filtered to that job.
+- A job is **Open** until at least one of its candidates is marked *Hired*, then it shows **Filled**. This is derived from candidate records; jobs have no separately stored status.
+
+### Candidates
+
+![Candidates page filtered to Backend Engineer, showing scores, status, matched and missing skills](docs/screenshots/candidates.png)
+
+The main working view. Each row shows the candidate's name and years of experience, email, applied job, a color-coded score, their pipeline status, and skill tags: **blue for matched required skills, red for missing ones**.
+
+- **Search** by name, email or any skill on the resume.
+- **Filter** by job and by pipeline status. The screenshot shows the list filtered to *Backend Engineer*.
+- **Sort** by score, name, or most recent.
+- **View** opens the candidate profile: contact details, education, full score, matched and missing skills, the AI-generated explanation, a pipeline status selector, and a link to download the original resume.
+- **Score** appears only on candidates that don't have a score yet, so you can retry scoring for them.
+
+### Analytics
+
+![Analytics page with headline metrics, score distribution, pipeline distribution, candidates by job and skill gaps](docs/screenshots/analytics.png)
+
+Hiring metrics calculated from the records stored in the database, not sample numbers:
+
+- **Headline metrics**: total screened, average score, shortlist rate, offers, hires and rejections.
+- **Score Distribution**: how many candidates fall into each 20-point score band.
+- **Pipeline Distribution**: candidate count at each stage, from Screened through Hired and Rejected.
+- **Candidates by Job**: how many candidates each job has.
+- **Most Common Skill Gaps**: the required skills candidates are most often missing. This shows where the talent pool is thin, or where a job description may be asking for too much.
+
+---
+
+## Features
+
+| Area | What it does |
+|---|---|
+| **Resume parsing** | Reads `.txt`, `.pdf` and `.docx` files and extracts name, email, phone, skills, years of experience, education and work history |
+| **Job description parsing** | Extracts title, required and preferred skills, minimum experience and required education from pasted text |
+| **Explainable scoring** | Four scores (semantic, skills, experience, education) combined into one weighted 0–100 score, with the breakdown stored for each candidate |
+| **Skill gap analysis** | Matched and missing required skills for each candidate; a skill counts as matched on exact or fuzzy similarity (embedding similarity > 0.7) |
+| **Candidate database** | Candidates, jobs and screening results are saved in SQLite, so they survive restarts |
+| **Duplicate detection** | Re-uploading someone already added to the same job is rejected, based on exact email, normalized phone number, or a >90% fuzzy name match |
+| **Hiring pipeline** | `Screened → Shortlisted → Interview → Offer → Hired / Rejected`, changed from the candidate profile |
+| **Analytics** | Metrics and charts calculated live from database records |
+| **AI explanations (optional)** | With a Google Gemini API key, candidates get a short written explanation of their score; without one, a template-based explanation is used |
+| **Scoring templates** *(API only)* | Named weight presets per role, stored in the database. Five presets are included; there is no page for them in the dashboard yet |
+| **Interview questions** *(API only)* | Generates technical, resume-based, skill-gap and behavioral questions for a candidate; not yet shown in the dashboard |
+
+---
+
+## How scoring works
+
+Each candidate is scored against the job on four signals. Each signal is scored 0–100, then they are combined using the default weights:
+
+| Signal | Weight | How it is calculated |
+|---|---|---|
+| **Semantic similarity** | 40% | Cosine similarity between embeddings of the whole resume and the whole job description (`all-MiniLM-L6-v2`) |
+| **Skill match** | 30% | Share of the job's required skills found on the resume, by exact or fuzzy match |
+| **Experience** | 15% | `min(100, candidate_years / required_years × 100)` |
+| **Education** | 15% | The candidate's highest degree compared with the job's requirement on a degree ladder |
+
+```text
+Overall = 0.40 × Semantic + 0.30 × Skills + 0.15 × Experience + 0.15 × Education
 ```
 
-If you want to enable the optional AI enhancement, set your Google API key in the environment and run:
+The weights live in [config.py](config.py). More detail and edge cases are in [scoring_method.md](scoring_method.md).
 
-```bash
-python main.py --jd sample_jd/jd.txt --resumes sample_resumes --output output
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    UI["Dashboard<br/>frontend.html"] -- "fetch /api/*" --> API["Flask API<br/>app.py"]
+
+    API --> JD["jd_parser.py"]
+    API --> RP["resume_parser.py"]
+    API --> SC["scorer.py"]
+    API --> DD["duplicate_detection.py"]
+    API --> AN["analytics_service.py"]
+    API --> IQ["interview_generator.py"]
+
+    SC --> EMB[("Sentence-Transformers<br/>all-MiniLM-L6-v2")]
+    JD -. optional .-> LLM[("Google Gemini")]
+    RP -. optional .-> LLM
+    IQ -. optional .-> LLM
+
+    API --> DB[("SQLite<br/>models.py")]
+    API --> UP[/"uploads/<br/>resume files"/]
 ```
 
-### LLM and model choice
+Flask serves the dashboard at `/` and the API under `/api`. They share an origin, so the browser needs no CORS setup.
 
-- Default local path: sentence-transformers with the all-MiniLM-L6-v2 embedding model
-- Optional AI enhancement: Google Gemini via the gemini-2.0-flash model
-- The project is designed so reviewers can still run the agent even if the LLM quota is unavailable
+**Upload and scoring flow**
 
-## Project Structure and Execution Order
+```text
+Upload resume → validate type and size → save to uploads/ → parse resume
+  → duplicate check → store candidate → POST /api/screen → score 4 signals
+  → store result with explanation → dashboard, candidates and analytics update
+```
 
-The repository is organized in the following order so reviewers can understand the flow quickly:
+---
 
-1. [main.py](main.py) – CLI entry point that runs the full pipeline
-2. [config.py](config.py) – scoring weights, embedding settings, and API configuration
-3. [jd_parser.py](jd_parser.py) – parses the job description into structured requirements
-4. [resume_parser.py](resume_parser.py) – parses resumes and extracts candidate details
-5. [scorer.py](scorer.py) – computes semantic and structured matching scores
-6. [ranker.py](ranker.py) – ranks candidates and prepares the final shortlist
-7. [utils.py](utils.py) – file discovery, formatting, and output saving
-8. [sample_jd/jd.txt](sample_jd/jd.txt) – sample job description used for the demo
-9. [sample_resumes/](sample_resumes/) – sample resumes used for the demo
-10. [output/](output/) – generated ranked results in CSV and JSON format
-11. [tests/](tests/) – unit tests for the scoring pipeline
+## Tech stack
 
-## Setup Instructions
+| Layer | Technology |
+|---|---|
+| Backend | Python, Flask, Flask-CORS |
+| Database | SQLAlchemy ORM on SQLite |
+| NLP / scoring | Sentence-Transformers (`all-MiniLM-L6-v2`), NumPy |
+| Optional LLM | Google Gemini (`gemini-2.0-flash`) |
+| Document parsing | PyPDF2, python-docx |
+| Duplicate matching | fuzzywuzzy, python-Levenshtein |
+| Frontend | Plain HTML, CSS and JavaScript; no build step |
+| Testing | pytest |
 
-### 1) Install dependencies
+---
+
+## Getting started
+
+### 1. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2) Configure optional LLM support
+On the first run the embedding model (about 90 MB) downloads automatically.
 
-The project works without an API key. If you want optional Gemini-based reasoning, create a .env file with your key:
+### 2. Configure environment variables (optional)
 
 ```bash
-copy .env.example .env
+cp .env.example .env
 ```
 
-Then add your key:
+On Windows PowerShell, use `copy .env.example .env`.
 
-```env
-GOOGLE_API_KEY=your_api_key_here
+Everything works without editing `.env`. The settings you're most likely to change:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `GOOGLE_API_KEY` | *(unset)* | Turns on Gemini-based parsing and written explanations. Without it, regex parsing and template explanations are used |
+| `DATABASE_URL` | `sqlite:///recruiting_agent.db` | SQLAlchemy connection string |
+| `MAX_RESUME_SIZE_MB` | `10` | Upload size limit |
+| `ALLOWED_RESUME_EXTENSIONS` | `.txt,.pdf,.docx` | Accepted resume file types |
+| `HOST` / `PORT` | `127.0.0.1` / `5000` | Server address, used by `python app.py` |
+
+Never commit `.env`; it is already in `.gitignore`.
+
+### 3. Database setup
+
+No manual setup is needed. On startup the app creates `recruiting_agent.db` and its tables, and adds the default scoring templates.
+
+To start with an empty database, stop the server, delete `recruiting_agent.db`, and start it again.
+
+`recruiting_agent.db` and `uploads/` hold candidate personal data and are excluded from Git.
+
+### 4. Run the app
+
+```bash
+python start.py
 ```
 
-> Note: the LLM mode depends on your Gemini API quota. If you hit rate-limit or quota errors, the project will automatically fall back to the local parsing flow so the agent still runs.
+`start.py` loads the embedding model, then starts the server. When you see `Running on http://127.0.0.1:5000`, open:
 
-## How to Run the Agent End to End
+**http://127.0.0.1:5000**
 
-### Linux or macOS
+> **Open the app through that URL, not by double-clicking `frontend.html`.** A page opened from disk (`file://`) is blocked by the browser from calling the local API, so jobs and uploads fail.
+
+> **Auto-reload is off.** When the scoring model loads, Flask's auto-reloader mistakes the import for a code change and restarts the server mid-request, which caused uploaded resumes to go unscored. After editing Python code, restart the server yourself.
+
+---
+
+## Example workflow
+
+1. **Create a job.** Click **+ New Job**, enter a title, paste the full job description, and click **Create Job**. Required skills and experience are extracted automatically.
+2. **Upload resumes.** Click **Upload Resume**, pick the job, choose a file, and click **Upload**. The candidate is parsed, checked for duplicates, saved and scored in one step. A message shows the score.
+3. **Review candidates.** On **Candidates**, filter to the job and sort by score. Compare matched (blue) and missing (red) skills.
+4. **Open a profile.** Click **View** to see the full score, the AI-generated explanation and education, or to download the original resume.
+5. **Move them through the pipeline.** In the profile, change the status to Shortlisted, Interview, Offer, Hired or Rejected. The dashboard and analytics update.
+6. **Check the funnel.** Use **Analytics** to see score distribution, pipeline stages and the most common skill gaps.
+
+To try it with sample data, use the job description in [sample_jd/jd.txt](sample_jd/jd.txt) and the ten resumes in [sample_resumes/](sample_resumes/).
+
+---
+
+## API reference
+
+All endpoints return JSON. Errors come back as `{"error": "..."}` with a matching HTTP status.
+
+### Jobs
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/jobs` | Create a job. Body: `{"title", "description_text", "scoring_template_id"?}` |
+| `GET` | `/api/jobs` | List all jobs |
+| `GET` | `/api/jobs/<id>` | Get one job |
+| `PUT` | `/api/jobs/<id>` | Update title, description or scoring template |
+| `DELETE` | `/api/jobs/<id>` | Delete a job and its candidates |
+
+### Candidates
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/candidates?job_id=<id>` | Upload a resume (`multipart/form-data`, field `resume`). Returns `409` for a duplicate |
+| `GET` | `/api/candidates` | List candidates with latest score. Query: `job_id`, `status`, `sort_by=score` |
+| `GET` | `/api/candidates/<id>` | Candidate details and screening history |
+| `PUT` | `/api/candidates/<id>` | Update `status` and/or `notes` |
+| `GET` | `/api/candidates/<id>/resume` | Download the original resume |
+| `DELETE` | `/api/candidates/<id>` | Delete a candidate and their resume file |
+
+### Screening and interview questions
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/screen/<candidate_id>/<job_id>` | Score a candidate against a job. Optional body `{"use_llm": false}` |
+| `GET` | `/api/screening/<id>` | Get a stored screening result |
+| `GET` | `/api/candidates/<cid>/jobs/<jid>/interview-questions` | Generate interview questions for a scored candidate |
+
+### Scoring templates
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/scoring-templates` | List templates |
+| `POST` | `/api/scoring-templates` | Create a template. The four weights must sum to 1.0 |
+| `GET` / `PUT` / `DELETE` | `/api/scoring-templates/<id>` | Read, update or delete a template. The default template can't be deleted |
+
+### Analytics and health
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/analytics/dashboard` | Counts, average score, score and pipeline distribution, candidates by job, skill gaps |
+| `GET` | `/api/analytics/jobs/<id>` | The same metrics for one job, plus a 30-day screening timeline |
+| `GET` | `/api/analytics/top-candidates?limit=10` | Highest-scoring candidates |
+| `GET` | `/api/health` | Health check |
+
+**Example calls**
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/jobs -H "Content-Type: application/json" -d "{\"title\": \"Backend Engineer\", \"description_text\": \"3+ years Python, Django, PostgreSQL. Bachelor's degree.\"}"
+```
+
+```bash
+curl -X POST "http://127.0.0.1:5000/api/candidates?job_id=1" -F "resume=@sample_resumes/resume_01_ananya_patel.txt"
+```
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/screen/1/1
+```
+
+---
+
+## Command-line mode
+
+The original CLI agent still ranks a folder of resumes without the web app or database:
 
 ```bash
 python main.py --jd sample_jd/jd.txt --resumes sample_resumes --output output --no-llm
 ```
 
-### Windows PowerShell
+It writes ranked results to `output/ranked_results.json` and `output/ranked_results.csv`.
 
-```powershell
-py -3 main.py --jd sample_jd/jd.txt --resumes sample_resumes --output output --no-llm
-```
-
-### With optional LLM support
-
-If you have a valid Google API key configured, run:
-
-```bash
-python main.py --jd sample_jd/jd.txt --resumes sample_resumes --output output
-```
-
-### What happens during the run
-
-- The job description is parsed and converted into structured requirements.
-- Each resume is scanned and converted into a candidate profile.
-- The agent compares the resume profile with the job requirements.
-- A ranked shortlist is written to CSV and JSON files for review.
-
-## Sample Inputs and Outputs
-
-### Sample Input
-
-- Job description: [sample_jd/jd.txt](sample_jd/jd.txt)
-- Resume folder: [sample_resumes/](sample_resumes/)
-
-### Sample Output
-
-The agent writes:
-- [output/ranked_results.json](output/ranked_results.json)
-- [output/ranked_results.csv](output/ranked_results.csv)
-
-These files are generated by the included demo run and can be used to inspect the ranking output immediately.
-
-## Agent-Specific Deliverables
-
-This submission includes:
-- a job description file,
-- a folder of sample resumes,
-- ranked output in CSV and JSON,
-- a transparent explanation of the scoring method.
-
-## Scoring Method
-
-The ranking is built from a transparent multi-signal score:
-
-- Semantic similarity (40%) – compares resume text and job description embeddings
-- Skill match (30%) – checks required skills against extracted skills
-- Experience (15%) – rewards candidates who meet the experience requirement
-- Education (15%) – scores the highest qualification against the job requirement
+---
 
 ## Testing
 
-Run the tests with:
-
 ```bash
-pytest
+python -m pytest tests/ -v
 ```
 
-## Tradeoffs and Notes
+33 tests across two files:
 
-- The agent is intentionally simple and easy to run locally.
-- It focuses on transparency and reproducibility instead of a fully enterprise recruiting system.
-- LLM support is optional; the default path works without external API access.
-- The current implementation targets text-based resumes for a clean demo experience.
+- [tests/test_agent.py](tests/test_agent.py): the original scoring engine, data models and output files.
+- [tests/test_platform.py](tests/test_platform.py): database models, weight validation, duplicate detection and analytics calculations.
 
-## Future Improvements
+---
 
-Possible next steps include:
-- PDF and DOCX upload support for real resumes
-- stronger skill extraction and entity recognition
-- recruiter preference weighting and custom scoring rules
-- a web UI or REST API for interactive use
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| Create Job or Upload shows "Could not reach the backend" | Start `python start.py` and open http://127.0.0.1:5000, not the HTML file |
+| An uploaded candidate has no score | Click **Score** on that row in Candidates. If it keeps failing, make sure the server was started with `start.py` |
+| First scoring after startup is slow | The embedding model is loading; `start.py` loads it before accepting requests |
+| "has already been added for this job" | Duplicate detection found the same email, phone or name for that job |
+| PDF parses to an empty profile | The PDF is a scanned image with no text layer; use a text-based PDF, DOCX or TXT |
+| Port 5000 is in use | Stop the other process, or set `PORT` in `.env` and run `python app.py` |
+
+---
+
+## Limitations
+
+- **Single user, no login.** Anyone who can reach the server can see and change all data. Don't expose it to the internet as-is.
+- **SQLite by default.** `DATABASE_URL` accepts any SQLAlchemy URL, but PostgreSQL needs a driver such as `psycopg2-binary`, which isn't in `requirements.txt` and hasn't been tested.
+- **Skill extraction without an API key uses a fixed keyword list.** Skills not on that list, and job descriptions that don't use recognizable section headings, can produce fewer required skills. A job with no extracted required skills gives every candidate a full skill score.
+- **Scoring templates and interview questions are API-only.** Jobs use the default weights unless a template ID is set through the API.
+- **Development server.** Flask's built-in server isn't meant for production traffic.
+- **Static hosting no longer applies.** The dashboard needs the Flask backend running, so a static-only deployment such as the earlier Vercel setup won't serve a working app.
+
+---
+
+## Responsible AI
+
+HireAI is built to **assist** recruiters, not to make hiring decisions.
+
+- **Job-relevant signals only.** Scores come from resume text similarity, skills, years of experience and education level. Name, gender, age, ethnicity, religion, nationality, marital status and photographs are not scoring inputs.
+- **Explainable.** Every score is broken into its four parts, with the exact matched and missing skills, so a recruiter can see why a candidate scored as they did.
+- **AI content is labeled.** Written explanations are marked *AI-generated* in the candidate profile.
+- **Humans decide.** Pipeline status only changes when a recruiter changes it.
+- **Known risks.** Semantic similarity rewards resumes that use similar wording to the job description, and education scoring can disadvantage self-taught candidates. Review low scores before rejecting anyone, and don't use the score as the only filter.
+- **Candidate data stays local.** The database and uploaded resumes are stored on your machine and excluded from Git. With a Gemini key set, resume and job text is sent to Google's API for parsing.
+
+---
+
+## Project structure
+
+```text
+Hire-AI/
+├── start.py                  # Recommended entry point: loads model, starts server
+├── app.py                    # Flask API + serves the dashboard at /
+├── frontend.html             # Recruiter dashboard (Dashboard, Jobs, Candidates, Analytics)
+├── models.py                 # SQLAlchemy models: Job, Candidate, ScreeningResult, ScoringTemplate
+├── analytics_service.py      # Metrics computed from database records
+├── duplicate_detection.py    # Email / phone / fuzzy-name duplicate checks
+├── interview_generator.py    # Candidate-specific interview questions
+├── scorer.py                 # Four-signal scoring engine (original)
+├── resume_parser.py          # Resume extraction (original)
+├── jd_parser.py              # Job description extraction (original)
+├── ranker.py                 # Ranking and explanations for the CLI (original)
+├── config.py                 # Default weights, model names, data classes
+├── main.py                   # CLI entry point (original)
+├── utils.py                  # File discovery and CSV/JSON output
+├── scoring_method.md         # Scoring methodology in detail
+├── requirements.txt
+├── .env.example
+├── docs/
+│   ├── demo.gif
+│   └── screenshots/          # dashboard, jobs, candidates, analytics
+├── sample_jd/                # Sample job description
+├── sample_resumes/           # 10 sample resumes
+├── output/                   # Sample CLI output
+└── tests/
+    ├── test_agent.py
+    └── test_platform.py
+```
+
+---
+
+## License
+
+MIT. See [LICENSE](LICENSE).

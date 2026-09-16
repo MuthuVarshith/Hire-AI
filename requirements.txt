@@ -13,5 +13,27 @@ google-generativeai>=0.5.0
 tabulate>=0.9.0
 colorama>=0.4.6
 
+# Web Framework & Database
+flask>=3.0.0
+flask-cors>=4.0.0
+flask-sqlalchemy>=3.1.0
+sqlalchemy>=2.0.0
+python-dotenv>=1.0.0
+
+# Database migrations
+alembic>=1.13.0
+
+# Data serialization
+marshmallow>=3.20.0
+
+# File handling & validation
+werkzeug>=3.0.0
+
 # Testing
 pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Utilities
+fuzzywuzzy>=0.18.0
+python-Levenshtein>=0.22.0
+Pillow>=10.0.0

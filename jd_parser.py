@@ -155,6 +155,33 @@ def _extract_with_regex(text: str) -> JobRequirements:
     return jd
 
 
+def parse_jd_text(text: str, api_key: str = None) -> JobRequirements:
+    """Parse JD from text string (for API usage).
+
+    Args:
+        text: Job description text
+        api_key: Optional API key for LLM extraction
+
+    Returns:
+        JobRequirements object with extracted data
+    """
+    if not api_key:
+        api_key = get_api_key()
+
+    jd = None
+    if api_key:
+        try:
+            jd = _extract_with_llm(text, api_key)
+        except Exception as e:
+            pass
+
+    if not jd:
+        jd = _extract_with_regex(text)
+
+    jd.raw_text = text
+    return jd
+
+
 def parse_jd(file_path: str) -> JobRequirements:
     """Main entry point to parse a JD.
 
@@ -170,19 +197,7 @@ def parse_jd(file_path: str) -> JobRequirements:
         print(f"{Fore.RED}Error reading {path}: {e}{Style.RESET_ALL}")
         return JobRequirements()
 
-    jd = None
-    api_key = get_api_key()
-
-    if api_key:
-        try:
-            jd = _extract_with_llm(text, api_key)
-        except Exception as e:
-            print(f"{Fore.YELLOW}  [!] JD LLM extraction failed, falling back to regex: {e}{Style.RESET_ALL}")
-
-    if not jd:
-        jd = _extract_with_regex(text)
-
-    jd.raw_text = text
+    jd = parse_jd_text(text)
 
     print(f"  [OK] JD Extracted: {jd.title} ({len(jd.required_skills)} required skills)")
     return jd

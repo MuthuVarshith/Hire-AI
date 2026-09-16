@@ -21,6 +21,11 @@ env/
 # Environment
 .env
 
+# Local data: contains candidate PII (resumes, emails, phone numbers)
+recruiting_agent.db
+*.db
+uploads/
+
 # OS
 .DS_Store
 Thumbs.db
