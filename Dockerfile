@@ -22,9 +22,11 @@ RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTr
 COPY --chown=user . .
 RUN mkdir -p data/uploads
 
+# HF_HUB_OFFLINE: the model is already in the image; skip update checks at startup.
 ENV DATABASE_URL=sqlite:////home/user/app/data/recruiting_agent.db \
     UPLOAD_FOLDER=/home/user/app/data/uploads \
     PRELOAD_MODEL=1 \
+    HF_HUB_OFFLINE=1 \
     PORT=7860
 
 EXPOSE 7860
