@@ -210,53 +210,6 @@ python start.py
 
 ---
 
-## Deployment (Hugging Face Spaces)
-
-The app ships as a Docker image that runs on a free CPU [Hugging Face Space](https://huggingface.co/docs/hub/spaces-sdks-docker). The [Dockerfile](Dockerfile) installs CPU-only PyTorch, bakes the embedding model into the image, and serves the app with gunicorn on port 7860.
-
-**Run the container locally**
-
-```bash
-docker build -t hire-ai .
-```
-
-```bash
-docker run --rm -p 7860:7860 hire-ai
-```
-
-Then open http://127.0.0.1:7860.
-
-**Deploy to a Space**
-
-```bash
-pip install -U huggingface_hub
-```
-
-```bash
-hf auth login
-```
-
-```bash
-python deploy/deploy_hf.py
-```
-
-This creates (or updates) the Space `<your-username>/hire-ai` and uploads the app. The first build takes several minutes; follow it in the Space's **Logs** tab. Run the same command again to redeploy after changes.
-
-[deploy/deploy_hf.py](deploy/deploy_hf.py) uploads through the Hub API rather than `git push`, because a Space's git remote rejects binary files that aren't stored with Xet/LFS, and this repository's history contains screenshots. It skips `docs/`, `tests/` and local data, and publishes [deploy/hf_space_readme.md](deploy/hf_space_readme.md) as the Space's README.
-
-**Optional settings.** To enable Gemini explanations, add `GOOGLE_API_KEY` under the Space's **Settings → Variables and secrets** as a secret, not a variable.
-
-**Data persistence.** The database and uploads live inside the container, so they reset when the Space restarts, sleeps or rebuilds. To keep them, enable persistent storage on the Space and set these variables:
-
-| Variable | Value |
-|---|---|
-| `DATABASE_URL` | `sqlite:////data/recruiting_agent.db` |
-| `UPLOAD_FOLDER` | `/data/uploads` |
-
-**Public access.** A public Space has no login: anyone with the link can view, edit and delete everything. Use only sample resumes, or deploy with `--private`.
-
----
-
 ## Example workflow
 
 1. **Create a job.** Click **+ New Job**, enter a title, paste the full job description, and click **Create Job**. Required skills and experience are extracted automatically.
@@ -381,7 +334,7 @@ python -m pytest tests/ -v
 - **Skill extraction without an API key uses a fixed keyword list.** Skills not on that list, and job descriptions that don't use recognizable section headings, can produce fewer required skills. A job with no extracted required skills gives every candidate a full skill score.
 - **Scoring templates and interview questions are API-only.** Jobs use the default weights unless a template ID is set through the API.
 - **Development server.** Flask's built-in server isn't meant for production traffic.
-- **Needs a server with memory and a disk.** The app runs PyTorch and writes to SQLite and an uploads folder, so serverless and static hosts (Vercel, Netlify) don't work. Use a container host such as Hugging Face Spaces.
+- **Static hosting no longer applies.** The dashboard needs the Flask backend running, so a static-only deployment such as the earlier Vercel setup won't serve a working app.
 
 ---
 
@@ -419,10 +372,6 @@ Hire-AI/
 ├── scoring_method.md         # Scoring methodology in detail
 ├── requirements.txt
 ├── .env.example
-├── Dockerfile                # Container image (Hugging Face Spaces, local Docker)
-├── deploy/
-│   ├── deploy_hf.py          # Create/update the Hugging Face Space
-│   └── hf_space_readme.md    # README published on the Space
 ├── docs/
 │   ├── demo.gif
 │   └── screenshots/          # dashboard, jobs, candidates, analytics

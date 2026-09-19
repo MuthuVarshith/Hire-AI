@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_RESUME_SIZE_MB', 10)) * 1024 * 1024
 app.config['JSON_SORT_KEYS'] = False
-app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'uploads')
+app.config['UPLOAD_FOLDER'] = 'uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -58,11 +58,6 @@ try:
         create_default_templates(session)
 except Exception as e:
     logger.warning(f"Could not create default templates: {e}")
-
-# Under gunicorn the __main__ block never runs, so load the model at import
-# time instead of making the first screening request wait for it.
-if os.getenv('PRELOAD_MODEL', '').lower() in ('1', 'true'):
-    scorer.load_embedding_model()
 
 # Constants
 ALLOWED_RESUME_EXTENSIONS = set(os.getenv('ALLOWED_RESUME_EXTENSIONS', '.txt,.pdf,.docx').split(','))
