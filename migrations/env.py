@@ -14,6 +14,7 @@ from sqlalchemy.engine import Connection
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import models  # noqa: E402
+from database import include_object  # noqa: E402
 
 config = context.config
 target_metadata = models.Base.metadata
@@ -30,6 +31,7 @@ def _run(connection: Connection) -> None:
         # SQLite can't ALTER most things in place; batch mode copies the table instead.
         render_as_batch=connection.dialect.name == "sqlite",
         compare_type=True,
+        include_object=include_object,
     )
     with context.begin_transaction():
         context.run_migrations()

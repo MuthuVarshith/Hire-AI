@@ -19,6 +19,10 @@ pgvector>=0.3.0             # vector column type for PostgreSQL
 werkzeug>=3.0.0
 python-dotenv>=1.0.0
 
+# Retrieval
+rank-bm25>=0.2.2            # BM25 keyword search
+langchain-core>=0.3         # LangChain retriever adapter
+
 # Duplicate detection
 fuzzywuzzy>=0.18.0
 python-Levenshtein>=0.22.0

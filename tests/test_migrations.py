@@ -47,7 +47,8 @@ def engine(request, tmp_path) -> Iterator[Engine]:
 
 def _schema_drift(eng: Engine) -> list:
     with eng.connect() as conn:
-        return compare_metadata(MigrationContext.configure(conn), models.Base.metadata)
+        context = MigrationContext.configure(conn, opts={"include_object": database.include_object})
+        return compare_metadata(context, models.Base.metadata)
 
 
 def _revision(eng: Engine) -> str | None:

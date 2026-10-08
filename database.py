@@ -22,6 +22,12 @@ BASELINE_REVISION = "0001"
 _PRE_MIGRATION_TABLES = {"jobs", "candidates", "screening_results", "scoring_templates"}
 
 
+def include_object(obj: object, name: str | None, type_: str, reflected: bool, compare_to: object) -> bool:
+    """Schema comparison filter: HNSW indexes are PostgreSQL-only expression indexes created by
+    migration 0003 and deliberately not declared on the models, so comparisons skip them."""
+    return not (type_ == "index" and name is not None and name.endswith("_hnsw_minilm"))
+
+
 def alembic_config(connection: Connection | None = None) -> Config:
     config = Config(str(ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(ROOT / "migrations"))
