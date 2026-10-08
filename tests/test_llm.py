@@ -111,3 +111,50 @@ def test_rank_candidates_llm_failure_falls_back_to_template(monkeypatch):
     monkeypatch.setattr(llm, "generate_text", boom)
     reasoning = ranker.rank_candidates([_score()], api_key="k")[0]["reasoning"]
     assert reasoning.startswith("Ranked #1 with a composite score")
+
+
+class _FlakyModels:
+    def __init__(self, failures):
+        self.failures, self.calls = list(failures), 0
+
+    def generate_content(self, *, model, contents):
+        self.calls += 1
+        if self.failures:
+            raise self.failures.pop(0)
+        return SimpleNamespace(text="fine")
+
+
+def _api_error(code):
+    error = RuntimeError(f"HTTP {code}")
+    error.code = code
+    return error
+
+
+def test_transient_errors_are_retried_with_backoff(monkeypatch):
+    models = _FlakyModels([_api_error(503), _api_error(429)])
+    sleeps = []
+    monkeypatch.setattr(llm, "_client", lambda key: SimpleNamespace(models=models))
+    monkeypatch.setattr(llm, "generate_text", REAL_GENERATE_TEXT)
+    monkeypatch.setattr(llm.time, "sleep", sleeps.append)
+    assert llm.generate_text("p", "k") == "fine"
+    assert models.calls == 3 and sleeps == [2.0, 5.0]
+
+
+def test_permanent_errors_are_not_retried(monkeypatch):
+    models = _FlakyModels([_api_error(403)])
+    monkeypatch.setattr(llm, "_client", lambda key: SimpleNamespace(models=models))
+    monkeypatch.setattr(llm, "generate_text", REAL_GENERATE_TEXT)
+    monkeypatch.setattr(llm.time, "sleep", lambda s: pytest.fail("must not sleep"))
+    with pytest.raises(RuntimeError, match="403"):
+        llm.generate_text("p", "k")
+    assert models.calls == 1
+
+
+def test_gives_up_after_the_last_retry(monkeypatch):
+    models = _FlakyModels([_api_error(503)] * 10)
+    monkeypatch.setattr(llm, "_client", lambda key: SimpleNamespace(models=models))
+    monkeypatch.setattr(llm, "generate_text", REAL_GENERATE_TEXT)
+    monkeypatch.setattr(llm.time, "sleep", lambda s: None)
+    with pytest.raises(RuntimeError, match="503"):
+        llm.generate_text("p", "k")
+    assert models.calls == 4  # first try + 3 retries
