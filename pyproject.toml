@@ -27,8 +27,8 @@ files = ["*.py"]
 # SQLAlchemy 1.x-style models, which Phase 1 replaces with typed Mapped[] models.
 [[tool.mypy.overrides]]
 module = [
-    "analytics_service", "app", "config", "duplicate_detection", "interview_generator",
-    "jd_parser", "main", "models", "ranker", "resume_parser", "scorer", "start", "utils",
+    "analytics_service", "app", "config", "interview_generator",
+    "jd_parser", "main", "ranker", "resume_parser", "scorer", "start", "utils",
 ]
 ignore_errors = true
 

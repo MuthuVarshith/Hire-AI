@@ -1,11 +1,20 @@
-"""Database models for the Recruiting Agent."""
-from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text, DateTime, Boolean, ForeignKey, JSON, Enum
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, Session
+"""Database models for the Recruiting Agent (SQLAlchemy 2.0 typed declarative style)."""
 import enum
+from datetime import datetime, timezone
+from typing import Any, Optional
 
-Base = declarative_base()
+from sqlalchemy import JSON, Boolean, Enum, Float, ForeignKey, Integer, String, Text, create_engine
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+
+
+def _utcnow() -> datetime:
+    """Naive UTC, the same values the deprecated datetime.utcnow() produced."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+class Base(DeclarativeBase):
+    pass
 
 
 class PipelineStatus(enum.Enum):
@@ -22,24 +31,24 @@ class Job(Base):
     """Job posting."""
     __tablename__ = "jobs"
 
-    id = Column(Integer, primary_key=True)
-    title = Column(String(255), nullable=False)
-    description_text = Column(Text, nullable=False)
-    required_skills = Column(JSON, nullable=True)  # List of skills
-    preferred_skills = Column(JSON, nullable=True)  # List of skills
-    min_experience_years = Column(Float, default=0.0)
-    required_education = Column(String(100), default="Bachelor's")
-    responsibilities = Column(JSON, nullable=True)  # List of responsibilities
-    scoring_template_id = Column(Integer, ForeignKey("scoring_templates.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description_text: Mapped[str] = mapped_column(Text, nullable=False)
+    required_skills: Mapped[Optional[list[str]]] = mapped_column(JSON)
+    preferred_skills: Mapped[Optional[list[str]]] = mapped_column(JSON)
+    min_experience_years: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    required_education: Mapped[Optional[str]] = mapped_column(String(100), default="Bachelor's")
+    responsibilities: Mapped[Optional[list[str]]] = mapped_column(JSON)
+    scoring_template_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("scoring_templates.id"))
+    created_at: Mapped[Optional[datetime]] = mapped_column(default=_utcnow)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(default=_utcnow, onupdate=_utcnow)
 
-    # Relationships
-    candidates = relationship("Candidate", back_populates="job", cascade="all, delete-orphan")
-    screening_results = relationship("ScreeningResult", back_populates="job", cascade="all, delete-orphan")
-    scoring_template = relationship("ScoringTemplate", back_populates="jobs")
+    candidates: Mapped[list["Candidate"]] = relationship(back_populates="job", cascade="all, delete-orphan")
+    screening_results: Mapped[list["ScreeningResult"]] = relationship(
+        back_populates="job", cascade="all, delete-orphan")
+    scoring_template: Mapped[Optional["ScoringTemplate"]] = relationship(back_populates="jobs")
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         hired = sum(1 for c in self.candidates if c.status == PipelineStatus.HIRED)
         return {
             "id": self.id,
@@ -60,28 +69,28 @@ class Candidate(Base):
     """Job candidate."""
     __tablename__ = "candidates"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=True, unique=False)  # Not unique; may apply to multiple jobs
-    phone = Column(String(20), nullable=True)
-    resume_filename = Column(String(255), nullable=True)
-    resume_text = Column(Text, nullable=True)  # Extracted resume text
-    skills = Column(JSON, nullable=True)  # List of extracted skills
-    experience_years = Column(Float, default=0.0)
-    education = Column(JSON, nullable=True)  # List of education records
-    work_history = Column(JSON, nullable=True)  # List of work history records
-    job_id = Column(Integer, ForeignKey("jobs.id"), nullable=True)
-    status = Column(Enum(PipelineStatus), default=PipelineStatus.SCREENED)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    notes = Column(Text, nullable=True)  # Recruiter notes
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    email: Mapped[Optional[str]] = mapped_column(String(255))  # Not unique; may apply to multiple jobs
+    phone: Mapped[Optional[str]] = mapped_column(String(20))
+    resume_filename: Mapped[Optional[str]] = mapped_column(String(255))
+    resume_text: Mapped[Optional[str]] = mapped_column(Text)
+    skills: Mapped[Optional[list[str]]] = mapped_column(JSON)
+    experience_years: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    education: Mapped[Optional[list[dict[str, Any]]]] = mapped_column(JSON)
+    work_history: Mapped[Optional[list[dict[str, Any]]]] = mapped_column(JSON)
+    job_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("jobs.id"))
+    status: Mapped[Optional[PipelineStatus]] = mapped_column(Enum(PipelineStatus), default=PipelineStatus.SCREENED)
+    created_at: Mapped[Optional[datetime]] = mapped_column(default=_utcnow)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(default=_utcnow, onupdate=_utcnow)
+    notes: Mapped[Optional[str]] = mapped_column(Text)
 
-    # Relationships
-    job = relationship("Job", back_populates="candidates")
-    screening_results = relationship("ScreeningResult", back_populates="candidate", cascade="all, delete-orphan")
+    job: Mapped[Optional[Job]] = relationship(back_populates="candidates")
+    screening_results: Mapped[list["ScreeningResult"]] = relationship(
+        back_populates="candidate", cascade="all, delete-orphan")
 
-    def to_dict(self, include_screening=False):
-        data = {
+    def to_dict(self, include_screening: bool = False) -> dict[str, Any]:
+        data: dict[str, Any] = {
             "id": self.id,
             "name": self.name,
             "email": self.email,
@@ -106,46 +115,42 @@ class ScreeningResult(Base):
     """Screening result for a candidate against a job."""
     __tablename__ = "screening_results"
 
-    id = Column(Integer, primary_key=True)
-    candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
-    job_id = Column(Integer, ForeignKey("jobs.id"), nullable=False)
-    scoring_template_id = Column(Integer, ForeignKey("scoring_templates.id"), nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    candidate_id: Mapped[int] = mapped_column(Integer, ForeignKey("candidates.id"), nullable=False)
+    job_id: Mapped[int] = mapped_column(Integer, ForeignKey("jobs.id"), nullable=False)
+    scoring_template_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("scoring_templates.id"))
 
-    # Scores
-    composite_score = Column(Float, default=0.0)
-    semantic_score = Column(Float, default=0.0)
-    skill_match_score = Column(Float, default=0.0)
-    experience_score = Column(Float, default=0.0)
-    education_score = Column(Float, default=0.0)
+    composite_score: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    semantic_score: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    skill_match_score: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    experience_score: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    education_score: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
 
-    # Results
-    matched_skills = Column(JSON, default=list)  # List of matched skills
-    missing_skills = Column(JSON, default=list)  # List of missing skills
-    matched_preferred_skills = Column(JSON, default=list)  # Matched preferred skills
+    matched_skills: Mapped[Optional[list[str]]] = mapped_column(JSON, default=list)
+    missing_skills: Mapped[Optional[list[str]]] = mapped_column(JSON, default=list)
+    matched_preferred_skills: Mapped[Optional[list[str]]] = mapped_column(JSON, default=list)
 
-    # Explanations
-    reasoning = Column(Text, nullable=True)  # AI-generated reasoning
-    strengths = Column(JSON, nullable=True)  # List of strengths
-    skill_gaps = Column(JSON, nullable=True)  # List of gaps
+    reasoning: Mapped[Optional[str]] = mapped_column(Text)  # Template text, or AI-generated when a key is set
+    strengths: Mapped[Optional[list[str]]] = mapped_column(JSON)
+    skill_gaps: Mapped[Optional[list[str]]] = mapped_column(JSON)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[Optional[datetime]] = mapped_column(default=_utcnow)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(default=_utcnow, onupdate=_utcnow)
 
-    # Relationships
-    candidate = relationship("Candidate", back_populates="screening_results")
-    job = relationship("Job", back_populates="screening_results")
-    scoring_template = relationship("ScoringTemplate", back_populates="screening_results")
+    candidate: Mapped[Candidate] = relationship(back_populates="screening_results")
+    job: Mapped[Job] = relationship(back_populates="screening_results")
+    scoring_template: Mapped[Optional["ScoringTemplate"]] = relationship(back_populates="screening_results")
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "candidate_id": self.candidate_id,
             "job_id": self.job_id,
-            "composite_score": round(self.composite_score, 2),
-            "semantic_score": round(self.semantic_score, 2),
-            "skill_match_score": round(self.skill_match_score, 2),
-            "experience_score": round(self.experience_score, 2),
-            "education_score": round(self.education_score, 2),
+            "composite_score": round(self.composite_score or 0.0, 2),
+            "semantic_score": round(self.semantic_score or 0.0, 2),
+            "skill_match_score": round(self.skill_match_score or 0.0, 2),
+            "experience_score": round(self.experience_score or 0.0, 2),
+            "education_score": round(self.education_score or 0.0, 2),
             "matched_skills": self.matched_skills or [],
             "missing_skills": self.missing_skills or [],
             "matched_preferred_skills": self.matched_preferred_skills or [],
@@ -160,25 +165,24 @@ class ScoringTemplate(Base):
     """Reusable scoring configuration for different roles."""
     __tablename__ = "scoring_templates"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False, unique=True)
-    description = Column(Text, nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    description: Mapped[Optional[str]] = mapped_column(Text)
 
     # Weights (must sum to 1.0)
-    semantic_weight = Column(Float, default=0.40)
-    skill_weight = Column(Float, default=0.30)
-    experience_weight = Column(Float, default=0.15)
-    education_weight = Column(Float, default=0.15)
+    semantic_weight: Mapped[Optional[float]] = mapped_column(Float, default=0.40)
+    skill_weight: Mapped[Optional[float]] = mapped_column(Float, default=0.30)
+    experience_weight: Mapped[Optional[float]] = mapped_column(Float, default=0.15)
+    education_weight: Mapped[Optional[float]] = mapped_column(Float, default=0.15)
 
-    is_default = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_default: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
+    created_at: Mapped[Optional[datetime]] = mapped_column(default=_utcnow)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(default=_utcnow, onupdate=_utcnow)
 
-    # Relationships
-    jobs = relationship("Job", back_populates="scoring_template")
-    screening_results = relationship("ScreeningResult", back_populates="scoring_template")
+    jobs: Mapped[list[Job]] = relationship(back_populates="scoring_template")
+    screening_results: Mapped[list[ScreeningResult]] = relationship(back_populates="scoring_template")
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
@@ -191,29 +195,29 @@ class ScoringTemplate(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
-    def validate_weights(self):
+    def validate_weights(self) -> bool:
         """Ensure weights sum to 1.0."""
-        total = self.semantic_weight + self.skill_weight + self.experience_weight + self.education_weight
+        total = sum(self.to_weights_dict().values())
         return abs(total - 1.0) < 1e-9
 
-    def to_weights_dict(self):
+    def to_weights_dict(self) -> dict[str, float]:
         """Return weights in the format expected by scorer."""
         return {
-            "semantic": self.semantic_weight,
-            "skills": self.skill_weight,
-            "experience": self.experience_weight,
-            "education": self.education_weight,
+            "semantic": self.semantic_weight or 0.0,
+            "skills": self.skill_weight or 0.0,
+            "experience": self.experience_weight or 0.0,
+            "education": self.education_weight or 0.0,
         }
 
 
-def init_db(database_url: str):
+def init_db(database_url: str) -> Engine:
     """Initialize database and create all tables."""
     engine = create_engine(database_url, echo=False)
     Base.metadata.create_all(engine)
     return engine
 
 
-def create_default_templates(session: Session):
+def create_default_templates(session: Session) -> None:
     """Create default scoring templates if they don't exist."""
     if session.query(ScoringTemplate).filter_by(name="Default").first():
         return
