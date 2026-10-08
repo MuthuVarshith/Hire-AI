@@ -1,184 +1,504 @@
 {
   "description": "Recruiter-style questions over the synthetic resume corpus (sample_resumes/*.txt and sample_resumes/varied/*). A label is a chunk that directly evidences the answer, identified by resume file, section and a quote the chunk must contain. Labels are a DRAFT pending human review; nothing is measured until they are approved.",
-  "status": "draft - awaiting review",
+  "status": "approved rules applied; labels being updated",
   "labelled_by": "Claude (draft); reviewer: repository owner",
-  "corpus": ["sample_resumes/*.txt", "sample_resumes/varied/v*"],
+  "corpus": [
+    "sample_resumes/*.txt",
+    "sample_resumes/varied/v*"
+  ],
   "questions": [
-    {"id": "q01", "question": "Who has run FastAPI services in production?",
-     "relevant": [
-       {"resume": "varied/v06_senior_rachel_kim.txt", "section": "experience", "contains": "FastAPI\n  microservices running in production"},
-       {"resume": "varied/v07_ml_engineer_omar_haddad.txt", "section": "experience", "contains": "Deployed model services with FastAPI"}],
-     "rationale": "Rachel migrated to FastAPI microservices 'running in production'; Omar deployed FastAPI model services on Cloud Run. Distractor: Aarav (v01) built a FastAPI API for coursework that was explicitly 'Not deployed', and skills lists that only name FastAPI are not evidence of production use."},
-
-    {"id": "q02", "question": "Which candidates have built retrieval-augmented generation (RAG) systems?",
-     "relevant": [
-       {"resume": "resume_01_ananya_patel.txt", "section": "experience", "contains": "retrieval-augmented generation systems"},
-       {"resume": "varied/v07_ml_engineer_omar_haddad.txt", "section": "experience", "contains": "retrieval-augmented generation (RAG) assistant"},
-       {"resume": "varied/v01_fresher_aarav_mehta.txt", "section": "projects", "contains": "retrieval-augmented chatbot"}],
-     "rationale": "All three describe building a RAG system (Aarav's as a student project, which still counts as having built one). Javier (resume_10) 'connected retrieval systems to user products', which is adjacent but not RAG, so it is not labelled."},
-
-    {"id": "q03", "question": "Who has hands-on Kafka experience?",
-     "relevant": [
-       {"resume": "varied/v06_senior_rachel_kim.txt", "section": "experience", "contains": "Kafka-based event backbone"},
-       {"resume": "varied/v05_fresher_diego_ramos.txt", "section": "projects", "contains": "Kafka producer and consumer"}],
-     "rationale": "Rachel designed a Kafka backbone in production; Diego built a Kafka producer/consumer demo. Both are hands-on; the recruiter can weigh depth from the cited text."},
-
-    {"id": "q04", "question": "Find candidates with a Certified Kubernetes Administrator (CKA) certification.",
-     "relevant": [
-       {"resume": "varied/v09_no_headings_tom_baker.txt", "section": "header", "contains": "Certified Kubernetes Administrator (CKA)"}],
-     "rationale": "Only Tom holds the CKA. His resume has no headings, so the answer is in an unlabelled chunk: a deliberate hard case."},
-
-    {"id": "q05", "question": "Who has security certifications such as OSCP or CISSP?",
-     "relevant": [
-       {"resume": "varied/v13_security_fatima_zahra.txt", "section": "certifications", "contains": "OSCP, CISSP"}],
-     "rationale": "Fatima's certifications section lists both. Keyword-heavy question, should favour BM25."},
-
-    {"id": "q06", "question": "Which candidates have managed or mentored engineers?",
-     "relevant": [
-       {"resume": "varied/v06_senior_rachel_kim.txt", "section": "experience", "contains": "Mentored 6 engineers"},
-       {"resume": "varied/v10_multipage_elena_petrova.txt", "section": "experience", "contains": "Manage two teams (11 engineers)"}],
-     "rationale": "Rachel mentored engineers; Elena manages two teams. Elena's skills chunk mentions 'mentoring' as a word but is not evidence of having done it, so it is not labelled."},
-
-    {"id": "q07", "question": "Who has worked with Terraform?",
-     "relevant": [
-       {"resume": "varied/v06_senior_rachel_kim.txt", "section": "skills", "contains": "Terraform"},
-       {"resume": "varied/v09_no_headings_tom_baker.txt", "section": "header", "contains": "all managed with Terraform"}],
-     "rationale": "Rachel lists Terraform in skills (her experience section does not mention it); Tom manages clusters with Terraform. A skills list counts here because the question asks about any Terraform work, not production depth."},
-
-    {"id": "q08", "question": "Find freshers who built a chatbot project.",
-     "relevant": [
-       {"resume": "varied/v01_fresher_aarav_mehta.txt", "section": "projects", "contains": "Campus Chatbot"}],
-     "rationale": "Aarav is a fresher (graduating 2026) with a campus chatbot project. No other fresher built a chatbot."},
-
-    {"id": "q09", "question": "Who knows React and TypeScript?",
-     "relevant": [
-       {"resume": "varied/v03_fresher_liam_novak.txt", "section": "projects", "contains": "React and TypeScript single-page app"},
-       {"resume": "varied/v03_fresher_liam_novak.txt", "section": "skills", "contains": "TypeScript, React"},
-       {"resume": "varied/v10_multipage_elena_petrova.txt", "section": "experience", "contains": "checkout frontend in React and TypeScript"},
-       {"resume": "varied/v10_multipage_elena_petrova.txt", "section": "skills", "contains": "TypeScript, React"}],
-     "rationale": "Liam and Elena both evidence React and TypeScript in a project/experience chunk and in skills; all four chunks answer the question."},
-
-    {"id": "q10", "question": "Who has built Android apps?",
-     "relevant": [
-       {"resume": "varied/v11_inline_headings_kwame_asante.txt", "section": "experience", "contains": "Kotlin and Jetpack Compose banking app"}],
-     "rationale": "Kwame shipped an Android banking app. His resume uses inline headings ('Experience: ...'), a format test."},
-
-    {"id": "q11", "question": "Which candidate has compressed large language models to run on a laptop?",
-     "relevant": [
-       {"resume": "varied/v14_research_scientist_chen_wei.txt", "section": "experience", "contains": "Quantized 7B-parameter language models"}],
-     "rationale": "Paraphrase test: 'compressed ... to run on a laptop' vs 'Quantized ... for laptop inference'. Should favour vector search."},
-
-    {"id": "q12", "question": "Who has published research papers?",
-     "relevant": [
-       {"resume": "varied/v14_research_scientist_chen_wei.txt", "section": "other", "contains": "workshop paper"}],
-     "rationale": "Only Chen Wei lists publications. Emma (resume_09) 'benchmarked NLP systems' but lists no publications."},
-
-    {"id": "q13", "question": "Who has built data pipelines with Airflow or dbt?",
-     "relevant": [
-       {"resume": "varied/v05_fresher_diego_ramos.txt", "section": "projects", "contains": "Airflow DAG"},
-       {"resume": "varied/v08_two_column_style_priya_s.txt", "section": "header", "contains": "SQL and dbt"}],
-     "rationale": "Diego built an Airflow + dbt pipeline; Priya automated reporting with dbt. Priya's two-column layout leaves everything in one unlabelled chunk: a format hard case."},
-
-    {"id": "q14", "question": "Who has built dashboards in Power BI?",
-     "relevant": [
-       {"resume": "varied/v12_career_changer_hannah_lee.txt", "section": "experience", "contains": "dashboards in Power BI"}],
-     "rationale": "Hannah built Power BI dashboards. Priya built dashboards in Looker, not Power BI, so she is not labelled."},
-
-    {"id": "q15", "question": "Find a candidate who moved into tech from teaching.",
-     "relevant": [
-       {"resume": "varied/v12_career_changer_hannah_lee.txt", "section": "summary", "contains": "Former high-school chemistry teacher"}],
-     "rationale": "Hannah was a teacher for 6 years before data analysis. Sara (v02) was a teaching assistant during her degree, which is not a career change."},
-
-    {"id": "q16", "question": "Who has experience with vector databases or semantic search?",
-     "relevant": [
-       {"resume": "resume_03_sophia_nguyen.txt", "section": "experience", "contains": "semantic search systems"},
-       {"resume": "resume_03_sophia_nguyen.txt", "section": "skills", "contains": "vector databases"},
-       {"resume": "resume_10_javier_lopez.txt", "section": "skills", "contains": "vector databases"},
-       {"resume": "varied/v07_ml_engineer_omar_haddad.txt", "section": "experience", "contains": "using pgvector"}],
-     "rationale": "Sophia built semantic search and lists vector databases; Javier lists vector databases; Omar used pgvector in a RAG system. Aarav (v01) used FAISS, a vector index library, in a project; arguably relevant, left unlabelled for the reviewer to decide."},
-
-    {"id": "q17", "question": "Who has evaluated an LLM system with a golden dataset?",
-     "relevant": [
-       {"resume": "varied/v07_ml_engineer_omar_haddad.txt", "section": "experience", "contains": "400-question golden set"}],
-     "rationale": "Omar ran offline evaluation with RAGAS and a golden set. Michael and Emma mention 'evaluation' generally but not a golden dataset."},
-
-    {"id": "q18", "question": "Which candidates have used MLflow?",
-     "relevant": [
-       {"resume": "resume_02_michael_chen.txt", "section": "skills", "contains": "MLflow"},
-       {"resume": "resume_11_maya_chen.txt", "section": "skills", "contains": "MLflow"}],
-     "rationale": "Exact keyword in two skills lists; a pure keyword question."},
-
-    {"id": "q19", "question": "Which candidates hold a PhD?",
-     "relevant": [
-       {"resume": "varied/v14_research_scientist_chen_wei.txt", "section": "education", "contains": "Ph.D. Computer Science"}],
-     "rationale": "Only Chen Wei. Tests matching 'PhD' against 'Ph.D.'."},
-
-    {"id": "q20", "question": "Who has fine-tuned transformer models?",
-     "relevant": [
-       {"resume": "resume_02_michael_chen.txt", "section": "experience", "contains": "fine-tuning pipelines"},
-       {"resume": "resume_07_lina_fernandez.txt", "section": "summary", "contains": "fine-tuning"},
-       {"resume": "varied/v02_fresher_sara_okafor.md", "section": "projects", "contains": "Fine-tuned a DistilBERT model"}],
-     "rationale": "Michael built fine-tuning pipelines, Lina's summary states fine-tuning experience, Sara fine-tuned DistilBERT. Ananya and Emma do not mention fine-tuning."},
-
-    {"id": "q21", "question": "Who made a slow nightly batch job much faster?",
-     "relevant": [
-       {"resume": "varied/v06_senior_rachel_kim.txt", "section": "experience", "contains": "from 5 hours to 40 minutes"}],
-     "rationale": "Paraphrase with almost no keyword overlap ('reduced nightly job time from 5 hours to 40 minutes')."},
-
-    {"id": "q22", "question": "Who has led a migration from a monolith to microservices?",
-     "relevant": [
-       {"resume": "varied/v06_senior_rachel_kim.txt", "section": "experience", "contains": "Django monolith to FastAPI"}],
-     "rationale": "Rachel led exactly this. Elena's MySQL-to-PostgreSQL migration is a database migration, not monolith-to-microservices."},
-
-    {"id": "q23", "question": "Who has introduced feature flags or trunk-based development?",
-     "relevant": [
-       {"resume": "varied/v10_multipage_elena_petrova.txt", "section": "experience", "contains": "adoption of feature flags and trunk-based development"},
-       {"resume": "varied/v10_multipage_elena_petrova.txt", "section": "projects", "contains": "trunk-based development"}],
-     "rationale": "Elena drove the adoption (experience) and spoke about it (projects). Two chunks from one candidate: tests that both surface."},
-
-    {"id": "q24", "question": "Who has worked on fraud detection?",
-     "relevant": [
-       {"resume": "varied/v10_multipage_elena_petrova.txt", "section": "experience", "contains": "fraud detection"}],
-     "rationale": "Elena's teams own fraud detection and shipped a fraud model."},
-
-    {"id": "q25", "question": "Who speaks German?",
-     "relevant": [
-       {"resume": "varied/v10_multipage_elena_petrova.txt", "section": "other", "contains": "German (native)"}],
-     "rationale": "Elena's Languages section. Her header mentions Berlin, which is not evidence of speaking German."},
-
-    {"id": "q26", "question": "Who knows the Go programming language?",
-     "relevant": [
-       {"resume": "varied/v04_fresher_mei_tanaka.txt", "section": "skills", "contains": "Go, Python, gRPC"},
-       {"resume": "varied/v04_fresher_mei_tanaka.txt", "section": "projects", "contains": "rate limiter service in Go"},
-       {"resume": "varied/v13_security_fatima_zahra.txt", "section": "skills", "contains": "Python, Go, AWS IAM"}],
-     "rationale": "Mei (skills and a Go project) and Fatima (skills). 'Go' is a short, ambiguous token; a known weak spot for keyword search."},
-
-    {"id": "q27", "question": "Who has used gradient boosting models such as XGBoost or LightGBM?",
-     "relevant": [
-       {"resume": "varied/v02_fresher_sara_okafor.md", "section": "projects", "contains": "Gradient-boosted trees (XGBoost)"},
-       {"resume": "varied/v02_fresher_sara_okafor.md", "section": "skills", "contains": "XGBoost"},
-       {"resume": "varied/v07_ml_engineer_omar_haddad.txt", "section": "experience", "contains": "LightGBM"}],
-     "rationale": "Sara used XGBoost; Omar forecasted demand with LightGBM (also gradient boosting)."},
-
-    {"id": "q28", "question": "Who has managed secrets with a tool like HashiCorp Vault?",
-     "relevant": [
-       {"resume": "varied/v13_security_fatima_zahra.txt", "section": "experience", "contains": "moved them to HashiCorp Vault"},
-       {"resume": "varied/v13_security_fatima_zahra.txt", "section": "skills", "contains": "HashiCorp Vault"}],
-     "rationale": "Fatima rotated secrets into Vault and lists it."},
-
-    {"id": "q29", "question": "Who built a high-throughput rate limiter?",
-     "relevant": [
-       {"resume": "varied/v04_fresher_mei_tanaka.txt", "section": "projects", "contains": "rate limiter service in Go"}],
-     "rationale": "Mei's project, load-tested to 5k requests/second."},
-
-    {"id": "q30", "question": "Who has worked as a teaching assistant?",
-     "relevant": [
-       {"resume": "varied/v02_fresher_sara_okafor.md", "section": "experience", "contains": "Teaching Assistant"}],
-     "rationale": "Sara was a TA. Hannah was a teacher, not a teaching assistant: a near-miss distractor."}
+    {
+      "id": "q01",
+      "question": "Who has run FastAPI services in production?",
+      "relevant": [
+        {
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "contains": "FastAPI\n  microservices running in production"
+        },
+        {
+          "resume": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "contains": "Deployed model services with FastAPI"
+        }
+      ],
+      "rationale": "Rachel migrated to FastAPI microservices 'running in production'; Omar deployed FastAPI model services on Cloud Run. Distractor: Aarav (v01) built a FastAPI API for coursework that was explicitly 'Not deployed', and skills lists that only name FastAPI are not evidence of production use."
+    },
+    {
+      "id": "q02",
+      "question": "Which candidates have built retrieval-augmented generation (RAG) systems?",
+      "relevant": [
+        {
+          "resume": "resume_01_ananya_patel.txt",
+          "section": "experience",
+          "contains": "retrieval-augmented generation systems"
+        },
+        {
+          "resume": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "contains": "retrieval-augmented generation (RAG) assistant"
+        },
+        {
+          "resume": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "projects",
+          "contains": "retrieval-augmented chatbot"
+        }
+      ],
+      "rationale": "All three describe building a RAG system (Aarav's as a student project, which still counts as having built one). Javier (resume_10) 'connected retrieval systems to user products', which is adjacent but not RAG, so it is not labelled."
+    },
+    {
+      "id": "q03",
+      "question": "Who has hands-on Kafka experience?",
+      "relevant": [
+        {
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "contains": "Kafka-based event backbone"
+        },
+        {
+          "resume": "varied/v05_fresher_diego_ramos.txt",
+          "section": "projects",
+          "contains": "Kafka producer and consumer"
+        }
+      ],
+      "rationale": "Rachel designed a Kafka backbone in production; Diego built a Kafka producer/consumer demo. Both are hands-on; the recruiter can weigh depth from the cited text."
+    },
+    {
+      "id": "q04",
+      "question": "Find candidates with a Certified Kubernetes Administrator (CKA) certification.",
+      "relevant": [
+        {
+          "resume": "varied/v09_no_headings_tom_baker.txt",
+          "section": "header",
+          "contains": "Certified Kubernetes Administrator (CKA)"
+        }
+      ],
+      "rationale": "Only Tom holds the CKA. His resume has no headings, so the answer is in an unlabelled chunk: a deliberate hard case."
+    },
+    {
+      "id": "q05",
+      "question": "Who has security certifications such as OSCP or CISSP?",
+      "relevant": [
+        {
+          "resume": "varied/v13_security_fatima_zahra.txt",
+          "section": "certifications",
+          "contains": "OSCP, CISSP"
+        }
+      ],
+      "rationale": "Fatima's certifications section lists both. Keyword-heavy question, should favour BM25."
+    },
+    {
+      "id": "q06",
+      "question": "Which candidates have managed or mentored engineers?",
+      "relevant": [
+        {
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "contains": "Mentored 6 engineers"
+        },
+        {
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "contains": "Manage two teams (11 engineers)"
+        }
+      ],
+      "rationale": "Rachel mentored engineers; Elena manages two teams. Elena's skills chunk mentions 'mentoring' as a word but is not evidence of having done it, so it is not labelled."
+    },
+    {
+      "id": "q07",
+      "question": "Who has worked with Terraform?",
+      "relevant": [
+        {
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "contains": "Terraform"
+        },
+        {
+          "resume": "varied/v09_no_headings_tom_baker.txt",
+          "section": "header",
+          "contains": "all managed with Terraform"
+        }
+      ],
+      "rationale": "'Has worked with' accepts a skills mention: Rachel lists Terraform; Tom manages clusters with Terraform (in his unlabelled chunk)."
+    },
+    {
+      "id": "q08",
+      "question": "Find freshers who built a chatbot project.",
+      "relevant": [
+        {
+          "resume": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "projects",
+          "contains": "Campus Chatbot"
+        }
+      ],
+      "rationale": "Aarav is a fresher (graduating 2026) with a campus chatbot project. No other fresher built a chatbot."
+    },
+    {
+      "id": "q09",
+      "question": "Who knows React and TypeScript?",
+      "relevant": [
+        {
+          "resume": "varied/v03_fresher_liam_novak.txt",
+          "section": "projects",
+          "contains": "React and TypeScript single-page app"
+        },
+        {
+          "resume": "varied/v03_fresher_liam_novak.txt",
+          "section": "skills",
+          "contains": "TypeScript, React"
+        },
+        {
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "contains": "checkout frontend in React and TypeScript"
+        },
+        {
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "skills",
+          "contains": "TypeScript, React"
+        }
+      ],
+      "rationale": "Liam and Elena both evidence React and TypeScript in a project/experience chunk and in skills; all four chunks answer the question."
+    },
+    {
+      "id": "q10",
+      "question": "Who has built Android apps?",
+      "relevant": [
+        {
+          "resume": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "experience",
+          "contains": "Kotlin and Jetpack Compose banking app"
+        }
+      ],
+      "rationale": "Kwame shipped an Android banking app. His resume uses inline headings ('Experience: ...'), a format test."
+    },
+    {
+      "id": "q11",
+      "question": "Which candidate has compressed large language models to run on a laptop?",
+      "relevant": [
+        {
+          "resume": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "experience",
+          "contains": "Quantized 7B-parameter language models"
+        }
+      ],
+      "rationale": "Paraphrase test: 'compressed ... to run on a laptop' vs 'Quantized ... for laptop inference'. Should favour vector search."
+    },
+    {
+      "id": "q12",
+      "question": "Who has published research papers?",
+      "relevant": [
+        {
+          "resume": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "other",
+          "contains": "workshop paper"
+        }
+      ],
+      "rationale": "Only Chen Wei lists publications. Emma (resume_09) 'benchmarked NLP systems' but lists no publications."
+    },
+    {
+      "id": "q13",
+      "question": "Who has built data pipelines with Airflow or dbt?",
+      "relevant": [
+        {
+          "resume": "varied/v05_fresher_diego_ramos.txt",
+          "section": "projects",
+          "contains": "Airflow DAG"
+        },
+        {
+          "resume": "varied/v08_two_column_style_priya_s.txt",
+          "section": "header",
+          "contains": "SQL and dbt"
+        }
+      ],
+      "rationale": "Diego built an Airflow + dbt pipeline; Priya automated reporting with dbt. Priya's two-column layout leaves everything in one unlabelled chunk: a format hard case."
+    },
+    {
+      "id": "q14",
+      "question": "Who has built dashboards in Power BI?",
+      "relevant": [
+        {
+          "resume": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "experience",
+          "contains": "dashboards in Power BI"
+        }
+      ],
+      "rationale": "Hannah built Power BI dashboards. Priya built dashboards in Looker, not Power BI, so she is not labelled."
+    },
+    {
+      "id": "q15",
+      "question": "Find a candidate who moved into tech from teaching.",
+      "relevant": [
+        {
+          "resume": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "summary",
+          "contains": "Former high-school chemistry teacher"
+        }
+      ],
+      "rationale": "Hannah was a teacher for 6 years before data analysis. Sara (v02) was a teaching assistant during her degree, which is not a career change."
+    },
+    {
+      "id": "q16",
+      "question": "Who has experience with vector databases or semantic search?",
+      "relevant": [
+        {
+          "resume": "resume_03_sophia_nguyen.txt",
+          "section": "experience",
+          "contains": "semantic search systems"
+        },
+        {
+          "resume": "resume_03_sophia_nguyen.txt",
+          "section": "skills",
+          "contains": "vector databases"
+        },
+        {
+          "resume": "resume_10_javier_lopez.txt",
+          "section": "skills",
+          "contains": "vector databases"
+        },
+        {
+          "resume": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "contains": "using pgvector"
+        },
+        {
+          "resume": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "projects",
+          "contains": "LangChain, FAISS and a small open-source LLM"
+        },
+        {
+          "resume": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "skills",
+          "contains": "LangChain, FAISS"
+        },
+        {
+          "resume": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "skills",
+          "contains": "pgvector, FAISS"
+        }
+      ],
+      "rationale": "'Has experience with' question, so skills lists count. Sophia built semantic search and lists vector databases; Javier lists vector databases; Omar used pgvector in a RAG system and lists pgvector and FAISS; Aarav used FAISS in his chatbot project and lists it (reviewer decision: FAISS counts as vector database experience)."
+    },
+    {
+      "id": "q17",
+      "question": "Who has evaluated an LLM system with a golden dataset?",
+      "relevant": [
+        {
+          "resume": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "contains": "400-question golden set"
+        }
+      ],
+      "rationale": "Omar ran offline evaluation with RAGAS and a golden set. Michael and Emma mention 'evaluation' generally but not a golden dataset."
+    },
+    {
+      "id": "q18",
+      "question": "Which candidates list MLflow experience?",
+      "relevant": [
+        {
+          "resume": "resume_02_michael_chen.txt",
+          "section": "skills",
+          "contains": "MLflow"
+        },
+        {
+          "resume": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "contains": "MLflow"
+        }
+      ],
+      "rationale": "'List' question, so skills lists count; MLflow appears only in Michael's and Maya's skills lists. (Reworded from 'have used': under the rules no resume shows MLflow being used in a job or project.)"
+    },
+    {
+      "id": "q19",
+      "question": "Which candidates hold a PhD?",
+      "relevant": [
+        {
+          "resume": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "education",
+          "contains": "Ph.D. Computer Science"
+        }
+      ],
+      "rationale": "Only Chen Wei. Tests matching 'PhD' against 'Ph.D.'."
+    },
+    {
+      "id": "q20",
+      "question": "Who has fine-tuned transformer models?",
+      "relevant": [
+        {
+          "resume": "resume_02_michael_chen.txt",
+          "section": "experience",
+          "contains": "fine-tuning pipelines"
+        },
+        {
+          "resume": "varied/v02_fresher_sara_okafor.md",
+          "section": "projects",
+          "contains": "Fine-tuned a DistilBERT model"
+        }
+      ],
+      "rationale": "'Has fine-tuned' is a doing question, so a job or project passage is needed. Michael built fine-tuning pipelines (job) and Sara fine-tuned DistilBERT (project). Lina's summary says she is 'experienced in ... fine-tuning', but that is a self-description and her job passage does not mention fine-tuning, so she is not labelled."
+    },
+    {
+      "id": "q21",
+      "question": "Who made a slow nightly batch job much faster?",
+      "relevant": [
+        {
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "contains": "from 5 hours to 40 minutes"
+        }
+      ],
+      "rationale": "Paraphrase with almost no keyword overlap ('reduced nightly job time from 5 hours to 40 minutes')."
+    },
+    {
+      "id": "q22",
+      "question": "Who has led a migration from a monolith to microservices?",
+      "relevant": [
+        {
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "contains": "Django monolith to FastAPI"
+        }
+      ],
+      "rationale": "Rachel led exactly this. Elena's MySQL-to-PostgreSQL migration is a database migration, not monolith-to-microservices."
+    },
+    {
+      "id": "q23",
+      "question": "Who has introduced feature flags or trunk-based development?",
+      "relevant": [
+        {
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "contains": "adoption of feature flags and trunk-based development"
+        },
+        {
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "projects",
+          "contains": "trunk-based development"
+        }
+      ],
+      "rationale": "Elena drove the adoption (experience) and spoke about it (projects). Two chunks from one candidate: tests that both surface."
+    },
+    {
+      "id": "q24",
+      "question": "Who has worked on fraud detection?",
+      "relevant": [
+        {
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "contains": "fraud detection"
+        }
+      ],
+      "rationale": "Elena's teams own fraud detection and shipped a fraud model."
+    },
+    {
+      "id": "q25",
+      "question": "Who speaks German?",
+      "relevant": [
+        {
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "other",
+          "contains": "German (native)"
+        }
+      ],
+      "rationale": "Elena's Languages section. Her header mentions Berlin, which is not evidence of speaking German."
+    },
+    {
+      "id": "q26",
+      "question": "Who knows the Go programming language?",
+      "relevant": [
+        {
+          "resume": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "skills",
+          "contains": "Go, Python, gRPC"
+        },
+        {
+          "resume": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "projects",
+          "contains": "rate limiter service in Go"
+        },
+        {
+          "resume": "varied/v13_security_fatima_zahra.txt",
+          "section": "skills",
+          "contains": "Python, Go, AWS IAM"
+        }
+      ],
+      "rationale": "Mei (skills and a Go project) and Fatima (skills). 'Go' is a short, ambiguous token; a known weak spot for keyword search."
+    },
+    {
+      "id": "q27",
+      "question": "Who has used gradient boosting models such as XGBoost or LightGBM?",
+      "relevant": [
+        {
+          "resume": "varied/v02_fresher_sara_okafor.md",
+          "section": "projects",
+          "contains": "Gradient-boosted trees (XGBoost)"
+        },
+        {
+          "resume": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "contains": "LightGBM"
+        }
+      ],
+      "rationale": "'Has used' is a doing question: Sara used XGBoost in a project; Omar forecasted demand with LightGBM in a job. Sara's skills list is not counted."
+    },
+    {
+      "id": "q28",
+      "question": "Who has managed secrets with a tool like HashiCorp Vault?",
+      "relevant": [
+        {
+          "resume": "varied/v13_security_fatima_zahra.txt",
+          "section": "experience",
+          "contains": "moved them to HashiCorp Vault"
+        }
+      ],
+      "rationale": "'Has managed secrets' is a doing question: Fatima rotated secrets into Vault in her job. Her skills list is not counted."
+    },
+    {
+      "id": "q29",
+      "question": "Who built a high-throughput rate limiter?",
+      "relevant": [
+        {
+          "resume": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "projects",
+          "contains": "rate limiter service in Go"
+        }
+      ],
+      "rationale": "Mei's project, load-tested to 5k requests/second."
+    },
+    {
+      "id": "q30",
+      "question": "Who has worked as a teaching assistant?",
+      "relevant": [
+        {
+          "resume": "varied/v02_fresher_sara_okafor.md",
+          "section": "experience",
+          "contains": "Teaching Assistant"
+        }
+      ],
+      "rationale": "Sara was a TA. Hannah was a teacher, not a teaching assistant: a near-miss distractor."
+    }
   ],
   "negative_questions": [
-    {"id": "n01", "question": "Who has COBOL mainframe experience?", "rationale": "No resume mentions COBOL or mainframes."},
-    {"id": "n02", "question": "Who is a licensed medical doctor?", "rationale": "No resume mentions medicine."},
-    {"id": "n03", "question": "Who is a certified Salesforce administrator?", "rationale": "No resume mentions Salesforce."}
+    {
+      "id": "n01",
+      "question": "Who has COBOL mainframe experience?",
+      "rationale": "No resume mentions COBOL or mainframes."
+    },
+    {
+      "id": "n02",
+      "question": "Who is a licensed medical doctor?",
+      "rationale": "No resume mentions medicine."
+    },
+    {
+      "id": "n03",
+      "question": "Who is a certified Salesforce administrator?",
+      "rationale": "No resume mentions Salesforce."
+    }
+  ],
+  "labelling_rules": [
+    "Doing/using questions ('built', 'used', 'run in production', 'hands-on', 'fine-tuned', 'managed', 'led', 'worked on') need evidence of the act in an experience or project passage. For a resume without section headings, that is the unlabelled chunk holding the passage. Skills lists and summary self-descriptions do not count.",
+    "Knowing/experience-with questions ('knows', 'has experience with', 'has worked with', 'lists') also accept a mention in a skills list.",
+    "Credentials, degrees, languages and publications: the chunk that states them is the evidence.",
+    "A label marks a chunk; when one candidate has several qualifying chunks, each is labelled."
   ]
 }
