@@ -34,7 +34,7 @@ import resume_parser  # noqa: E402
 
 
 def _no_network_llm(*args, **kwargs):
-    raise AssertionError("A test reached the real LLM; patch llm.generate_text instead.")
+    raise AssertionError("A test reached the real LLM; mock llm.generate_text or pass a fake client instead.")
 
 
 @pytest.fixture(autouse=True)
@@ -47,3 +47,5 @@ def offline_llm(monkeypatch):
     for module in (config, resume_parser, jd_parser, interview_generator):
         monkeypatch.setattr(module, "get_api_key", lambda: None)
     monkeypatch.setattr(llm, "generate_text", _no_network_llm)
+    # Every Gemini call (generation and embeddings) goes through llm._client; block it too.
+    monkeypatch.setattr(llm, "_client", _no_network_llm)

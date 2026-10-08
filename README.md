@@ -2,7 +2,7 @@
 
 [![Python 3](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Backend-Flask-black.svg)](https://flask.palletsprojects.com/)
-[![Tests](https://img.shields.io/badge/tests-126%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-192%20passing-brightgreen.svg)](#testing)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 HireAI screens resumes against a job description, gives every candidate an explainable 0–100 score, and gives recruiters a dashboard to track candidates through the hiring pipeline.
@@ -125,19 +125,29 @@ flowchart LR
     RP -. optional .-> LLM
     IQ -. optional .-> LLM
 
-    API --> DB[("SQLite<br/>models.py")]
+    API --> IX["indexing.py"]
+    IX --> CH["chunking.py<br/>section-aware chunks"]
+    IX --> EP["embeddings.py<br/>pluggable provider"]
+    EP --> EMB
+    EP -. optional .-> GEMB[("Gemini embeddings")]
+
+    API --> DB[("PostgreSQL + pgvector<br/>or SQLite<br/>models.py · Alembic")]
+    IX --> DB
     API --> UP[/"uploads/<br/>resume files"/]
 ```
 
 Flask serves the dashboard at `/` and the API under `/api`. They share an origin, so the browser needs no CORS setup.
 
-**Upload and scoring flow**
+**Upload, scoring and indexing flow**
 
 ```text
-Upload resume → validate type and size → save to uploads/ → parse resume
-  → duplicate check → store candidate → POST /api/screen → score 4 signals
-  → store result with explanation → dashboard, candidates and analytics update
+Upload resume → validate type and size → save to uploads/ under a unique name → parse resume
+  → duplicate check → store candidate → chunk by section → embed → store chunks + vectors
+  → POST /api/screen → score 4 signals → store result with explanation
+  → dashboard, candidates and analytics update
 ```
+
+Chunks and embeddings feed retrieval (search and "ask the candidate pool", added next). They never change scores: the score always comes from the deterministic engine in `scorer.py`.
 
 ---
 
@@ -146,8 +156,9 @@ Upload resume → validate type and size → save to uploads/ → parse resume
 | Layer | Technology |
 |---|---|
 | Backend | Python, Flask, Flask-CORS |
-| Database | SQLAlchemy ORM on SQLite |
+| Database | PostgreSQL 17 with pgvector, or SQLite for local use; SQLAlchemy 2.0 (typed models), Alembic migrations, psycopg 3 |
 | NLP / scoring | Sentence-Transformers (`all-MiniLM-L6-v2`), NumPy |
+| Retrieval prep | Section-aware chunking; embeddings from Sentence-Transformers (default, offline) or the Gemini embedding API |
 | Optional LLM | Google Gemini via the `google-genai` SDK (default model `gemini-3.8-flash`, set by `GEMINI_MODEL`) |
 | Document parsing | PyPDF2, python-docx |
 | Duplicate matching | fuzzywuzzy, python-Levenshtein |
@@ -182,7 +193,9 @@ Everything works without editing `.env`. The settings you're most likely to chan
 |---|---|---|
 | `GOOGLE_API_KEY` | *(unset)* | Turns on Gemini-based parsing and written explanations. Without it, regex parsing and template explanations are used. Read [Using Gemini](#using-gemini-synthetic-data-only) first |
 | `GEMINI_MODEL` | `gemini-3.8-flash` | Gemini model name. Change it when Google retires a model or your key's free tier doesn't include the default |
-| `DATABASE_URL` | `sqlite:///recruiting_agent.db` | SQLAlchemy connection string |
+| `DATABASE_URL` | `sqlite:///recruiting_agent.db` | SQLAlchemy connection string; see [Database setup](#3-database-setup) for PostgreSQL |
+| `EMBEDDING_PROVIDER` | `sentence-transformers` | Embeddings for retrieval: `sentence-transformers` (local, offline) or `gemini`. Never affects scores |
+| `EMBEDDING_API_MODEL` / `EMBEDDING_API_DIM` | `gemini-embedding-001` / `768` | Used when `EMBEDDING_PROVIDER=gemini` |
 | `MAX_RESUME_SIZE_MB` | `10` | Upload size limit |
 | `ALLOWED_RESUME_EXTENSIONS` | `.txt,.pdf,.docx` | Accepted resume file types |
 | `HOST` / `PORT` | `127.0.0.1` / `5000` | Server address, used by `python app.py` |
@@ -197,11 +210,29 @@ The app works fully without a key: leave `GOOGLE_API_KEY` unset when processing 
 
 ### 3. Database setup
 
-No manual setup is needed. On startup the app creates `recruiting_agent.db` and its tables, and adds the default scoring templates.
+**SQLite (default, nothing to install).** On startup the app creates `recruiting_agent.db` and brings its schema up to date. Embeddings are stored as JSON and searched by brute force, which is fine for hundreds of resumes.
 
-To start with an empty database, stop the server, delete `recruiting_agent.db`, and start it again.
+**PostgreSQL with pgvector (recommended for anything larger).** One database holds both the records and the embeddings, in pgvector `vector` columns. Start it locally with Docker:
 
-`recruiting_agent.db` and `uploads/` hold candidate personal data and are excluded from Git.
+```bash
+docker run -d --name hireai-pg -e POSTGRES_USER=hireai -e POSTGRES_PASSWORD=hireai -e POSTGRES_DB=hireai -p 127.0.0.1:5433:5432 -v hireai-pgdata:/var/lib/postgresql/data pgvector/pgvector:pg17
+```
+
+Then set `DATABASE_URL=postgresql+psycopg://hireai:hireai@127.0.0.1:5433/hireai` in `.env`. The port is bound to `127.0.0.1`, so the database isn't reachable from your network; use a real password anywhere else.
+
+**Migrations.** [Alembic](migrations/) owns the schema, and the app applies pending migrations on startup. A database created by a version from before migrations existed is detected and adopted without recreating anything. To run migrations by hand:
+
+```bash
+python -m alembic upgrade head
+```
+
+**Search index.** Each resume and job description is split into section-aware chunks (Summary, Experience, Projects, Skills, Education…) and embedded when it is saved. If embedding was unavailable at the time, or you change `EMBEDDING_PROVIDER`, rebuild every chunk:
+
+```bash
+python -m indexing --reindex
+```
+
+To start over with SQLite, stop the server and delete `recruiting_agent.db`. The database and `uploads/` hold candidate personal data and are excluded from Git.
 
 ### 4. Run the app
 
@@ -328,18 +359,35 @@ python -m ruff check .
 python -m mypy
 ```
 
-126 tests across six files. No test calls a real LLM: the suite fails any test that reaches the network instead of using a mocked response.
+192 tests across eleven files. No test calls a real LLM or embedding API: the suite fails any test that reaches one instead of using a mocked response.
 
 | File | Tests | What it covers |
 |---|---|---|
 | [tests/test_agent.py](tests/test_agent.py) | 19 | The original scoring signals, data models and CSV/JSON output |
 | [tests/test_platform.py](tests/test_platform.py) | 14 | Database models, duplicate detection, analytics |
-| [tests/test_api_contract.py](tests/test_api_contract.py) | 46 | All 25 API routes: responses, validation, errors and known issues |
+| [tests/test_api_contract.py](tests/test_api_contract.py) | 57 | All 25 API routes: responses, validation, errors, unique upload storage, and a sweep checking no route leaks internals |
+| [tests/test_concurrency.py](tests/test_concurrency.py) | 1 | 36 concurrent screenings for two jobs with different weights; each uses its own job's weights |
 | [tests/test_parsers.py](tests/test_parsers.py) | 25 | Resume and job-description extraction (snapshot), PDF/DOCX reading, the Gemini path with a mocked model |
 | [tests/test_llm.py](tests/test_llm.py) | 17 | The Gemini wrapper, model configuration, API-key lookup, rationale text |
-| [tests/test_score_regression.py](tests/test_score_regression.py) | 5 | Scores are identical to the original code across 120 cases; per-role weights never leak between requests |
+| [tests/test_score_regression.py](tests/test_score_regression.py) | 5 | Scores are identical to the original code across 120 cases; per-role weights never leak |
+| [tests/test_chunking.py](tests/test_chunking.py) | 26 | Section detection across heading styles, exact offsets, nothing lost or duplicated, chunks fit the model's input |
+| [tests/test_embeddings.py](tests/test_embeddings.py) | 11 | The local model for real; the Gemini embedding API mocked |
+| [tests/test_indexing.py](tests/test_indexing.py) | 9 | Chunks stored on upload and job changes, reindexing, deletes, a pgvector round trip |
+| [tests/test_migrations.py](tests/test_migrations.py) | 8 | Migrated schema matches the models, adoption of older databases, downgrade and upgrade |
 
-The regression test loads the embedding model and takes about a minute; skip it with `python -m pytest -m "not slow"`.
+Tests marked `slow` load the embedding model; skip them with `python -m pytest -m "not slow"`.
+
+**Running on PostgreSQL.** By default the suite uses a temporary SQLite database and skips the PostgreSQL-only tests. To run everything on PostgreSQL, using the container from [Database setup](#3-database-setup):
+
+```bash
+docker exec hireai-pg psql -U hireai -d postgres -c "CREATE DATABASE hireai_test;"
+```
+
+```bash
+TEST_DATABASE_URL=postgresql+psycopg://hireai:hireai@127.0.0.1:5433/hireai_test TEST_POSTGRES_URL=postgresql+psycopg://hireai:hireai@127.0.0.1:5433/postgres python -m pytest
+```
+
+The tests drop and recreate every table, so `TEST_DATABASE_URL` is refused unless the database name contains `test`. `TEST_POSTGRES_URL` is used to create and drop a throwaway database per migration test.
 
 **mypy** runs in strict mode. Modules written before strict typing was adopted are listed in `pyproject.toml` and come off that list as they're typed; new code is never added to it.
 
@@ -361,7 +409,8 @@ The regression test loads the embedding model and takes about a minute; skip it 
 ## Limitations
 
 - **Single user, no login.** Anyone who can reach the server can see and change all data. Don't expose it to the internet as-is.
-- **SQLite by default.** `DATABASE_URL` accepts any SQLAlchemy URL, but PostgreSQL needs a driver such as `psycopg2-binary`, which isn't in `requirements.txt` and hasn't been tested.
+- **No vector index yet.** Embeddings are stored but not yet searched; retrieval and an approximate-nearest-neighbour index arrive with the next phase. SQLite will always search by brute force.
+- **Chunking relies on recognizable headings.** A resume without standard section headings (or a PDF whose text extraction loses them) is chunked by paragraph without section labels.
 - **Skill extraction without an API key uses a fixed keyword list.** Skills not on that list, and job descriptions that don't use recognizable section headings, can produce fewer required skills. A job with no extracted required skills gives every candidate a full skill score.
 - **Scoring templates and interview questions are API-only.** Jobs use the default weights unless a template ID is set through the API.
 - **Development server.** Flask's built-in server isn't meant for production traffic.
@@ -389,7 +438,11 @@ Hire-AI/
 ├── start.py                  # Recommended entry point: loads model, starts server
 ├── app.py                    # Flask API + serves the dashboard at /
 ├── frontend.html             # Recruiter dashboard (Dashboard, Jobs, Candidates, Analytics)
-├── models.py                 # SQLAlchemy models: Job, Candidate, ScreeningResult, ScoringTemplate
+├── models.py                 # Typed SQLAlchemy models, incl. ResumeChunk/JobChunk with embeddings
+├── database.py               # Engine creation; applies Alembic migrations on startup
+├── chunking.py               # Section-aware chunking with exact source offsets
+├── embeddings.py             # Pluggable embedding providers (Sentence-Transformers, Gemini)
+├── indexing.py               # Chunk + embed on save; `python -m indexing --reindex`
 ├── analytics_service.py      # Metrics computed from database records
 ├── duplicate_detection.py    # Email / phone / fuzzy-name duplicate checks
 ├── interview_generator.py    # Candidate-specific interview questions
@@ -405,11 +458,13 @@ Hire-AI/
 ├── requirements.txt          # Runtime dependencies
 ├── requirements-dev.txt      # + pytest, coverage, ruff, mypy
 ├── pyproject.toml            # ruff, mypy and pytest settings
+├── alembic.ini
+├── migrations/               # Alembic environment and schema revisions
 ├── .env.example
 ├── docs/
 │   ├── demo.gif
 │   ├── screenshots/          # dashboard, jobs, candidates, analytics
-│   └── phase-0-notes.md      # Design notes for each upgrade phase
+│   └── phase-N-notes.md      # Design notes for each upgrade phase
 ├── sample_jd/                # Sample job description
 ├── sample_resumes/           # 12 synthetic sample resumes
 ├── output/                   # Sample CLI output
@@ -418,9 +473,14 @@ Hire-AI/
     ├── test_agent.py
     ├── test_platform.py
     ├── test_api_contract.py
+    ├── test_concurrency.py
     ├── test_parsers.py
     ├── test_llm.py
-    └── test_score_regression.py
+    ├── test_score_regression.py
+    ├── test_chunking.py
+    ├── test_embeddings.py
+    ├── test_indexing.py
+    └── test_migrations.py
 ```
 
 ---
