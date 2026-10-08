@@ -99,11 +99,11 @@ def test_create_job_validation(client, body, message):
     assert (response.status_code, response.get_json()) == (400, {"error": message})
 
 
-def test_known_issue_create_job_with_non_json_body_returns_500(client):
-    """Should be 415; the 415 is caught by the handler's generic except and leaked as a 500."""
+def test_create_job_with_non_json_body_returns_415(client):
+    """Regression: was a 500 that leaked the 415 message through a generic except."""
     response = client.post("/api/jobs", data={"title": "x"})
-    assert response.status_code == 500
-    assert "415 Unsupported Media Type" in response.get_json()["error"]
+    assert response.status_code == 415
+    assert "application/json" in response.get_json()["error"]
 
 
 def test_list_get_update_delete_job(client):
@@ -216,12 +216,12 @@ def test_upload_sanitizes_filename(client, tmp_path):
     assert (tmp_path / body["resume_filename"]).exists()
 
 
-def test_known_issue_oversized_upload_returns_500(client):
-    """Should be 413; the limit error is caught by the generic except and leaked as a 500."""
+def test_oversized_upload_returns_413(client):
+    """Regression: was a 500 that leaked the 413 message through a generic except."""
     job = make_job(client)
     response = upload(client, job["id"], name="big.txt", data=b"a" * (11 * 1024 * 1024))
-    assert response.status_code == 500
-    assert "413 Request Entity Too Large" in response.get_json()["error"]
+    assert response.status_code == 413
+    assert response.get_json() == {"error": "The data value transmitted exceeds the capacity limit."}
 
 
 def test_duplicate_upload_is_rejected_and_file_removed(client, tmp_path):
@@ -361,12 +361,11 @@ def test_update_candidate_status_and_notes(client):
 
 
 def test_known_issue_non_string_status_returns_500(client):
-    """Should be 400; .upper() on an int raises and the AttributeError text is returned."""
+    """Should be 400 (request validation arrives with FastAPI). No longer leaks the AttributeError text."""
     job = make_job(client)
     cid = upload(client, job["id"]).get_json()["id"]
     response = client.put(f"/api/candidates/{cid}", json={"status": 5})
-    assert response.status_code == 500
-    assert "upper" in response.get_json()["error"]
+    assert (response.status_code, response.get_json()) == (500, {"error": "Internal server error"})
 
 
 def test_download_and_delete_resume(client, tmp_path):
@@ -560,11 +559,26 @@ def test_create_template_rejects_non_numeric_weight(client):
     assert response.get_json()["error"].startswith("Invalid weight value:")
 
 
-def test_known_issue_duplicate_template_name_leaks_sql(client):
-    """Should be a 409 with a plain message; returns 500 containing the SQL statement and parameters."""
+def test_duplicate_template_name_returns_409_without_sql(client):
+    """Regression: used to return 500 with the INSERT statement and its parameters."""
+    duplicate = {"error": "A scoring template with this name already exists"}
+    created = client.post("/api/scoring-templates", json={"name": "Default"})
+    assert (created.status_code, created.get_json()) == (409, duplicate)
+
+    mine = client.post("/api/scoring-templates", json={"name": "Mine"}).get_json()
+    renamed = client.put(f"/api/scoring-templates/{mine['id']}", json={"name": "Default"})
+    assert (renamed.status_code, renamed.get_json()) == (409, duplicate)
+    assert client.get(f"/api/scoring-templates/{mine['id']}").get_json()["name"] == "Mine"
+    same_name = client.put(f"/api/scoring-templates/{mine['id']}", json={"name": "Mine", "skill_weight": 0.3})
+    assert same_name.status_code == 200  # keeping your own name is not a duplicate
+
+
+def test_duplicate_template_race_is_caught_by_the_database(client, app_module, monkeypatch):
+    """If two requests pass the pre-check at once, the unique index still yields a clean 409."""
+    monkeypatch.setattr(app_module, "_template_name_taken", lambda db, name: False)
     response = client.post("/api/scoring-templates", json={"name": "Default"})
-    assert response.status_code == 500
-    assert "INSERT INTO scoring_templates" in response.get_json()["error"]
+    assert (response.status_code, response.get_json()) == (
+        409, {"error": "A scoring template with this name already exists"})
 
 
 def test_update_template(client):
@@ -658,3 +672,52 @@ def test_known_issue_method_not_allowed_returns_html(client):
     response = client.delete("/api/jobs")
     assert response.status_code == 405
     assert response.get_json(silent=True) is None
+
+
+# --- No internals in error responses ---------------------------------------------
+
+SECRET = "SECRET-db-password=hunter2 /srv/hireai/uploads SELECT * FROM candidates"
+
+
+class _BrokenSession:
+    """A database session where every operation fails with a message full of internals."""
+
+    def __getattr__(self, name):
+        if name in ("close", "rollback"):
+            return lambda *a, **k: None
+
+        def fail(*args, **kwargs):
+            raise RuntimeError(SECRET)
+        return fail
+
+
+def _db_routes(app_module):
+    """Every route that touches the database, with ids filled in, from Flask's own route table."""
+    skip = {"serve_dashboard", "health_check", "info", "static"}
+    for rule in app_module.app.url_map.iter_rules():
+        if rule.endpoint in skip:
+            continue
+        url = re.sub(r"<int:\w+>", "1", rule.rule)
+        for method in sorted(rule.methods - {"HEAD", "OPTIONS"}):
+            yield method, url
+
+
+def test_server_errors_never_reach_the_client(client, app_module, monkeypatch, caplog):
+    monkeypatch.setattr(app_module, "get_db", lambda: _BrokenSession())
+    routes = list(_db_routes(app_module))
+    assert len(routes) == 22  # 25 routes minus the dashboard page, health and info
+
+    for method, url in routes:
+        caplog.clear()
+        kwargs = {"json": {"title": "t", "description_text": "d", "name": "n", "status": "Hired"}}
+        if (method, url) == ("POST", "/api/candidates"):
+            kwargs = {"query_string": {"job_id": 1}, "content_type": "multipart/form-data",
+                      "data": {"resume": (io.BytesIO(b"Jo Bloggs\njo@x.com"), "jo.txt")}}
+        response = client.open(url, method=method, **kwargs)
+
+        assert response.status_code == 500, (method, url, response.status_code)
+        assert response.get_json() == {"error": "Internal server error"}, (method, url)
+        assert "hunter2" not in response.get_data(as_text=True), (method, url)
+        # ...but the full details are in the server log, with a traceback.
+        assert SECRET in caplog.text, (method, url)
+        assert any(r.exc_info for r in caplog.records), (method, url)

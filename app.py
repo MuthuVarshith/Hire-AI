@@ -1,6 +1,7 @@
 """Flask backend for the Recruiting Agent platform."""
 import os
 import re
+import sys
 import uuid
 import logging
 from pathlib import Path
@@ -9,7 +10,9 @@ from functools import wraps
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, Session
+from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
 
 # Load environment variables
@@ -80,6 +83,21 @@ def download_name(stored_name: str) -> str:
     """The name a stored file is downloaded as: its sanitized original name."""
     match = _STORED_NAME.match(stored_name)
     return match.group(1) if match else stored_name
+
+
+def error_response(action: str):
+    """Response for an exception caught in a request handler. Call from inside `except`.
+
+    Full details (message and traceback) go to the server log only; clients never see
+    exception text, SQL or file paths. Client errors Werkzeug raises while reading the
+    request (413 too large, 415 not JSON) keep their status and standard public message.
+    """
+    exc = sys.exc_info()[1]
+    if isinstance(exc, HTTPException) and exc.code is not None and exc.code < 500:
+        logger.info("Rejected request while %s: HTTP %s", action, exc.code)
+        return jsonify({"error": exc.description}), exc.code
+    logger.exception("Unexpected error while %s", action)
+    return jsonify({"error": "Internal server error"}), 500
 
 
 def _remove_upload(stored_name: str) -> None:
@@ -165,10 +183,9 @@ def create_job():
         logger.info(f"Created job {job.id}: {job.title}")
         return jsonify(job.to_dict()), 201
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        logger.error(f"Error creating job: {e}")
-        return jsonify({"error": str(e)}), 500
+        return error_response("creating job")
     finally:
         db.close()
 
@@ -218,10 +235,9 @@ def update_job(job_id):
         logger.info(f"Updated job {job_id}")
         return jsonify(job.to_dict()), 200
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        logger.error(f"Error updating job: {e}")
-        return jsonify({"error": str(e)}), 500
+        return error_response("updating job")
     finally:
         db.close()
 
@@ -244,10 +260,9 @@ def delete_job(job_id):
         logger.info(f"Deleted job {job_id} and {len(resume_files)} resume file(s)")
         return jsonify({"message": "Job deleted"}), 200
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        logger.error(f"Error deleting job: {e}")
-        return jsonify({"error": str(e)}), 500
+        return error_response("deleting job")
     finally:
         db.close()
 
@@ -325,10 +340,9 @@ def upload_candidate(job_id):
         logger.info(f"Created candidate {candidate.id}: {candidate.name}")
         return jsonify(candidate.to_dict(include_screening=False)), 201
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        logger.error(f"Error uploading candidate: {e}")
-        return jsonify({"error": str(e)}), 500
+        return error_response("uploading candidate")
     finally:
         db.close()
 
@@ -415,10 +429,9 @@ def update_candidate(candidate_id):
         logger.info(f"Updated candidate {candidate_id}")
         return jsonify(candidate.to_dict()), 200
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        logger.error(f"Error updating candidate: {e}")
-        return jsonify({"error": str(e)}), 500
+        return error_response("updating candidate")
     finally:
         db.close()
 
@@ -462,10 +475,9 @@ def delete_candidate(candidate_id):
         logger.info(f"Deleted candidate {candidate_id}")
         return jsonify({"message": "Candidate deleted"}), 200
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        logger.error(f"Error deleting candidate: {e}")
-        return jsonify({"error": str(e)}), 500
+        return error_response("deleting candidate")
     finally:
         db.close()
 
@@ -592,10 +604,9 @@ def screen_candidate(candidate_id, job_id):
         logger.info(f"Screened candidate {candidate_id} against job {job_id}: score {score_result.composite_score:.2f}")
         return jsonify(screening.to_dict()), 201
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        logger.error(f"Error screening candidate: {e}")
-        return jsonify({"error": str(e)}), 500
+        return error_response("screening candidate")
     finally:
         db.close()
 
@@ -672,9 +683,8 @@ def get_interview_questions(candidate_id, job_id):
 
         return jsonify(questions), 200
 
-    except Exception as e:
-        logger.error(f"Error generating interview questions: {e}")
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return error_response("generating interview questions")
     finally:
         db.close()
 
@@ -682,6 +692,14 @@ def get_interview_questions(candidate_id, job_id):
 # ============================================================================
 # SCORING TEMPLATES ENDPOINTS
 # ============================================================================
+
+def _template_name_taken(db: Session, name: str) -> bool:
+    return db.query(ScoringTemplate.id).filter(ScoringTemplate.name == name).first() is not None
+
+
+def _duplicate_template_response():
+    return jsonify({"error": "A scoring template with this name already exists"}), 409
+
 
 @app.route('/api/scoring-templates', methods=['POST'])
 def create_scoring_template():
@@ -702,6 +720,9 @@ def create_scoring_template():
         if abs((semantic + skill + exp + edu) - 1.0) > 1e-9:
             return jsonify({"error": "Weights must sum to 1.0"}), 400
 
+        if _template_name_taken(db, data['name']):
+            return _duplicate_template_response()
+
         template = ScoringTemplate(
             name=data['name'],
             description=data.get('description', ''),
@@ -721,10 +742,13 @@ def create_scoring_template():
 
     except ValueError as e:
         return jsonify({"error": f"Invalid weight value: {e}"}), 400
-    except Exception as e:
+    except IntegrityError:
+        # Backstop for two requests creating the same name at once; the pre-check covers the normal case.
         db.rollback()
-        logger.error(f"Error creating template: {e}")
-        return jsonify({"error": str(e)}), 500
+        return _duplicate_template_response()
+    except Exception:
+        db.rollback()
+        return error_response("creating template")
     finally:
         db.close()
 
@@ -764,6 +788,10 @@ def update_scoring_template(template_id):
 
         data = request.json or {}
 
+        # Check before assigning: queries autoflush pending changes, which would hit the unique index.
+        if 'name' in data and data['name'] != template.name and _template_name_taken(db, data['name']):
+            return _duplicate_template_response()
+
         if 'name' in data:
             template.name = data['name']
         if 'description' in data:
@@ -788,10 +816,12 @@ def update_scoring_template(template_id):
     except ValueError as e:
         db.rollback()
         return jsonify({"error": f"Invalid weight value: {e}"}), 400
-    except Exception as e:
+    except IntegrityError:
         db.rollback()
-        logger.error(f"Error updating template: {e}")
-        return jsonify({"error": str(e)}), 500
+        return _duplicate_template_response()
+    except Exception:
+        db.rollback()
+        return error_response("updating template")
     finally:
         db.close()
 
@@ -813,10 +843,9 @@ def delete_scoring_template(template_id):
         logger.info(f"Deleted template {template_id}")
         return jsonify({"message": "Template deleted"}), 200
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        logger.error(f"Error deleting template: {e}")
-        return jsonify({"error": str(e)}), 500
+        return error_response("deleting template")
     finally:
         db.close()
 
