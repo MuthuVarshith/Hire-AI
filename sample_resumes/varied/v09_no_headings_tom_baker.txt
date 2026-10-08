@@ -1,0 +1,9 @@
+Tom Baker, tom.baker@example.com, (555) 201-0009.
+
+I am a DevOps engineer with about seven years of experience. Most recently at Granite Cloud
+(2021 to now) I run the CI/CD platform: GitHub Actions and Argo CD deploying to three Kubernetes
+clusters, all managed with Terraform. Before that I was a systems administrator at Oakridge
+Bank (2017 to 2021), where I automated Linux server patching with Ansible.
+
+I hold the Certified Kubernetes Administrator (CKA) certification and an AWS Solutions
+Architect Associate certification. I studied Network Engineering at Midvale Polytechnic.

@@ -1,0 +1,22 @@
+Chen Wei
+chen.wei@example.com | (555) 201-0014
+
+Research Interests
+Efficient transformers, model compression, on-device inference.
+
+Education
+Ph.D. Computer Science, Ashford University, 2024. Thesis: "Structured pruning for small language models".
+M.S. Computer Science, Ashford University, 2020
+
+Experience
+Research Scientist, Corvid Labs (2024 - Present)
+Quantized 7B-parameter language models to 4-bit for laptop inference with under 2% accuracy loss.
+Research Intern, Halcyon AI (Summer 2022)
+Prototyped knowledge distillation for speech recognition models in PyTorch.
+
+Publications
+- "Pruning Heads You Can Afford to Lose", workshop paper, 2023
+- "Tiny but Mighty: Distilling Speech Models", conference paper, 2022
+
+Skills
+PyTorch, JAX, CUDA, quantization, knowledge distillation, Python, C++

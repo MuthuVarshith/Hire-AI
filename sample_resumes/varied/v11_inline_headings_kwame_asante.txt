@@ -1,0 +1,7 @@
+Kwame Asante - kwame.asante@example.com - (555) 201-0011
+Summary: Mobile developer, 4 years, Android and cross-platform.
+Experience: Android Developer at Savanna Mobile (2022-present) - shipped a Kotlin and Jetpack
+Compose banking app with 500k installs; Junior Developer at Pixelcraft (2021-2022) - built
+Flutter prototypes for clients.
+Skills: Kotlin, Jetpack Compose, Flutter, Dart, Firebase, REST APIs, Git
+Education: B.Sc. Computer Science, Accra Technical University, 2021

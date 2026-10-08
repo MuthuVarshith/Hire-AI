@@ -1,0 +1,21 @@
+Omar Haddad
+omar.haddad@example.com · (555) 201-0007
+
+Summary
+Machine learning engineer with 5 years of experience shipping NLP and LLM features.
+
+Experience
+Machine Learning Engineer, Northwind AI (2022 - Present)
+Built a retrieval-augmented generation (RAG) assistant over 2M support articles using pgvector,
+a cross-encoder reranker and GPT-class models; cut average handling time by 18%.
+Set up offline evaluation with RAGAS and a 400-question golden set.
+Deployed model services with FastAPI and Docker on Google Cloud Run.
+
+Data Scientist, Bluepeak Retail (2020 - 2022)
+Forecasted weekly demand for 3,000 products with LightGBM; owned the feature store in BigQuery.
+
+Skills
+Python, PyTorch, Hugging Face, LangChain, pgvector, FAISS, RAGAS, FastAPI, Docker, GCP, BigQuery
+
+Education
+M.S. Computer Science (NLP track), Westbrook University, 2020

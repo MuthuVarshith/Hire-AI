@@ -1,0 +1,22 @@
+Aarav Mehta
+aarav.mehta@example.com | +1 (555) 201-0001 | github.com/aarav-example
+
+EDUCATION
+B.Tech in Computer Science, Riverbend Institute of Technology, 2026
+CGPA 8.7/10. Coursework: Machine Learning, Databases, Operating Systems
+
+PROJECTS
+Campus Chatbot (2025)
+Built a retrieval-augmented chatbot over university policy PDFs using LangChain, FAISS and a
+small open-source LLM. Answered 300+ student questions during orientation week.
+
+Expense Splitter API (2024)
+REST API in FastAPI with PostgreSQL and SQLAlchemy; containerized with Docker for a class demo.
+Not deployed beyond the course.
+
+SKILLS
+Python, FastAPI, PostgreSQL, Docker (coursework), LangChain, FAISS, Git
+
+INTERNSHIP
+Data Intern, Lumen Analytics (Summer 2025, 10 weeks)
+Cleaned survey data with pandas and built Tableau dashboards.

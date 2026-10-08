@@ -1,0 +1,16 @@
+LIAM NOVAK
+Email: liam.novak@example.com
+Phone: (555) 201-0003
+
+OBJECTIVE
+Entry-level frontend developer looking for a first role building accessible web apps.
+
+ACADEMIC PROJECTS
+* Recipe finder - React and TypeScript single-page app using a public recipes API; deployed on Netlify.
+* Accessibility audit tool - browser extension that flags missing alt text and low colour contrast.
+
+TECHNICAL SKILLS
+JavaScript, TypeScript, React, HTML, CSS, Tailwind, Jest, Figma
+
+EDUCATION
+Diploma in Web Development, Harbor City College, 2026

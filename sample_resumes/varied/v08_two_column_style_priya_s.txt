@@ -1,0 +1,12 @@
+PRIYA SUBRAMANIAN                                   priya.s@example.com | (555) 201-0008
+Data Analyst                                        Austin, TX
+
+SKILLS                                              EXPERIENCE
+SQL (advanced)                                      Senior Data Analyst, Cedar Health (2021 - Present)
+Python (pandas)                                     Built Looker dashboards used by 200+ clinicians;
+Looker, Tableau                                     automated monthly KPI reporting in SQL and dbt.
+dbt                                                 Data Analyst, Cedar Health (2019 - 2021)
+A/B testing                                         Analysed A/B tests for the patient portal.
+
+EDUCATION
+B.A. Economics, Pinecrest College, 2019

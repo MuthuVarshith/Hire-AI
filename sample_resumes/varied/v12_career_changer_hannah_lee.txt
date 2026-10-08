@@ -1,0 +1,19 @@
+Hannah Lee
+hannah.lee@example.com
+(555) 201-0012
+
+Career Summary
+Former high-school chemistry teacher (6 years) who moved into data analysis through a
+bootcamp. Strong at explaining results to non-technical audiences.
+
+Relevant Experience
+Junior Data Analyst, Brightfield Schools Network (2024 - Present)
+Built attendance and grade dashboards in Power BI; wrote SQL queries against SQL Server.
+
+Teacher, Westgate High School (2017 - 2023)
+
+Certificates
+Data Analytics Bootcamp, Codeway Academy, 2023 (12 weeks, Python, SQL, Power BI)
+
+Skills
+SQL Server, Power BI, Excel, Python (pandas, basic), data storytelling

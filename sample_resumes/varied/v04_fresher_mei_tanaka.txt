@@ -1,0 +1,8 @@
+Mei Tanaka
+mei.tanaka@example.com
+
+Education: B.Sc. Software Engineering, Eastvale University, expected 2026
+Skills: Go, Python, gRPC, Redis, Docker, Kubernetes (minikube), Linux, Bash
+Projects: Built a rate limiter service in Go backed by Redis, load-tested to 5k requests/second
+on a laptop. Wrote a Kubernetes operator tutorial for a university club using minikube.
+Interests: distributed systems, competitive programming (ICPC regional finalist 2025)

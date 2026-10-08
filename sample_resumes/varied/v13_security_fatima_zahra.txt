@@ -1,0 +1,23 @@
+FATIMA ZAHRA
+Application Security Engineer | fatima.zahra@example.com | (555) 201-0013
+
+PROFILE
+Security engineer specialising in application security, threat modelling and secure SDLC.
+
+EMPLOYMENT HISTORY
+Application Security Engineer, Ironclad Insurance (2021 - Present)
+* Ran threat-modelling sessions for 25 services; embedded SAST (Semgrep) and dependency scanning
+  in CI for 300 repositories.
+* Led the response to a leaked API key incident; rotated secrets and moved them to HashiCorp Vault.
+
+Security Analyst, Northstar Bank (2018 - 2021)
+* Triaged penetration-test findings and tracked remediation with engineering teams.
+
+CERTIFICATIONS
+OSCP, CISSP
+
+TECHNICAL SKILLS
+Threat modelling, OWASP Top 10, Semgrep, Burp Suite, HashiCorp Vault, Python, Go, AWS IAM
+
+EDUCATION
+BSc Cybersecurity, Kingsbridge University, 2018

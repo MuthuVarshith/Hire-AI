@@ -1,0 +1,43 @@
+Elena Petrova
+elena.petrova@example.com | (555) 201-0010 | Berlin, Germany (open to remote)
+
+SUMMARY
+Engineering manager and former full-stack engineer with 14 years of experience across fintech
+and e-commerce. Comfortable owning roadmaps, hiring, and hands-on architecture reviews.
+
+WORK EXPERIENCE
+
+Engineering Manager, Lindenpay (2021 - Present)
+- Manage two teams (11 engineers) owning checkout and fraud detection.
+- Hired 9 engineers; built the interview loop and leveling guide.
+- Drove the adoption of feature flags and trunk-based development; deploy frequency rose from
+  weekly to 20+ times per day.
+- Partnered with data science to ship a fraud model that reduced chargebacks by 23%.
+
+Tech Lead, Lindenpay (2018 - 2021)
+- Led the rebuild of the checkout frontend in React and TypeScript with a Node.js BFF.
+- Introduced end-to-end testing with Playwright, cutting checkout regressions by half.
+
+Senior Full-Stack Engineer, Marktplatz GmbH (2014 - 2018)
+- Built seller tools in Ruby on Rails and React; scaled the catalog search on Elasticsearch.
+- Ran the migration from MySQL to PostgreSQL with zero downtime.
+
+Software Engineer, Webwerk Agency (2011 - 2014)
+- Delivered client sites in PHP and JavaScript.
+
+PROJECTS
+- Open-source maintainer of a small React form-validation library (1.2k GitHub stars).
+- Speaker at a regional JavaScript meetup on trunk-based development.
+
+SKILLS
+Leadership: hiring, mentoring, roadmap planning, incident management
+Engineering: TypeScript, React, Node.js, Ruby on Rails, PostgreSQL, Elasticsearch, Playwright
+
+CERTIFICATIONS
+- Professional Scrum Master I
+
+EDUCATION
+M.Sc. Computer Science, Technical University of Hamburg, 2011
+
+LANGUAGES
+English (fluent), German (native), Russian (native)

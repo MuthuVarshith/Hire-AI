@@ -1,0 +1,16 @@
+Diego Ramos | diego.ramos@example.com | (555) 201-0005
+
+=== SUMMARY ===
+Final-year student focused on data engineering.
+
+=== PROJECTS ===
+City bike trips pipeline: Airflow DAG that ingests daily CSV dumps into a PostgreSQL warehouse,
+with dbt models for daily station usage. Ran locally with Docker Compose.
+
+Streaming demo: Kafka producer and consumer in Python that simulated sensor readings.
+
+=== SKILLS ===
+Python, SQL, Airflow, dbt, Kafka (demo only), PostgreSQL, Docker Compose
+
+=== EDUCATION ===
+B.Sc. Information Systems, Coastline University, 2026

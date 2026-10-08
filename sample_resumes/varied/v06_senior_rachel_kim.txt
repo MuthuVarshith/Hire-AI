@@ -1,0 +1,27 @@
+Rachel Kim
+rachel.kim@example.com | (555) 201-0006 | Seattle, WA
+
+PROFESSIONAL SUMMARY
+Staff backend engineer with 11 years building high-throughput APIs and event-driven systems.
+
+PROFESSIONAL EXPERIENCE
+Staff Software Engineer, Tidewater Logistics (2020 - Present)
+- Led the migration of the shipment-tracking platform from a Django monolith to FastAPI
+  microservices running in production on Kubernetes (EKS), serving 40M requests per day.
+- Designed the Kafka-based event backbone (30+ topics) for real-time shipment status updates.
+- Mentored 6 engineers; introduced contract testing with Pact.
+
+Senior Software Engineer, Brightline Payments (2016 - 2020)
+- Built the payment-reconciliation service in Python and PostgreSQL; reduced nightly job time
+  from 5 hours to 40 minutes with partitioned tables.
+- Owned on-call for the ledger service; wrote the incident runbooks.
+
+Software Engineer, Quarry Labs (2014 - 2016)
+- Maintained internal tools in Flask and MySQL.
+
+SKILLS
+Python, FastAPI, Django, Flask, Kafka, PostgreSQL, MySQL, Redis, Docker, Kubernetes, AWS (EKS,
+RDS, SQS), Terraform, Pact
+
+EDUCATION
+B.S. Computer Engineering, Lakeshore State University, 2014
