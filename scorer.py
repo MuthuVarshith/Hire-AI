@@ -1,6 +1,6 @@
 """Scoring engine — computes multi-signal relevance scores for candidates."""
 import numpy as np
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from config import ResumeProfile, JobRequirements, CandidateScore, WEIGHTS, EMBEDDING_MODEL
 
 try:
@@ -15,7 +15,7 @@ except ImportError:
 _cached_model = None
 
 
-def load_embedding_model():
+def load_embedding_model() -> Any:
     """Load and cache the SentenceTransformer embedding model."""
     global _cached_model
     if _cached_model is not None:

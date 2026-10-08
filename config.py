@@ -56,8 +56,15 @@ WEIGHTS = {
 }
 
 # Model configuration
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+EMBEDDING_MODEL = "all-MiniLM-L6-v2"  # used for scoring, always, regardless of EMBEDDING_PROVIDER
 GEMINI_MODEL = os.getenv("GEMINI_MODEL") or "gemini-3.8-flash"
+
+# Retrieval embeddings (embeddings.py). Changing these requires re-embedding stored chunks.
+EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER") or "sentence-transformers"
+EMBEDDING_API_MODEL = os.getenv("EMBEDDING_API_MODEL") or "gemini-embedding-001"
+# 768 rather than the 3072 default: Google recommends it, and pgvector's HNSW index supports
+# at most 2000 dimensions for the vector type.
+EMBEDDING_API_DIM = int(os.getenv("EMBEDDING_API_DIM") or 768)
 
 _API_KEY_PLACEHOLDER = "your_api_key_here"
 
