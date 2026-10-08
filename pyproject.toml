@@ -23,7 +23,7 @@ select = ["E", "F", "W", "B"]
 python_version = "3.11"
 strict = true
 ignore_missing_imports = true
-files = ["*.py"]
+files = ["*.py", "eval"]
 
 # Ratchet: pre-existing modules not yet typed. Remove a module from this list once it
 # passes strict mode; never add new code here. Most errors come from the untyped

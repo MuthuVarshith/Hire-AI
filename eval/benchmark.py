@@ -8,6 +8,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -39,15 +40,16 @@ class LabelMatch:
     chunk: Chunk
 
 
-def load() -> dict:
-    return json.loads(BENCHMARK.read_text(encoding="utf-8"))
+def load() -> dict[str, Any]:
+    data: dict[str, Any] = json.loads(BENCHMARK.read_text(encoding="utf-8"))
+    return data
 
 
 def chunks_by_resume() -> dict[str, list[Chunk]]:
     return {resume_key(p): chunk_resume(p.read_text(encoding="utf-8")) for p in corpus_files()}
 
 
-def resolve(label: dict, corpus: dict[str, list[Chunk]]) -> list[LabelMatch]:
+def resolve(label: dict[str, Any], corpus: dict[str, list[Chunk]]) -> list[LabelMatch]:
     chunks = corpus.get(label["resume"])
     if chunks is None:
         return []
@@ -56,7 +58,7 @@ def resolve(label: dict, corpus: dict[str, list[Chunk]]) -> list[LabelMatch]:
             if c.section == label["section"] and needle in squash(c.text)]
 
 
-def validate(benchmark: dict, corpus: dict[str, list[Chunk]]) -> list[str]:
+def validate(benchmark: dict[str, Any], corpus: dict[str, list[Chunk]]) -> list[str]:
     problems = []
     for q in benchmark["questions"]:
         seen = set()
@@ -72,7 +74,7 @@ def validate(benchmark: dict, corpus: dict[str, list[Chunk]]) -> list[str]:
     return problems
 
 
-def review_page(benchmark: dict, corpus: dict[str, list[Chunk]]) -> str:
+def review_page(benchmark: dict[str, Any], corpus: dict[str, list[Chunk]]) -> str:
     lines = [
         "# Retrieval benchmark: labels for review",
         "",
