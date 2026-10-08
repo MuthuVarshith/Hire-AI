@@ -3,9 +3,11 @@ import enum
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from sqlalchemy import JSON, Boolean, Enum, Float, ForeignKey, Integer, String, Text, create_engine
-from sqlalchemy.engine import Engine
+from sqlalchemy import (JSON, Boolean, Enum, Float, ForeignKey, Integer, String, Text, UniqueConstraint,
+                        create_engine)
+from sqlalchemy.engine import Dialect, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+from sqlalchemy.types import TypeDecorator, TypeEngine
 
 
 def _utcnow() -> datetime:
@@ -15,6 +17,30 @@ def _utcnow() -> datetime:
 
 class Base(DeclarativeBase):
     pass
+
+
+class EmbeddingVector(TypeDecorator[list[float]]):
+    """An embedding: pgvector's `vector` on PostgreSQL, a JSON array elsewhere (SQLite).
+
+    No fixed dimension, so vectors from different providers can coexist; each row also
+    records the model that produced it, and vectors are only compared within one model.
+    """
+
+    impl = JSON
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[Any]:
+        if dialect.name == "postgresql":
+            from pgvector.sqlalchemy import Vector
+
+            return dialect.type_descriptor(Vector())
+        return dialect.type_descriptor(JSON())
+
+    def process_bind_param(self, value: Optional[list[float]], dialect: Dialect) -> Optional[list[float]]:
+        return None if value is None else [float(x) for x in value]
+
+    def process_result_value(self, value: Any, dialect: Dialect) -> Optional[list[float]]:
+        return None if value is None else [float(x) for x in value]  # pgvector returns a numpy array
 
 
 class PipelineStatus(enum.Enum):
@@ -47,6 +73,8 @@ class Job(Base):
     screening_results: Mapped[list["ScreeningResult"]] = relationship(
         back_populates="job", cascade="all, delete-orphan")
     scoring_template: Mapped[Optional["ScoringTemplate"]] = relationship(back_populates="jobs")
+    chunks: Mapped[list["JobChunk"]] = relationship(
+        back_populates="job", cascade="all, delete-orphan", order_by="JobChunk.chunk_index")
 
     def to_dict(self) -> dict[str, Any]:
         hired = sum(1 for c in self.candidates if c.status == PipelineStatus.HIRED)
@@ -88,6 +116,8 @@ class Candidate(Base):
     job: Mapped[Optional[Job]] = relationship(back_populates="candidates")
     screening_results: Mapped[list["ScreeningResult"]] = relationship(
         back_populates="candidate", cascade="all, delete-orphan")
+    chunks: Mapped[list["ResumeChunk"]] = relationship(
+        back_populates="candidate", cascade="all, delete-orphan", order_by="ResumeChunk.chunk_index")
 
     def to_dict(self, include_screening: bool = False) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -208,6 +238,48 @@ class ScoringTemplate(Base):
             "experience": self.experience_weight or 0.0,
             "education": self.education_weight or 0.0,
         }
+
+
+class ResumeChunk(Base):
+    """A section-aware piece of a candidate's resume, with its embedding (see chunking.py)."""
+    __tablename__ = "resume_chunks"
+    __table_args__ = (UniqueConstraint("candidate_id", "chunk_index", name="uq_resume_chunks_candidate_index"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    candidate_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False, index=True)
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    section: Mapped[str] = mapped_column(String(32), nullable=False)
+    heading: Mapped[Optional[str]] = mapped_column(String(255))
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    char_start: Mapped[int] = mapped_column(Integer, nullable=False)  # text == resume_text[char_start:char_end]
+    char_end: Mapped[int] = mapped_column(Integer, nullable=False)
+    source_file: Mapped[Optional[str]] = mapped_column(String(255))
+    embedding: Mapped[Optional[list[float]]] = mapped_column(EmbeddingVector())
+    embedding_model: Mapped[Optional[str]] = mapped_column(String(128))
+    created_at: Mapped[Optional[datetime]] = mapped_column(default=_utcnow)
+
+    candidate: Mapped[Candidate] = relationship(back_populates="chunks")
+
+
+class JobChunk(Base):
+    """A section-aware piece of a job description, with its embedding (see chunking.py)."""
+    __tablename__ = "job_chunks"
+    __table_args__ = (UniqueConstraint("job_id", "chunk_index", name="uq_job_chunks_job_index"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    job_id: Mapped[int] = mapped_column(Integer, ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True)
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    section: Mapped[str] = mapped_column(String(32), nullable=False)
+    heading: Mapped[Optional[str]] = mapped_column(String(255))
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    char_start: Mapped[int] = mapped_column(Integer, nullable=False)  # text == description_text[char_start:char_end]
+    char_end: Mapped[int] = mapped_column(Integer, nullable=False)
+    embedding: Mapped[Optional[list[float]]] = mapped_column(EmbeddingVector())
+    embedding_model: Mapped[Optional[str]] = mapped_column(String(128))
+    created_at: Mapped[Optional[datetime]] = mapped_column(default=_utcnow)
+
+    job: Mapped[Job] = relationship(back_populates="chunks")
 
 
 def init_db(database_url: str) -> Engine:

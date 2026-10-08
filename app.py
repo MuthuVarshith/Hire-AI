@@ -19,6 +19,7 @@ from werkzeug.utils import secure_filename
 load_dotenv()
 
 # Import our modules
+import indexing
 import llm
 import scorer
 import config as cfg
@@ -101,6 +102,17 @@ def error_response(action: str):
     return jsonify({"error": "Internal server error"}), 500
 
 
+def _index_safely(db: Session, index, record, what: str) -> None:
+    """Chunk and embed a record that is already committed. A failure is logged, never raised:
+    the upload or job is saved either way, and `python -m indexing --reindex` fills the gap."""
+    try:
+        index(db, record)
+        db.commit()
+    except Exception:
+        db.rollback()
+        logger.exception("Indexing failed for %s; run `python -m indexing --reindex` to retry", what)
+
+
 def _remove_upload(stored_name: str) -> None:
     """Delete an uploaded file; a missing file is fine, other errors are logged, not raised."""
     try:
@@ -180,6 +192,7 @@ def create_job():
         db.add(job)
         db.commit()
         db.refresh(job)
+        _index_safely(db, indexing.index_job, job, f"job {job.id}")
 
         logger.info(f"Created job {job.id}: {job.title}")
         return jsonify(job.to_dict()), 201
@@ -227,12 +240,15 @@ def update_job(job_id):
         data = request.json or {}
         if 'title' in data:
             job.title = data['title']
+        description_changed = 'description_text' in data and data['description_text'] != job.description_text
         if 'description_text' in data:
             job.description_text = data['description_text']
         if 'scoring_template_id' in data:
             job.scoring_template_id = data['scoring_template_id']
 
         db.commit()
+        if description_changed:
+            _index_safely(db, indexing.index_job, job, f"job {job_id}")
         logger.info(f"Updated job {job_id}")
         return jsonify(job.to_dict()), 200
 
@@ -337,6 +353,7 @@ def upload_candidate(job_id):
         db.add(candidate)
         db.commit()
         db.refresh(candidate)
+        _index_safely(db, indexing.index_candidate, candidate, f"candidate {candidate.id}")
 
         logger.info(f"Created candidate {candidate.id}: {candidate.name}")
         return jsonify(candidate.to_dict(include_screening=False)), 201

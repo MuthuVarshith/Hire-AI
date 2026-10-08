@@ -69,8 +69,8 @@ def test_upgrade_is_idempotent(engine):
 
 
 def test_adopts_database_created_before_migrations(engine):
-    # What older versions did on startup.
-    models.Base.metadata.create_all(engine)
+    # What older versions did on startup: create_all with the four tables that existed then.
+    models.Base.metadata.create_all(engine, tables=[models.Base.metadata.tables[t] for t in sorted(APP_TABLES)])
     with Session(engine) as session:
         models.create_default_templates(session)
         job = models.Job(title="Existing job", description_text="Python")
