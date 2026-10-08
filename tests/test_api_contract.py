@@ -10,6 +10,7 @@ matching) so results are fast and deterministic; test_score_regression.py
 covers scoring with the real model.
 """
 import io
+import re
 import json
 from pathlib import Path
 
@@ -209,41 +210,74 @@ def test_duplicate_upload_is_rejected_and_file_removed(client, tmp_path):
     job = make_job(client)
     first = upload(client, job["id"]).get_json()
     before = set(p.name for p in tmp_path.iterdir())
-    # Different upload name: same-second uploads of the same name collide (see the known issue below).
     same_person = (REPO / "sample_resumes" / "resume_01_ananya_patel.txt").read_bytes()
-    duplicate = upload(client, job["id"], name="ananya_again.txt", data=same_person)
+    duplicate = upload(client, job["id"])
     assert duplicate.status_code == 409
     assert duplicate.get_json() == {"error": "Duplicate candidate detected", "existing_candidate": {
         "id": first["id"], "name": "Ananya Patel", "email": "ananya.patel@email.com", "status": "Screened"}}
-    assert set(p.name for p in tmp_path.iterdir()) == before
+    assert set(p.name for p in tmp_path.iterdir()) == before  # the original's file survives the rejection
+    original = client.get(f"/api/candidates/{first['id']}/resume")
+    assert original.data == same_person
+    original.close()
 
     # The same person may apply to a different job.
     other = make_job(client, title="Other")
-    assert upload(client, other["id"], name="ananya_other_job.txt", data=same_person).status_code == 201
+    assert upload(client, other["id"]).status_code == 201
 
 
-@pytest.fixture
-def frozen_upload_clock(app_module, monkeypatch):
-    from datetime import datetime
-
-    class FrozenDatetime(datetime):
-        @classmethod
-        def utcnow(cls):
-            return cls(2026, 1, 1, 12, 0, 0)
-
-    monkeypatch.setattr(app_module, "datetime", FrozenDatetime)
-
-
-def test_known_issue_same_second_uploads_overwrite_each_other(client, frozen_upload_clock):
-    """DATA LOSS: stored names are <seconds timestamp>_<original name>, so two uploads of the same
-    file name within one second share a path and the second overwrites the first candidate's resume."""
+def test_same_named_uploads_never_share_storage(client, tmp_path):
+    """Regression: names used to be <timestamp to the second>_<name>, so two same-named uploads
+    within one second shared a path and one candidate was served the other's resume."""
     job = make_job(client)
-    first = upload(client, job["id"], name="resume.txt", data=b"Alice Able\nalice@example.com\nPython").get_json()
-    second = upload(client, job["id"], name="resume.txt", data=b"Bob Baker\nbob@example.com\nGo").get_json()
-    assert first["resume_filename"] == second["resume_filename"]
-    served = client.get(f"/api/candidates/{first['id']}/resume")
-    assert served.data == b"Bob Baker\nbob@example.com\nGo"  # Alice's download returns Bob's resume
-    served.close()
+    # Distinct names: duplicate detection fuzzy-matches names, so "Person 1" and "Person 10" would collide.
+    names = ["Ada Byron", "Bo Chen", "Cy Dorsey", "Di Evans", "Ed Flores", "Fay Gupta", "Gus Hale", "Hal Ito",
+             "Ivy Jones", "Jo Kumar", "Kai Lopez", "Liv Moreno", "Max Nakamura", "Nia Okafor", "Oz Patel",
+             "Pia Quinn", "Rex Romero", "Sue Silva", "Ty Tanaka", "Uma Varga"]
+    resumes = {n: f"{n}\n{n.split()[0].lower()}@example.com\nPython".encode() for n in names}
+    created = {name: upload(client, job["id"], name="resume.txt", data=data).get_json()
+               for name, data in resumes.items()}
+
+    stored = [c["resume_filename"] for c in created.values()]
+    assert len(set(stored)) == 20
+    assert len(list(tmp_path.iterdir())) == 20
+    for name, candidate in created.items():
+        served = client.get(f"/api/candidates/{candidate['id']}/resume")
+        assert served.data == resumes[name]
+        assert 'filename=resume.txt' in served.headers["Content-Disposition"]
+        served.close()
+
+
+@pytest.mark.parametrize("original, kept", [
+    ("resume.pdf", "_resume.pdf"),
+    ("../../evil name.txt", "_evil_name.txt"),
+    ("резюме.pdf", "_resume.pdf"),      # secure_filename drops non-ASCII; the extension must survive
+    ("Lebenslauf_Müller.DOCX", "_Lebenslauf_Muller.docx"),
+])
+def test_storage_name_is_unique_and_keeps_extension(app_module, original, kept):
+    names = {app_module.storage_name(original) for _ in range(1000)}
+    assert len(names) == 1000
+    for name in names:
+        assert re.fullmatch(r"[0-9a-f]{32}_.+", name) and name.lower().endswith(kept.lower())
+        assert "/" not in name and "\\" not in name and ".." not in name
+
+
+@pytest.mark.parametrize("stored, shown", [
+    ("0123456789abcdef0123456789abcdef_resume.pdf", "resume.pdf"),
+    ("20260101_120000_resume.pdf", "resume.pdf"),   # stored by older versions
+    ("plain.pdf", "plain.pdf"),
+])
+def test_download_name_strips_storage_prefix(app_module, stored, shown):
+    assert app_module.download_name(stored) == shown
+
+
+def test_non_ascii_pdf_upload_is_read_as_pdf(client):
+    from tests.test_parsers import _minimal_pdf
+
+    job = make_job(client)
+    pdf = _minimal_pdf(["Jana Novak", "jana.novak@example.com"])
+    body = upload(client, job["id"], name="резюме.pdf", data=pdf).get_json()
+    assert body["resume_filename"].endswith(".pdf")
+    assert (body["name"], body["email"]) == ("Jana Novak", "jana.novak@example.com")
 
 
 def test_list_candidates_filters_and_sorting(client):

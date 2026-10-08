@@ -1,8 +1,9 @@
 """Flask backend for the Recruiting Agent platform."""
 import os
+import re
+import uuid
 import logging
 from pathlib import Path
-from datetime import datetime
 from dotenv import load_dotenv
 from functools import wraps
 
@@ -58,6 +59,27 @@ except Exception as e:
 # Constants
 ALLOWED_RESUME_EXTENSIONS = set(os.getenv('ALLOWED_RESUME_EXTENSIONS', '.txt,.pdf,.docx').split(','))
 ALLOWED_JD_EXTENSIONS = {'.txt', '.pdf', '.docx'}
+
+# <32 hex chars>_<name> today; <YYYYmmdd_HHMMSS>_<name> for files stored by older versions.
+_STORED_NAME = re.compile(r"^(?:[0-9a-f]{32}|\d{8}_\d{6})_(.+)$")
+
+
+def storage_name(original_name: str) -> str:
+    """Unique on-disk name for an upload: <uuid4 hex>_<sanitized original name>.
+
+    The random prefix means two uploads can never share a path. The validated
+    extension is always kept, because secure_filename drops non-ASCII names
+    entirely and the parser picks PDF/DOCX/text reading from the suffix.
+    """
+    path = Path(original_name)
+    stem = secure_filename(path.stem) or "resume"
+    return f"{uuid.uuid4().hex}_{stem}{path.suffix.lower()}"
+
+
+def download_name(stored_name: str) -> str:
+    """The name a stored file is downloaded as: its sanitized original name."""
+    match = _STORED_NAME.match(stored_name)
+    return match.group(1) if match else stored_name
 
 
 def get_db() -> Session:
@@ -239,9 +261,7 @@ def upload_candidate(job_id):
             return jsonify({"error": f"File type {file_ext} not allowed"}), 400
 
         # Save file
-        filename = secure_filename(file.filename)
-        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S_')
-        filename = timestamp + filename
+        filename = storage_name(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
@@ -402,7 +422,7 @@ def download_resume(candidate_id):
         if not os.path.exists(filepath):
             return jsonify({"error": "Resume file not found on disk"}), 404
 
-        return send_file(filepath, as_attachment=True)
+        return send_file(filepath, as_attachment=True, download_name=download_name(candidate.resume_filename))
 
     finally:
         db.close()
