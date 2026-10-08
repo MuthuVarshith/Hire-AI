@@ -122,8 +122,9 @@ def _extract_with_regex(text: str) -> JobRequirements:
                     if skill not in target:
                         target.append(skill)
 
-    jd.required_skills = list(set(req_skills))
-    jd.preferred_skills = list(set(pref_skills))
+    # Already de-duplicated above; keep document order so output is the same on every run.
+    jd.required_skills = req_skills
+    jd.preferred_skills = pref_skills
 
     # Experience
     exp_match = re.search(r'(\d+)[-+]?\s*(?:to\s*\d+\s*)?years?', text, re.IGNORECASE)

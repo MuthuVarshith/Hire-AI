@@ -1,0 +1,26 @@
+Position: Backend Engineer
+Location: Remote
+Experience Level: 4+ years
+
+ROLE SUMMARY
+We are looking for a Backend Engineer to design, build and operate scalable server-side
+services and REST APIs for our logistics platform.
+
+RESPONSIBILITIES
+- Build and maintain REST APIs and background workers.
+- Design database schemas and optimize SQL queries.
+- Containerize services and deploy them to the cloud.
+- Write automated tests and take part in code reviews.
+
+REQUIREMENTS
+- 4+ years of professional backend development experience.
+- Strong Python skills with Django or FastAPI.
+- Experience with PostgreSQL and Redis.
+- Hands-on experience with Docker and AWS.
+- Solid Git and pytest habits.
+- Bachelor's degree in Computer Science or a related field.
+
+NICE TO HAVE
+- Kubernetes and Terraform.
+- Celery or Kafka for asynchronous processing.
+- GraphQL.

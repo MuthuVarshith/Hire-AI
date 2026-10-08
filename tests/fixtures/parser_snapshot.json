@@ -1,0 +1,370 @@
+{
+ "resumes": {
+  "sample_resumes/resume_01_ananya_patel.txt": {
+   "name": "Ananya Patel",
+   "email": "ananya.patel@email.com",
+   "phone": "(512) 555-1010\n\n",
+   "skills": [
+    "python",
+    "pytorch",
+    "tensorflow",
+    "nlp",
+    "large language models",
+    "langchain",
+    "hugging face",
+    "pandas",
+    "numpy",
+    "sql",
+    "git",
+    "github",
+    "docker"
+   ],
+   "experience_years": 6.0,
+   "education": [
+    {
+     "degree": "Master's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  },
+  "sample_resumes/resume_02_michael_chen.txt": {
+   "name": "Michael Chen",
+   "email": "michael.chen@email.com",
+   "phone": "(206) 555-2020\n\n",
+   "skills": [
+    "python",
+    "pytorch",
+    "tensorflow",
+    "nlp",
+    "llms",
+    "mlflow",
+    "pandas",
+    "numpy",
+    "sql",
+    "aws",
+    "docker",
+    "git",
+    "github"
+   ],
+   "experience_years": 4.0,
+   "education": [
+    {
+     "degree": "Master's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  },
+  "sample_resumes/resume_03_sophia_nguyen.txt": {
+   "name": "Sophia Nguyen",
+   "email": "sophia.nguyen@email.com",
+   "phone": "(415) 555-3030\n\n",
+   "skills": [
+    "python",
+    "pytorch",
+    "nlp",
+    "embeddings",
+    "vector databases",
+    "langchain",
+    "hugging face",
+    "sql",
+    "pandas",
+    "git",
+    "github",
+    "pytest"
+   ],
+   "experience_years": 5.0,
+   "education": [
+    {
+     "degree": "Master's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  },
+  "sample_resumes/resume_04_daniel_rivera.txt": {
+   "name": "Daniel Rivera",
+   "email": "daniel.rivera@email.com",
+   "phone": "(312) 555-4040\n\n",
+   "skills": [
+    "python",
+    "javascript",
+    "tensorflow",
+    "llms",
+    "rest apis",
+    "langchain",
+    "docker",
+    "git",
+    "github",
+    "sql"
+   ],
+   "experience_years": 3.0,
+   "education": [
+    {
+     "degree": "Master's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  },
+  "sample_resumes/resume_05_priya_nair.txt": {
+   "name": "Priya Nair",
+   "email": "priya.nair@email.com",
+   "phone": "(650) 555-5050\n\n",
+   "skills": [
+    "python",
+    "pytorch",
+    "pandas",
+    "numpy",
+    "sql",
+    "nlp",
+    "docker",
+    "git",
+    "github",
+    "scikit-learn"
+   ],
+   "experience_years": 2.0,
+   "education": [
+    {
+     "degree": "Master's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  },
+  "sample_resumes/resume_06_owen_brooks.txt": {
+   "name": "Owen Brooks",
+   "email": "owen.brooks@email.com",
+   "phone": "(617) 555-6060\n\n",
+   "skills": [
+    "python",
+    "sql",
+    "excel",
+    "git",
+    "github",
+    "basic nlp",
+    "pandas"
+   ],
+   "experience_years": 1.0,
+   "education": [
+    {
+     "degree": "Master's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  },
+  "sample_resumes/resume_07_lina_fernandez.txt": {
+   "name": "Lina Fernandez",
+   "email": "lina.fernandez@email.com",
+   "phone": "(214) 555-7070\n\n",
+   "skills": [
+    "python",
+    "pytorch",
+    "tensorflow",
+    "nlp",
+    "llms",
+    "hugging face",
+    "aws",
+    "docker",
+    "kubernetes",
+    "git",
+    "github"
+   ],
+   "experience_years": 7.0,
+   "education": [
+    {
+     "degree": "Master's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  },
+  "sample_resumes/resume_08_rahul_kumar.txt": {
+   "name": "Rahul Kumar",
+   "email": "rahul.kumar@email.com",
+   "phone": "(972) 555-8080\n\n",
+   "skills": [
+    "java",
+    "python",
+    "rest apis",
+    "sql",
+    "git",
+    "github",
+    "docker",
+    "basic nlp"
+   ],
+   "experience_years": 4.0,
+   "education": [
+    {
+     "degree": "Bachelor's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  },
+  "sample_resumes/resume_09_emma_thompson.txt": {
+   "name": "Emma Thompson",
+   "email": "emma.thompson@email.com",
+   "phone": "(503) 555-9090\n\n",
+   "skills": [
+    "python",
+    "pytorch",
+    "nlp",
+    "transformers",
+    "hugging face",
+    "pandas",
+    "numpy",
+    "sql",
+    "git",
+    "github",
+    "docker"
+   ],
+   "experience_years": 6.0,
+   "education": [
+    {
+     "degree": "Master's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  },
+  "sample_resumes/resume_10_javier_lopez.txt": {
+   "name": "Javier Lopez",
+   "email": "javier.lopez@email.com",
+   "phone": "(949) 555-1000\n\n",
+   "skills": [
+    "python",
+    "llms",
+    "langchain",
+    "vector databases",
+    "embeddings",
+    "sql",
+    "docker",
+    "git",
+    "github",
+    "pandas"
+   ],
+   "experience_years": 3.0,
+   "education": [
+    {
+     "degree": "Master's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  },
+  "sample_resumes/resume_11_maya_chen.txt": {
+   "name": "Maya Chen",
+   "email": "maya.chen@email.com",
+   "phone": "(858) 555-1100\n\n",
+   "skills": [
+    "python",
+    "pytorch",
+    "tensorflow",
+    "nlp",
+    "llms",
+    "aws",
+    "docker",
+    "kubernetes",
+    "git",
+    "github",
+    "mlflow"
+   ],
+   "experience_years": 5.0,
+   "education": [
+    {
+     "degree": "Master's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  },
+  "sample_resumes/resume_12_tariq_hassan.txt": {
+   "name": "Tariq Hassan",
+   "email": "tariq.hassan@email.com",
+   "phone": "(305) 555-1200\n\n",
+   "skills": [
+    "python",
+    "pandas",
+    "numpy",
+    "sql",
+    "scikit-learn",
+    "git",
+    "github",
+    "basic nlp"
+   ],
+   "experience_years": 1.0,
+   "education": [
+    {
+     "degree": "Bachelor's",
+     "field": "",
+     "institution": ""
+    }
+   ],
+   "work_history": []
+  }
+ },
+ "jds": {
+  "sample_jd/jd.txt": {
+   "title": "AI Engineer",
+   "required_skills": [
+    "machine learning",
+    "python",
+    "tensorflow",
+    "pytorch",
+    "pandas",
+    "numpy",
+    "git",
+    "github"
+   ],
+   "preferred_skills": [
+    "aws",
+    "azure",
+    "gcp",
+    "docker",
+    "kubernetes",
+    "ci/cd"
+   ],
+   "min_experience_years": 3.0,
+   "required_education": "Bachelor's",
+   "responsibilities": []
+  },
+  "tests/fixtures/jd_backend_engineer.txt": {
+   "title": "Backend Engineer",
+   "required_skills": [
+    "python",
+    "django",
+    "fastapi",
+    "postgresql",
+    "redis",
+    "aws",
+    "docker",
+    "git",
+    "pytest"
+   ],
+   "preferred_skills": [
+    "kubernetes",
+    "terraform",
+    "celery",
+    "kafka",
+    "graphql"
+   ],
+   "min_experience_years": 4.0,
+   "required_education": "Bachelor's",
+   "responsibilities": []
+  }
+ }
+}

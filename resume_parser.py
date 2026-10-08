@@ -141,7 +141,8 @@ def _extract_with_regex(text: str) -> ResumeProfile:
                 parts = re.split(r'[,|]', cleaned)
                 skills.extend([p.strip().lower() for p in parts if p.strip() and len(p.strip()) < 50])
 
-    profile.skills = list(set([s for s in skills if s and len(s) > 1]))
+    # dict.fromkeys de-duplicates while keeping first-seen order; set() order varies per process.
+    profile.skills = list(dict.fromkeys(s for s in skills if s and len(s) > 1))
 
     # Experience years: look for explicit mention or calculate from work dates
     exp_match = re.search(r'(\d+)\+?\s*years?', text, re.IGNORECASE)
