@@ -27,9 +27,10 @@ import resume_parser
 import interview_generator
 import duplicate_detection
 from models import (
-    init_db, create_default_templates, Job, Candidate, ScreeningResult, ScoringTemplate, PipelineStatus
+    create_default_templates, Job, Candidate, ScreeningResult, ScoringTemplate, PipelineStatus
 )
 from analytics_service import AnalyticsService
+from database import create_database_engine
 
 # Configure logging
 logging.basicConfig(
@@ -49,7 +50,7 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Database setup
 DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///recruiting_agent.db')
-engine = init_db(DATABASE_URL)
+engine = create_database_engine(DATABASE_URL)  # applies migrations
 SessionLocal = sessionmaker(bind=engine)
 
 # Create default templates on startup
