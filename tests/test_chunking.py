@@ -103,13 +103,15 @@ def test_varied_heading_styles():
         ("header", None),
         ("summary", "## Professional Summary"),
         ("experience", "=== WORK EXPERIENCE ==="),
+        ("experience", "=== WORK EXPERIENCE ==="),
         ("projects", "PROJECTS"),
         ("skills", "Skills"),
         ("certifications", "Certifications:"),
         ("education", "EDUCATION"),
     ]
-    experience = next(c for c in chunks if c.section == "experience")
-    assert "Acme" in experience.text and "Initech" in experience.text  # paragraphs packed together
+    acme, initech = [c for c in chunks if c.section == "experience"]
+    assert "Acme" in acme.text and "Initech" not in acme.text  # one chunk per job
+    assert initech.text.startswith("Engineer, Initech")
     assert next(c for c in chunks if c.section == "skills").text == "Python, FastAPI, PostgreSQL, Docker"
 
 
@@ -228,3 +230,31 @@ def test_internship_and_research_interest_headings():
     assert [(c.section, c.text) for c in chunk_resume(text)] == [
         ("header", "Ann Lee"), ("summary", "Model compression."), ("skills", "Python"),
         ("experience", "Data Intern, Lumen")]
+
+
+@pytest.mark.parametrize("line, is_header", [
+    ("Staff Software Engineer, Tidewater Logistics (2020 - Present)", True),
+    ("Applied AI Engineer | Nova AI Labs | 2019-Present", True),
+    ("Research Intern, Halcyon AI (Summer 2022)", True),
+    ("Teacher, Westgate High School (2017 - 2023)", True),
+    ("- Led the migration in 2021 - 2022 of the platform", False),   # a bullet, not a role
+    ("Built a recommender used since 2019.", False),                 # a sentence with a year
+    ("Spoke at the 2019 - presentation track", False),               # 'present' must be a whole word
+])
+def test_job_header_detection(line, is_header):
+    assert chunking._is_job_header(line) is is_header
+
+
+def test_experience_is_split_per_job_and_leading_text_stays_with_the_first():
+    text = NL.join(["Experience", "6 years", "Engineer, Acme (2020 - Present)", "Built APIs.",
+                    "Intern, Initech (2019 - 2020)", "Wrote tests."])
+    jobs = [c.text for c in chunk_resume(text) if c.section == "experience"]
+    assert jobs == ["6 years" + NL + "Engineer, Acme (2020 - Present)" + NL + "Built APIs.",
+                    "Intern, Initech (2019 - 2020)" + NL + "Wrote tests."]
+
+
+def test_wrapped_sentence_with_a_year_is_not_a_new_job():
+    """Found by the benchmark validator: a wrapped line containing '(2021-2022)' was cut as a new job."""
+    text = NL.join(["Experience: Android Developer at Savanna (2022-present) - shipped a Kotlin and Jetpack",
+                    "Compose app; Junior Developer at Pixelcraft (2021-2022) - built Flutter prototypes."])
+    assert len([c for c in chunk_resume(text) if c.section == "experience"]) == 1

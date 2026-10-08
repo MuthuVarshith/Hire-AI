@@ -153,6 +153,37 @@ def _paragraphs(source: str, start: int, end: int) -> list[tuple[int, int]]:
     return spans
 
 
+_YEAR = r"(?:19|20)\d{2}"
+_DATE_RANGE = re.compile(rf"{_YEAR}\s*(?:-|–|—|to)\s*(?:{_YEAR}|present|now|current|today)\b", re.I)
+_PAREN_YEAR = re.compile(rf"\([^()]*{_YEAR}[^()]*\)\s*:?\s*$")
+
+
+def _is_job_header(line: str) -> bool:
+    """A role line such as 'Engineer, Acme (2020 - Present)' or 'ML Engineer | Northwind | 2020-Present'."""
+    stripped = line.strip()
+    if not stripped or len(stripped) > 150 or stripped[0] in "-*•+":
+        return False
+    return bool(_DATE_RANGE.search(stripped) or _PAREN_YEAR.search(stripped))
+
+
+def _job_ranges(source: str, start: int, end: int) -> list[tuple[int, int]]:
+    """Split an experience section at each role line after the first. Text before the first
+    role line (e.g. a '6 years' total) stays with the first job."""
+    cuts: list[int] = []
+    position = start
+    previous = ""
+    for line in source[start:end].splitlines(keepends=True):
+        # A role line starts after a blank line or a finished sentence; a line that continues a
+        # wrapped sentence ("...Kotlin and Jetpack" / "Compose app ... (2021-2022)") is not a new job.
+        after_break = not previous.strip() or previous.rstrip()[-1] in ".;:!?)"
+        if _is_job_header(line) and (after_break or not cuts):
+            cuts.append(position + len(line) - len(line.lstrip()))
+        previous = line
+        position += len(line)
+    bounds = [start] + cuts[1:] + [end]
+    return [(a, b) for a, b in zip(bounds, bounds[1:], strict=False) if source[a:b].strip()]
+
+
 def _split_long(source: str, start: int, end: int, max_chars: int) -> list[tuple[int, int]]:
     """Split one oversized paragraph at line, then sentence, then word boundaries."""
     if end - start <= max_chars:
@@ -183,18 +214,21 @@ def _chunk(source: str, vocabulary: dict[str, tuple[str, ...]], preamble: str, m
         raise ValueError("max_chars must be at least 50")
     spans: list[tuple[str, str | None, int, int]] = []
     for section, heading, start, end in _find_sections(source, vocabulary, preamble):
-        pieces = [piece for p_start, p_end in _paragraphs(source, start, end)
-                  for piece in _split_long(source, p_start, p_end, max_chars)]
-        group: list[tuple[int, int]] = []
-        for span in pieces + [(-1, -1)]:  # sentinel flushes the last group
-            # A chunk is one contiguous slice of the source, so only join paragraphs whose gap is
-            # whitespace; a separator line in between would otherwise end up inside the chunk.
-            joinable = span[0] >= 0 and bool(group) and not source[group[-1][1]:span[0]].strip()
-            if group and (not joinable or span[1] - group[0][0] > max_chars):
-                spans.append((section, heading, group[0][0], group[-1][1]))
-                group = []
-            if span[0] >= 0:
-                group.append(span)
+        # One chunk per job in experience sections: a citation should point at one role, not three.
+        ranges = _job_ranges(source, start, end) if section == "experience" else [(start, end)]
+        for r_start, r_end in ranges:
+            pieces = [piece for p_start, p_end in _paragraphs(source, r_start, r_end)
+                      for piece in _split_long(source, p_start, p_end, max_chars)]
+            group: list[tuple[int, int]] = []
+            for span in pieces + [(-1, -1)]:  # sentinel flushes the last group
+                # A chunk is one contiguous slice of the source, so only join paragraphs whose gap is
+                # whitespace; a separator line in between would otherwise end up inside the chunk.
+                joinable = span[0] >= 0 and bool(group) and not source[group[-1][1]:span[0]].strip()
+                if group and (not joinable or span[1] - group[0][0] > max_chars):
+                    spans.append((section, heading, group[0][0], group[-1][1]))
+                    group = []
+                if span[0] >= 0:
+                    group.append(span)
 
     chunks: list[Chunk] = []
     for section, heading, start, end in spans:
