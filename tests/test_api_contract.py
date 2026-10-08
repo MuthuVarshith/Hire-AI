@@ -136,11 +136,29 @@ def test_delete_job_cascades_to_candidates_and_screenings(client):
     assert client.get(f"/api/screening/{screening['id']}").status_code == 404
 
 
-def test_known_issue_delete_job_leaves_resume_files_on_disk(client, tmp_path):
-    """Candidate rows are deleted with the job, but their uploaded resume files (PII) are not."""
+def test_delete_job_removes_its_candidates_resume_files(client, tmp_path):
+    """Regression: deleting a job used to leave its candidates' resume files (PII) on disk."""
+    job = make_job(client)
+    other = make_job(client, title="Other")
+    doomed = [upload(client, job["id"], name=n).get_json()["resume_filename"]
+              for n in ("resume_01_ananya_patel.txt", "resume_02_michael_chen.txt")]
+    kept = upload(client, other["id"], name="resume_06_owen_brooks.txt").get_json()["resume_filename"]
+    (tmp_path / doomed[1]).unlink()  # an already-missing file must not break the delete
+
+    assert client.delete(f"/api/jobs/{job['id']}").status_code == 200
+    assert not (tmp_path / doomed[0]).exists()
+    assert (tmp_path / kept).exists()  # other jobs' candidates are untouched
+
+
+def test_failed_job_delete_keeps_resume_files(client, tmp_path, app_module, monkeypatch):
     job = make_job(client)
     stored = upload(client, job["id"]).get_json()["resume_filename"]
-    client.delete(f"/api/jobs/{job['id']}")
+
+    def failing_commit(self):
+        raise RuntimeError("database unavailable")
+
+    monkeypatch.setattr(app_module.Session, "commit", failing_commit)
+    assert client.delete(f"/api/jobs/{job['id']}").status_code == 500
     assert (tmp_path / stored).exists()
 
 

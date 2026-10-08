@@ -82,6 +82,16 @@ def download_name(stored_name: str) -> str:
     return match.group(1) if match else stored_name
 
 
+def _remove_upload(stored_name: str) -> None:
+    """Delete an uploaded file; a missing file is fine, other errors are logged, not raised."""
+    try:
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], stored_name))
+    except FileNotFoundError:
+        pass
+    except OSError:
+        logger.exception("Could not delete uploaded file %s", stored_name)
+
+
 def get_db() -> Session:
     """Get database session."""
     return SessionLocal()
@@ -225,9 +235,13 @@ def delete_job(job_id):
         if not job:
             return jsonify({"error": "Job not found"}), 404
 
+        resume_files = [c.resume_filename for c in job.candidates if c.resume_filename]
         db.delete(job)
         db.commit()
-        logger.info(f"Deleted job {job_id}")
+        # Only after the commit: if the delete fails, candidates still exist and need their files.
+        for name in resume_files:
+            _remove_upload(name)
+        logger.info(f"Deleted job {job_id} and {len(resume_files)} resume file(s)")
         return jsonify({"message": "Job deleted"}), 200
 
     except Exception as e:
