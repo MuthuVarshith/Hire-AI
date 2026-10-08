@@ -8,6 +8,7 @@ import chunking
 from chunking import chunk_job_description, chunk_resume
 
 REPO = Path(__file__).resolve().parent.parent
+NL = chr(10)
 SAMPLE_RESUMES = sorted((REPO / "sample_resumes").glob("*.txt"))
 SAMPLE_JDS = [REPO / "sample_jd" / "jd.txt", REPO / "tests" / "fixtures" / "jd_backend_engineer.txt"]
 SEPARATOR = re.compile(r"^\s*[=\-*_~#]{3,}\s*$")
@@ -214,3 +215,16 @@ def test_with_tokenizer_check_every_chunk_is_embedded_whole(tokenizer_model):
         chunks = chunker(source, fits=fits)
         _assert_lossless(source, chunks)
         assert all(fits(c) for c in chunks)
+
+
+def test_internship_and_research_interest_headings():
+    """Found in the varied synthetic resumes: these headings were merged into the previous section."""
+    text = (NL * 2).join([
+        "Ann Lee",
+        "Research Interests" + NL + "Model compression.",
+        "SKILLS" + NL + "Python",
+        "INTERNSHIP" + NL + "Data Intern, Lumen",
+    ])
+    assert [(c.section, c.text) for c in chunk_resume(text)] == [
+        ("header", "Ann Lee"), ("summary", "Model compression."), ("skills", "Python"),
+        ("experience", "Data Intern, Lumen")]

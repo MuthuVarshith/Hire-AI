@@ -20,9 +20,10 @@ DEFAULT_MAX_CHARS = 800
 
 RESUME_SECTIONS: dict[str, tuple[str, ...]] = {
     "summary": ("summary", "professional summary", "career summary", "profile", "professional profile",
-                "objective", "career objective", "about me", "about"),
+                "objective", "career objective", "about me", "about", "research interests"),
     "experience": ("experience", "work experience", "professional experience", "relevant experience",
-                   "employment", "employment history", "work history", "career history"),
+                   "employment", "employment history", "work history", "career history",
+                   "internship", "internships", "internship experience"),
     "projects": ("projects", "personal projects", "key projects", "selected projects", "academic projects",
                  "side projects", "project experience"),
     "skills": ("skills", "technical skills", "core skills", "key skills", "skills and tools", "technologies",
