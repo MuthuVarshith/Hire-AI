@@ -1,7 +1,6 @@
 import os
 import sys
 import argparse
-import logging
 
 # Ensure imports work from the project directory
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -32,7 +31,7 @@ def main():
     # Interactive mode fallback
     jd_path = args.jd
     resumes_dir = args.resumes
-    
+
     if not jd_path or not resumes_dir:
         print("Running in interactive mode. Please provide the required paths.")
         if not jd_path:
@@ -53,18 +52,18 @@ def main():
     try:
         print(f"\n[1/5] Parsing Job Description from {jd_path}...")
         jd = jd_parser.parse_jd(jd_path)
-        
+
         print(f"\n[2/5] Discovering resumes in {resumes_dir}...")
         resume_files = utils.discover_files(resumes_dir)
         print(f"      Found {len(resume_files)} resumes.")
-        
+
         if not resume_files:
             print("No resumes found. Exiting.")
             sys.exit(0)
 
         print(f"\n[3/5] Loading embedding model ({config.EMBEDDING_MODEL})...")
         model = scorer.load_embedding_model()
-        
+
         print(f"\n[4/5] Processing and scoring {len(resume_files)} candidates...")
         scores = []
         for i, resume_file in enumerate(resume_files, 1):
@@ -72,27 +71,27 @@ def main():
             resume = resume_parser.parse_resume(resume_file)
             score = scorer.score_candidate(resume, jd, model)
             scores.append(score)
-            
+
         print("\n[5/5] Ranking candidates...")
         ranked_results = ranker.rank_candidates(scores, api_key=api_key)
-        
+
         print("\n" + "="*50)
         print("RESULTS SUMMARY")
         print("="*50)
         utils.print_results_table(ranked_results)
-        
+
         print(f"\nDetailed View (Top {args.top} Candidates):")
-        for i, res in enumerate(ranked_results[:args.top]):
+        for res in ranked_results[:args.top]:
             utils.print_candidate_detail(res)
-            
+
         # Save results
         os.makedirs(args.output, exist_ok=True)
         json_path = os.path.join(args.output, "ranked_results.json")
         csv_path = os.path.join(args.output, "ranked_results.csv")
         utils.save_json(ranked_results, json_path)
         utils.save_csv(ranked_results, csv_path)
-        
-        print(f"\nSummary: Processing complete. Results saved to:")
+
+        print("\nSummary: Processing complete. Results saved to:")
         print(f"  - {json_path}")
         print(f"  - {csv_path}")
 

@@ -158,7 +158,7 @@ def parse_jd_text(text: str, api_key: str = None) -> JobRequirements:
     if api_key:
         try:
             jd = _extract_with_llm(text, api_key)
-        except Exception as e:
+        except Exception:
             pass
 
     if not jd:

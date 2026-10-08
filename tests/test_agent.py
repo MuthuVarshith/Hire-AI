@@ -2,7 +2,6 @@
 import os
 import json
 import csv
-import pytest
 import sys
 
 # Ensure imports work from the project directory

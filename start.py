@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 """Simple startup script for the Recruiting Platform."""
-import os
 import sys
-import webbrowser
-from pathlib import Path
 
 print("=" * 70)
 print("AI RECRUITING PLATFORM - STARTUP")

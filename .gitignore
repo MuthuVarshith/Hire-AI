@@ -38,3 +38,7 @@ Thumbs.db
 
 # Output (generated files - keep sample output, ignore user runs)
 # output/ is tracked for sample output
+
+# Coverage data
+.coverage
+htmlcov/

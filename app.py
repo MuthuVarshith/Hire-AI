@@ -1,6 +1,5 @@
 """Flask backend for the Recruiting Agent platform."""
 import os
-import json
 import logging
 from pathlib import Path
 from datetime import datetime
@@ -9,10 +8,8 @@ from functools import wraps
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from werkzeug.utils import secure_filename
-from werkzeug.exceptions import BadRequest
 
 # Load environment variables
 load_dotenv()
@@ -23,12 +20,10 @@ import scorer
 import config as cfg
 import jd_parser
 import resume_parser
-import ranker
 import interview_generator
 import duplicate_detection
 from models import (
-    init_db, create_default_templates, Base,
-    Job, Candidate, ScreeningResult, ScoringTemplate, PipelineStatus
+    init_db, create_default_templates, Job, Candidate, ScreeningResult, ScoringTemplate, PipelineStatus
 )
 from analytics_service import AnalyticsService
 

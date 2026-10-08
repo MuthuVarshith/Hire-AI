@@ -134,7 +134,7 @@ def _generate_template_questions(
             "category": "technical",
             "evaluating": f"Proficiency with {skill}",
             "expected_competency": "Hands-on experience and problem-solving ability",
-            "why_asked": f"This skill matched your resume and is required for this role"
+            "why_asked": "This skill matched your resume and is required for this role"
         })
 
     # Resume-based questions
@@ -147,7 +147,7 @@ def _generate_template_questions(
                 "category": "resume",
                 "evaluating": "Impact and accomplishment",
                 "expected_competency": "Clear communication and measurable results",
-                "why_asked": f"This role aligns with the position we're hiring for"
+                "why_asked": "This role aligns with the position we're hiring for"
             })
 
     # Skill gap questions

@@ -81,7 +81,7 @@ def compute_skill_match_score(resume_skills: List[str], required_skills: List[st
         found = False
 
         # 1. Exact substring match (case-insensitive)
-        for j, res in enumerate(resume_skills):
+        for res in resume_skills:
             if req.lower() in res.lower() or res.lower() in req.lower():
                 found = True
                 break

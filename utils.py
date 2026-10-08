@@ -45,11 +45,11 @@ def save_csv(data: list, output_path: str):
         if not data:
             print(f"{Fore.YELLOW}No data to save.")
             return
-        
-        fieldnames = ['rank', 'name', 'file', 'composite_score', 'semantic_score', 
-                      'skill_match_score', 'experience_score', 'education_score', 
+
+        fieldnames = ['rank', 'name', 'file', 'composite_score', 'semantic_score',
+                      'skill_match_score', 'experience_score', 'education_score',
                       'matched_skills', 'missing_skills', 'reasoning']
-        
+
         with open(output_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
@@ -79,7 +79,7 @@ def print_results_table(results: list):
     if not results:
         print(f"{Fore.YELLOW}No results to display.")
         return
-        
+
     table_data = []
     for r in results:
         table_data.append([
@@ -88,7 +88,7 @@ def print_results_table(results: list):
             f"{r.get('composite_score', 0):.1f}",
             f"{len(r.get('matched_skills', []))} skills"
         ])
-    
+
     headers = ["Rank", "Name", "Score", "Matched"]
     print(f"\n{Fore.CYAN}RANKING RESULTS:{Style.RESET_ALL}")
     print(tabulate(table_data, headers=headers, tablefmt="grid"))
@@ -99,10 +99,10 @@ def print_candidate_detail(result: dict):
     print(f"{Fore.YELLOW}Rank:{Style.RESET_ALL} {result.get('rank', '-')}")
     print(f"{Fore.YELLOW}File:{Style.RESET_ALL} {result.get('file', '-')}")
     print(f"{Fore.YELLOW}Composite Score:{Style.RESET_ALL} {result.get('composite_score', 0):.1f}")
-    
+
     matched = result.get('matched_skills', [])
     missing = result.get('missing_skills', [])
-    
+
     print(f"{Fore.GREEN}Matched Skills:{Style.RESET_ALL} {', '.join(matched) if matched else 'None'}")
     print(f"{Fore.RED}Missing Skills:{Style.RESET_ALL} {', '.join(missing) if missing else 'None'}")
     print(f"{Fore.YELLOW}Reasoning:{Style.RESET_ALL}\n{result.get('reasoning', '')}\n")

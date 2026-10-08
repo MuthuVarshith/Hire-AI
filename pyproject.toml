@@ -1,0 +1,37 @@
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Long lines here are LLM prompt strings and log messages in pre-existing modules.
+"app.py" = ["E402", "E501"]  # E402: .env is loaded before project modules are imported
+"interview_generator.py" = ["E501"]
+"jd_parser.py" = ["E501"]
+"ranker.py" = ["E501"]
+"resume_parser.py" = ["E501"]
+"scorer.py" = ["E501"]
+"tests/conftest.py" = ["E402"]  # environment must be set before project imports
+"tests/fixtures/make_parser_snapshot.py" = ["E402"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+files = ["*.py"]
+
+# Ratchet: pre-existing modules not yet typed. Remove a module from this list once it
+# passes strict mode; never add new code here. Most errors come from the untyped
+# SQLAlchemy 1.x-style models, which Phase 1 replaces with typed Mapped[] models.
+[[tool.mypy.overrides]]
+module = [
+    "analytics_service", "app", "config", "duplicate_detection", "interview_generator",
+    "jd_parser", "main", "models", "ranker", "resume_parser", "scorer", "start", "utils",
+]
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: loads the embedding model or runs many cases"]
