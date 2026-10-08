@@ -2,7 +2,7 @@
 
 [![Python 3](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Backend-Flask-black.svg)](https://flask.palletsprojects.com/)
-[![Tests](https://img.shields.io/badge/tests-33%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-126%20passing-brightgreen.svg)](#testing)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 HireAI screens resumes against a job description, gives every candidate an explainable 0–100 score, and gives recruiters a dashboard to track candidates through the hiring pipeline.
@@ -148,11 +148,11 @@ Upload resume → validate type and size → save to uploads/ → parse resume
 | Backend | Python, Flask, Flask-CORS |
 | Database | SQLAlchemy ORM on SQLite |
 | NLP / scoring | Sentence-Transformers (`all-MiniLM-L6-v2`), NumPy |
-| Optional LLM | Google Gemini (`gemini-2.0-flash`) |
+| Optional LLM | Google Gemini via the `google-genai` SDK (default model `gemini-3.8-flash`, set by `GEMINI_MODEL`) |
 | Document parsing | PyPDF2, python-docx |
 | Duplicate matching | fuzzywuzzy, python-Levenshtein |
 | Frontend | Plain HTML, CSS and JavaScript; no build step |
-| Testing | pytest |
+| Quality | pytest, pytest-cov, ruff, mypy |
 
 ---
 
@@ -163,6 +163,8 @@ Upload resume → validate type and size → save to uploads/ → parse resume
 ```bash
 pip install -r requirements.txt
 ```
+
+To run the tests and linters as well, install `requirements-dev.txt` instead.
 
 On the first run the embedding model (about 90 MB) downloads automatically.
 
@@ -178,13 +180,20 @@ Everything works without editing `.env`. The settings you're most likely to chan
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `GOOGLE_API_KEY` | *(unset)* | Turns on Gemini-based parsing and written explanations. Without it, regex parsing and template explanations are used |
+| `GOOGLE_API_KEY` | *(unset)* | Turns on Gemini-based parsing and written explanations. Without it, regex parsing and template explanations are used. Read [Using Gemini](#using-gemini-synthetic-data-only) first |
+| `GEMINI_MODEL` | `gemini-3.8-flash` | Gemini model name. Change it when Google retires a model or your key's free tier doesn't include the default |
 | `DATABASE_URL` | `sqlite:///recruiting_agent.db` | SQLAlchemy connection string |
 | `MAX_RESUME_SIZE_MB` | `10` | Upload size limit |
 | `ALLOWED_RESUME_EXTENSIONS` | `.txt,.pdf,.docx` | Accepted resume file types |
 | `HOST` / `PORT` | `127.0.0.1` / `5000` | Server address, used by `python app.py` |
 
 Never commit `.env`; it is already in `.gitignore`.
+
+#### Using Gemini: synthetic data only
+
+**Only send sample or synthetic resumes to Gemini, never real candidates' data.** Google's Gemini API pricing page states that on the free tier, content is "used to improve our products". Resumes contain personal data (names, emails, phone numbers, employment history), and candidates haven't agreed to share it with a model provider. The same rule applies to any tracing service added later, such as Langfuse Cloud, because traces include prompts and resume excerpts.
+
+The app works fully without a key: leave `GOOGLE_API_KEY` unset when processing real resumes.
 
 ### 3. Database setup
 
@@ -304,13 +313,35 @@ It writes ranked results to `output/ranked_results.json` and `output/ranked_resu
 ## Testing
 
 ```bash
-python -m pytest tests/ -v
+pip install -r requirements-dev.txt
 ```
 
-33 tests across two files:
+```bash
+python -m pytest
+```
 
-- [tests/test_agent.py](tests/test_agent.py): the original scoring engine, data models and output files.
-- [tests/test_platform.py](tests/test_platform.py): database models, weight validation, duplicate detection and analytics calculations.
+```bash
+python -m ruff check .
+```
+
+```bash
+python -m mypy
+```
+
+126 tests across six files. No test calls a real LLM: the suite fails any test that reaches the network instead of using a mocked response.
+
+| File | Tests | What it covers |
+|---|---|---|
+| [tests/test_agent.py](tests/test_agent.py) | 19 | The original scoring signals, data models and CSV/JSON output |
+| [tests/test_platform.py](tests/test_platform.py) | 14 | Database models, duplicate detection, analytics |
+| [tests/test_api_contract.py](tests/test_api_contract.py) | 46 | All 25 API routes: responses, validation, errors and known issues |
+| [tests/test_parsers.py](tests/test_parsers.py) | 25 | Resume and job-description extraction (snapshot), PDF/DOCX reading, the Gemini path with a mocked model |
+| [tests/test_llm.py](tests/test_llm.py) | 17 | The Gemini wrapper, model configuration, API-key lookup, rationale text |
+| [tests/test_score_regression.py](tests/test_score_regression.py) | 5 | Scores are identical to the original code across 120 cases; per-role weights never leak between requests |
+
+The regression test loads the embedding model and takes about a minute; skip it with `python -m pytest -m "not slow"`.
+
+**mypy** runs in strict mode. Modules written before strict typing was adopted are listed in `pyproject.toml` and come off that list as they're typed; new code is never added to it.
 
 ---
 
@@ -334,7 +365,7 @@ python -m pytest tests/ -v
 - **Skill extraction without an API key uses a fixed keyword list.** Skills not on that list, and job descriptions that don't use recognizable section headings, can produce fewer required skills. A job with no extracted required skills gives every candidate a full skill score.
 - **Scoring templates and interview questions are API-only.** Jobs use the default weights unless a template ID is set through the API.
 - **Development server.** Flask's built-in server isn't meant for production traffic.
-- **Static hosting no longer applies.** The dashboard needs the Flask backend running, so a static-only deployment such as the earlier Vercel setup won't serve a working app.
+- **Needs a running server.** The dashboard depends on the Flask backend, so static or serverless hosting (Vercel, Netlify) won't serve a working app.
 
 ---
 
@@ -347,7 +378,7 @@ HireAI is built to **assist** recruiters, not to make hiring decisions.
 - **AI content is labeled.** Written explanations are marked *AI-generated* in the candidate profile.
 - **Humans decide.** Pipeline status only changes when a recruiter changes it.
 - **Known risks.** Semantic similarity rewards resumes that use similar wording to the job description, and education scoring can disadvantage self-taught candidates. Review low scores before rejecting anyone, and don't use the score as the only filter.
-- **Candidate data stays local.** The database and uploaded resumes are stored on your machine and excluded from Git. With a Gemini key set, resume and job text is sent to Google's API for parsing.
+- **Candidate data stays local.** The database and uploaded resumes are stored on your machine and excluded from Git. With a Gemini key set, resume and job text is sent to Google's API, which is why Gemini is for [synthetic data only](#using-gemini-synthetic-data-only).
 
 ---
 
@@ -366,21 +397,30 @@ Hire-AI/
 ├── resume_parser.py          # Resume extraction (original)
 ├── jd_parser.py              # Job description extraction (original)
 ├── ranker.py                 # Ranking and explanations for the CLI (original)
-├── config.py                 # Default weights, model names, data classes
+├── config.py                 # Default weights, model names, data classes, .env loading
+├── llm.py                    # The single place that calls Gemini (google-genai SDK)
 ├── main.py                   # CLI entry point (original)
 ├── utils.py                  # File discovery and CSV/JSON output
 ├── scoring_method.md         # Scoring methodology in detail
-├── requirements.txt
+├── requirements.txt          # Runtime dependencies
+├── requirements-dev.txt      # + pytest, coverage, ruff, mypy
+├── pyproject.toml            # ruff, mypy and pytest settings
 ├── .env.example
 ├── docs/
 │   ├── demo.gif
-│   └── screenshots/          # dashboard, jobs, candidates, analytics
+│   ├── screenshots/          # dashboard, jobs, candidates, analytics
+│   └── phase-0-notes.md      # Design notes for each upgrade phase
 ├── sample_jd/                # Sample job description
-├── sample_resumes/           # 10 sample resumes
+├── sample_resumes/           # 12 synthetic sample resumes
 ├── output/                   # Sample CLI output
 └── tests/
+    ├── fixtures/             # Score baseline, parser snapshot, extra job description
     ├── test_agent.py
-    └── test_platform.py
+    ├── test_platform.py
+    ├── test_api_contract.py
+    ├── test_parsers.py
+    ├── test_llm.py
+    └── test_score_regression.py
 ```
 
 ---
