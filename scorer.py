@@ -1,6 +1,6 @@
 """Scoring engine — computes multi-signal relevance scores for candidates."""
 import numpy as np
-from typing import List, Tuple
+from typing import Dict, List, Optional, Tuple
 from config import ResumeProfile, JobRequirements, CandidateScore, WEIGHTS, EMBEDDING_MODEL
 
 try:
@@ -168,8 +168,19 @@ def compute_education_score(candidate_education: List[dict], required_education:
     return max(0.0, min(100.0, (cand_level / req_level) * 100))
 
 
-def score_candidate(resume: ResumeProfile, jd: JobRequirements, model) -> CandidateScore:
-    """Compute all 4 scores and combine into a weighted composite score."""
+def score_candidate(
+    resume: ResumeProfile,
+    jd: JobRequirements,
+    model,
+    weights: Optional[Dict[str, float]] = None,
+) -> CandidateScore:
+    """Compute all 4 scores and combine into a weighted composite score.
+
+    `weights` overrides the default WEIGHTS for this call only (e.g. a role's
+    scoring template); it is never written back to the shared defaults.
+    """
+    if weights is None:
+        weights = WEIGHTS
     semantic = compute_semantic_score(resume.raw_text, jd.raw_text, model)
     skills_score, matched, missing = compute_skill_match_score(
         resume.skills, jd.required_skills, model
@@ -178,10 +189,10 @@ def score_candidate(resume: ResumeProfile, jd: JobRequirements, model) -> Candid
     education = compute_education_score(resume.education, jd.required_education)
 
     composite = (
-        semantic * WEIGHTS["semantic"] +
-        skills_score * WEIGHTS["skills"] +
-        experience * WEIGHTS["experience"] +
-        education * WEIGHTS["education"]
+        semantic * weights["semantic"] +
+        skills_score * weights["skills"] +
+        experience * weights["experience"] +
+        education * weights["education"]
     )
 
     return CandidateScore(

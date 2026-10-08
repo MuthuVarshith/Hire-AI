@@ -1,0 +1,3673 @@
+{
+ "description": "Scores produced by the pre-refactor code, which applied per-template weights by mutating config.WEIGHTS in place (app.py screen_candidate).",
+ "source_commit": "e2563a7",
+ "environment": {
+  "python": "3.13.0",
+  "torch": "2.7.1+cpu",
+  "sentence_transformers": "5.6.1",
+  "numpy": "2.2.6"
+ },
+ "case_count": 120,
+ "cases": [
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_01_ananya_patel.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 39.54,
+    "skill_match_score": 87.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 74.47,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_01_ananya_patel.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 39.54,
+    "skill_match_score": 87.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 74.47,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_01_ananya_patel.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 39.54,
+    "skill_match_score": 87.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 72.07,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_01_ananya_patel.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 39.54,
+    "skill_match_score": 87.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 79.89,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_01_ananya_patel.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 39.54,
+    "skill_match_score": 87.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 76.86,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_02_michael_chen.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 43.6,
+    "skill_match_score": 87.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 75.88,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_02_michael_chen.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 43.6,
+    "skill_match_score": 87.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 75.88,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_02_michael_chen.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 43.6,
+    "skill_match_score": 87.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 73.69,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_02_michael_chen.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 43.6,
+    "skill_match_score": 87.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 80.9,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_02_michael_chen.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 43.6,
+    "skill_match_score": 87.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 78.08,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_03_sophia_nguyen.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 47.64,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 68.55,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_03_sophia_nguyen.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 47.64,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 68.55,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_03_sophia_nguyen.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 47.64,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 67.81,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_03_sophia_nguyen.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 47.64,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 71.91,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_03_sophia_nguyen.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 47.64,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 69.29,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_04_daniel_rivera.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 40.28,
+    "skill_match_score": 50.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.6,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_04_daniel_rivera.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 40.28,
+    "skill_match_score": 50.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.6,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_04_daniel_rivera.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 40.28,
+    "skill_match_score": 50.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.11,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_04_daniel_rivera.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 40.28,
+    "skill_match_score": 50.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 65.07,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_04_daniel_rivera.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 40.28,
+    "skill_match_score": 50.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 62.08,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_05_priya_nair.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 48.47,
+    "skill_match_score": 75.0,
+    "experience_score": 66.67,
+    "education_score": 100.0,
+    "composite_score": 66.55,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_05_priya_nair.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 48.47,
+    "skill_match_score": 75.0,
+    "experience_score": 66.67,
+    "education_score": 100.0,
+    "composite_score": 68.21,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_05_priya_nair.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 48.47,
+    "skill_match_score": 75.0,
+    "experience_score": 66.67,
+    "education_score": 100.0,
+    "composite_score": 66.89,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_05_priya_nair.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 48.47,
+    "skill_match_score": 75.0,
+    "experience_score": 66.67,
+    "education_score": 100.0,
+    "composite_score": 68.78,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_05_priya_nair.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 48.47,
+    "skill_match_score": 75.0,
+    "experience_score": 66.67,
+    "education_score": 100.0,
+    "composite_score": 67.87,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_06_owen_brooks.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 33.98,
+    "skill_match_score": 50.0,
+    "experience_score": 33.33,
+    "education_score": 100.0,
+    "composite_score": 46.06,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_06_owen_brooks.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 33.98,
+    "skill_match_score": 50.0,
+    "experience_score": 33.33,
+    "education_score": 100.0,
+    "composite_score": 49.39,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_06_owen_brooks.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 33.98,
+    "skill_match_score": 50.0,
+    "experience_score": 33.33,
+    "education_score": 100.0,
+    "composite_score": 48.59,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_06_owen_brooks.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 33.98,
+    "skill_match_score": 50.0,
+    "experience_score": 33.33,
+    "education_score": 100.0,
+    "composite_score": 46.83,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_06_owen_brooks.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 33.98,
+    "skill_match_score": 50.0,
+    "experience_score": 33.33,
+    "education_score": 100.0,
+    "composite_score": 46.86,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_07_lina_fernandez.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 42.96,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 66.91,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_07_lina_fernandez.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 42.96,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 66.91,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_07_lina_fernandez.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 42.96,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 65.93,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_07_lina_fernandez.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 42.96,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 70.74,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_07_lina_fernandez.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 42.96,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 67.89,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_08_rahul_kumar.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 41.98,
+    "skill_match_score": 37.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 57.82,
+    "matched_skills": [
+     "github",
+     "git",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pandas",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_08_rahul_kumar.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 41.98,
+    "skill_match_score": 37.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 57.82,
+    "matched_skills": [
+     "github",
+     "git",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pandas",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_08_rahul_kumar.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 41.98,
+    "skill_match_score": 37.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 58.04,
+    "matched_skills": [
+     "github",
+     "git",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pandas",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_08_rahul_kumar.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 41.98,
+    "skill_match_score": 37.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 60.49,
+    "matched_skills": [
+     "github",
+     "git",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pandas",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_08_rahul_kumar.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 41.98,
+    "skill_match_score": 37.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 57.59,
+    "matched_skills": [
+     "github",
+     "git",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pandas",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_09_emma_thompson.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 33.51,
+    "skill_match_score": 75.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 67.98,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_09_emma_thompson.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 33.51,
+    "skill_match_score": 75.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 67.98,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_09_emma_thompson.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 33.51,
+    "skill_match_score": 75.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 65.9,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_09_emma_thompson.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 33.51,
+    "skill_match_score": 75.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 73.38,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_09_emma_thompson.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 33.51,
+    "skill_match_score": 75.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 70.05,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "pytorch",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_10_javier_lopez.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 41.63,
+    "skill_match_score": 50.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 62.07,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_10_javier_lopez.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 41.63,
+    "skill_match_score": 50.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 62.07,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_10_javier_lopez.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 41.63,
+    "skill_match_score": 50.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.65,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_10_javier_lopez.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 41.63,
+    "skill_match_score": 50.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 65.41,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_10_javier_lopez.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 41.63,
+    "skill_match_score": 50.0,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 62.49,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_11_maya_chen.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 42.14,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 66.62,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_11_maya_chen.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 42.14,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 66.62,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_11_maya_chen.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 42.14,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 65.61,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_11_maya_chen.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 42.14,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 70.53,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_11_maya_chen.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 42.14,
+    "skill_match_score": 62.5,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 67.64,
+    "matched_skills": [
+     "tensorflow",
+     "github",
+     "git",
+     "pytorch",
+     "python"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "pandas",
+     "numpy"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_12_tariq_hassan.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 40.64,
+    "skill_match_score": 62.5,
+    "experience_score": 33.33,
+    "education_score": 100.0,
+    "composite_score": 52.77,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_12_tariq_hassan.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 40.64,
+    "skill_match_score": 62.5,
+    "experience_score": 33.33,
+    "education_score": 100.0,
+    "composite_score": 56.1,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_12_tariq_hassan.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 40.64,
+    "skill_match_score": 62.5,
+    "experience_score": 33.33,
+    "education_score": 100.0,
+    "composite_score": 55.01,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_12_tariq_hassan.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 40.64,
+    "skill_match_score": 62.5,
+    "experience_score": 33.33,
+    "education_score": 100.0,
+    "composite_score": 53.49,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch"
+    ]
+   }
+  },
+  {
+   "jd": "sample_jd/jd.txt",
+   "resume": "sample_resumes/resume_12_tariq_hassan.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 40.64,
+    "skill_match_score": 62.5,
+    "experience_score": 33.33,
+    "education_score": 100.0,
+    "composite_score": 53.86,
+    "matched_skills": [
+     "github",
+     "git",
+     "pandas",
+     "python",
+     "numpy"
+    ],
+    "missing_skills": [
+     "machine learning",
+     "tensorflow",
+     "pytorch"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_01_ananya_patel.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 44.87,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.26,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_01_ananya_patel.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 44.87,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.26,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_01_ananya_patel.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 44.87,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.28,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_01_ananya_patel.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 44.87,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 63.99,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_01_ananya_patel.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 44.87,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.24,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_02_michael_chen.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 51.86,
+    "skill_match_score": 55.56,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 67.6,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_02_michael_chen.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 51.86,
+    "skill_match_score": 55.56,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 67.6,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_02_michael_chen.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 51.86,
+    "skill_match_score": 55.56,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 67.41,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_02_michael_chen.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 51.86,
+    "skill_match_score": 55.56,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 70.19,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_02_michael_chen.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 51.86,
+    "skill_match_score": 55.56,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 67.78,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_03_sophia_nguyen.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 45.76,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.57,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql",
+     "pytest"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_03_sophia_nguyen.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 45.76,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.57,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql",
+     "pytest"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_03_sophia_nguyen.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 45.76,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.64,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql",
+     "pytest"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_03_sophia_nguyen.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 45.76,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 64.22,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql",
+     "pytest"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_03_sophia_nguyen.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 45.76,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.51,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql",
+     "pytest"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_04_daniel_rivera.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.31,
+    "skill_match_score": 44.44,
+    "experience_score": 75.0,
+    "education_score": 100.0,
+    "composite_score": 56.76,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_04_daniel_rivera.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 46.31,
+    "skill_match_score": 44.44,
+    "experience_score": 75.0,
+    "education_score": 100.0,
+    "composite_score": 58.01,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_04_daniel_rivera.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 46.31,
+    "skill_match_score": 44.44,
+    "experience_score": 75.0,
+    "education_score": 100.0,
+    "composite_score": 58.11,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_04_daniel_rivera.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.31,
+    "skill_match_score": 44.44,
+    "experience_score": 75.0,
+    "education_score": 100.0,
+    "composite_score": 58.1,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_04_daniel_rivera.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.31,
+    "skill_match_score": 44.44,
+    "experience_score": 75.0,
+    "education_score": 100.0,
+    "composite_score": 56.67,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_05_priya_nair.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 53.0,
+    "skill_match_score": 44.44,
+    "experience_score": 50.0,
+    "education_score": 100.0,
+    "composite_score": 54.11,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_05_priya_nair.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 53.0,
+    "skill_match_score": 44.44,
+    "experience_score": 50.0,
+    "education_score": 100.0,
+    "composite_score": 56.61,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_05_priya_nair.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 53.0,
+    "skill_match_score": 44.44,
+    "experience_score": 50.0,
+    "education_score": 100.0,
+    "composite_score": 57.03,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_05_priya_nair.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 53.0,
+    "skill_match_score": 44.44,
+    "experience_score": 50.0,
+    "education_score": 100.0,
+    "composite_score": 53.53,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_05_priya_nair.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 53.0,
+    "skill_match_score": 44.44,
+    "experience_score": 50.0,
+    "education_score": 100.0,
+    "composite_score": 53.68,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_06_owen_brooks.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 38.56,
+    "skill_match_score": 33.33,
+    "experience_score": 25.0,
+    "education_score": 100.0,
+    "composite_score": 40.16,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_06_owen_brooks.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 38.56,
+    "skill_match_score": 33.33,
+    "experience_score": 25.0,
+    "education_score": 100.0,
+    "composite_score": 43.91,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_06_owen_brooks.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 38.56,
+    "skill_match_score": 33.33,
+    "experience_score": 25.0,
+    "education_score": 100.0,
+    "composite_score": 44.17,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_06_owen_brooks.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 38.56,
+    "skill_match_score": 33.33,
+    "experience_score": 25.0,
+    "education_score": 100.0,
+    "composite_score": 39.22,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_06_owen_brooks.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 38.56,
+    "skill_match_score": 33.33,
+    "experience_score": 25.0,
+    "education_score": 100.0,
+    "composite_score": 39.9,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_07_lina_fernandez.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 55.53,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 64.99,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python"
+    ],
+    "missing_skills": [
+     "redis",
+     "postgresql",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_07_lina_fernandez.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 55.53,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 64.99,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python"
+    ],
+    "missing_skills": [
+     "redis",
+     "postgresql",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_07_lina_fernandez.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 55.53,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 65.54,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python"
+    ],
+    "missing_skills": [
+     "redis",
+     "postgresql",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_07_lina_fernandez.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 55.53,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 66.66,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python"
+    ],
+    "missing_skills": [
+     "redis",
+     "postgresql",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_07_lina_fernandez.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 55.53,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 64.44,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python"
+    ],
+    "missing_skills": [
+     "redis",
+     "postgresql",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_08_rahul_kumar.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.49,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.83,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_08_rahul_kumar.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 46.49,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.83,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_08_rahul_kumar.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 46.49,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.93,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_08_rahul_kumar.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.49,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 64.4,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_08_rahul_kumar.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.49,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 61.73,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_09_emma_thompson.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 40.01,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 59.56,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_09_emma_thompson.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 40.01,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 59.56,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_09_emma_thompson.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 40.01,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 59.34,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_09_emma_thompson.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 40.01,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 62.78,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_09_emma_thompson.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 40.01,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 59.78,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_10_javier_lopez.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.48,
+    "skill_match_score": 44.44,
+    "experience_score": 75.0,
+    "education_score": 100.0,
+    "composite_score": 56.82,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_10_javier_lopez.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 46.48,
+    "skill_match_score": 44.44,
+    "experience_score": 75.0,
+    "education_score": 100.0,
+    "composite_score": 58.07,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_10_javier_lopez.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 46.48,
+    "skill_match_score": 44.44,
+    "experience_score": 75.0,
+    "education_score": 100.0,
+    "composite_score": 58.17,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_10_javier_lopez.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.48,
+    "skill_match_score": 44.44,
+    "experience_score": 75.0,
+    "education_score": 100.0,
+    "composite_score": 58.15,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_10_javier_lopez.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.48,
+    "skill_match_score": 44.44,
+    "experience_score": 75.0,
+    "education_score": 100.0,
+    "composite_score": 56.72,
+    "matched_skills": [
+     "docker",
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_11_maya_chen.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 55.17,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 64.86,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python"
+    ],
+    "missing_skills": [
+     "redis",
+     "postgresql",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_11_maya_chen.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 55.17,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 64.86,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python"
+    ],
+    "missing_skills": [
+     "redis",
+     "postgresql",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_11_maya_chen.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 55.17,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 65.4,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python"
+    ],
+    "missing_skills": [
+     "redis",
+     "postgresql",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_11_maya_chen.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 55.17,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 66.57,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python"
+    ],
+    "missing_skills": [
+     "redis",
+     "postgresql",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_11_maya_chen.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 55.17,
+    "skill_match_score": 44.44,
+    "experience_score": 100.0,
+    "education_score": 100.0,
+    "composite_score": 64.33,
+    "matched_skills": [
+     "docker",
+     "git",
+     "aws",
+     "python"
+    ],
+    "missing_skills": [
+     "redis",
+     "postgresql",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_12_tariq_hassan.txt",
+   "template": "AI Engineer",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.39,
+    "skill_match_score": 33.33,
+    "experience_score": 25.0,
+    "education_score": 100.0,
+    "composite_score": 42.9,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_12_tariq_hassan.txt",
+   "template": "Data Scientist",
+   "weights": {
+    "semantic": 0.35,
+    "skills": 0.35,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 46.39,
+    "skill_match_score": 33.33,
+    "experience_score": 25.0,
+    "education_score": 100.0,
+    "composite_score": 46.65,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_12_tariq_hassan.txt",
+   "template": "Default",
+   "weights": {
+    "semantic": 0.4,
+    "skills": 0.3,
+    "experience": 0.15,
+    "education": 0.15
+   },
+   "result": {
+    "semantic_score": 46.39,
+    "skill_match_score": 33.33,
+    "experience_score": 25.0,
+    "education_score": 100.0,
+    "composite_score": 47.31,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_12_tariq_hassan.txt",
+   "template": "DevOps Engineer",
+   "weights": {
+    "semantic": 0.25,
+    "skills": 0.4,
+    "experience": 0.25,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.39,
+    "skill_match_score": 33.33,
+    "experience_score": 25.0,
+    "education_score": 100.0,
+    "composite_score": 41.18,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  },
+  {
+   "jd": "tests/fixtures/jd_backend_engineer.txt",
+   "resume": "sample_resumes/resume_12_tariq_hassan.txt",
+   "template": "Frontend Developer",
+   "weights": {
+    "semantic": 0.3,
+    "skills": 0.4,
+    "experience": 0.2,
+    "education": 0.1
+   },
+   "result": {
+    "semantic_score": 46.39,
+    "skill_match_score": 33.33,
+    "experience_score": 25.0,
+    "education_score": 100.0,
+    "composite_score": 42.25,
+    "matched_skills": [
+     "git",
+     "python",
+     "postgresql"
+    ],
+    "missing_skills": [
+     "redis",
+     "docker",
+     "aws",
+     "pytest",
+     "django",
+     "fastapi"
+    ]
+   }
+  }
+ ]
+}

@@ -492,15 +492,7 @@ def screen_candidate(candidate_id, job_id):
         else:
             weights = cfg.WEIGHTS
 
-        # Temporarily override scoring weights
-        original_weights = cfg.WEIGHTS.copy()
-        cfg.WEIGHTS.update(weights)
-
-        # Score candidate
-        score_result = scorer.score_candidate(resume_prof, job_req, embedding_model)
-
-        # Restore original weights
-        cfg.WEIGHTS.update(original_weights)
+        score_result = scorer.score_candidate(resume_prof, job_req, embedding_model, weights=weights)
 
         # Generate strengths and gaps
         strengths = []
