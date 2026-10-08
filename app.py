@@ -18,6 +18,7 @@ from werkzeug.exceptions import BadRequest
 load_dotenv()
 
 # Import our modules
+import llm
 import scorer
 import config as cfg
 import jd_parser
@@ -581,10 +582,7 @@ def screen_candidate(candidate_id, job_id):
 def _generate_candidate_explanation(name: str, score_result: cfg.CandidateScore, job_title: str, cand_years: float, req_years: float) -> str:
     """Generate AI explanation for screening results."""
     try:
-        import google.generativeai as genai
         api_key = cfg.get_api_key()
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(cfg.GEMINI_MODEL)
 
         prompt = f"""Write a concise 2-3 sentence recruiter-friendly explanation for this screening result. Be specific.
 
@@ -600,8 +598,7 @@ Missing Skills: {', '.join(score_result.missing_skills) if score_result.missing_
 
 Provide clear, actionable insight for recruiters. No markdown."""
 
-        response = model.generate_content(prompt)
-        return response.text.strip()
+        return llm.generate_text(prompt, api_key)
     except Exception as e:
         logger.warning(f"LLM explanation failed: {e}")
         return ""

@@ -1,8 +1,9 @@
 """Module to parse and extract structured data from resumes."""
 import re
-import json
 from pathlib import Path
-from config import ResumeProfile, get_api_key, GEMINI_MODEL
+
+import llm
+from config import ResumeProfile, get_api_key
 
 try:
     from colorama import Fore, Style
@@ -38,10 +39,6 @@ def _read_file(path: Path) -> str:
 
 def _extract_with_llm(text: str, api_key: str) -> ResumeProfile:
     """Use Gemini to extract structured data."""
-    import google.generativeai as genai
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(GEMINI_MODEL)
-
     prompt = f"""Extract the following information from this resume and return ONLY a valid JSON object (no markdown, no code fences).
 
 Keys required:
@@ -59,18 +56,7 @@ Return ONLY the JSON, nothing else.
 Resume text:
 {text[:4000]}"""
 
-    response = model.generate_content(prompt)
-    response_text = response.text.strip()
-
-    # Strip markdown code fences if present
-    if response_text.startswith('```json'):
-        response_text = response_text[7:]
-    if response_text.startswith('```'):
-        response_text = response_text[3:]
-    if response_text.endswith('```'):
-        response_text = response_text[:-3]
-
-    data = json.loads(response_text.strip())
+    data = llm.parse_json_response(llm.generate_text(prompt, api_key))
 
     skills = [s.strip().lower() for s in data.get('skills', []) if isinstance(s, str)]
 

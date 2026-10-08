@@ -1,8 +1,9 @@
 """Module to parse and extract structured data from job descriptions."""
 import re
-import json
 from pathlib import Path
-from config import JobRequirements, get_api_key, GEMINI_MODEL
+
+import llm
+from config import JobRequirements, get_api_key
 
 try:
     from colorama import Fore, Style
@@ -15,10 +16,6 @@ except ImportError:
 
 def _extract_with_llm(text: str, api_key: str) -> JobRequirements:
     """Use Gemini to extract structured data from JD."""
-    import google.generativeai as genai
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(GEMINI_MODEL)
-
     prompt = f"""Extract the following information from the job description and return ONLY a valid JSON object (no markdown, no code fences).
 
 Keys required:
@@ -32,18 +29,7 @@ Keys required:
 Job description:
 {text[:4000]}"""
 
-    response = model.generate_content(prompt)
-    response_text = response.text.strip()
-
-    # Strip markdown code fences if present
-    if response_text.startswith('```json'):
-        response_text = response_text[7:]
-    if response_text.startswith('```'):
-        response_text = response_text[3:]
-    if response_text.endswith('```'):
-        response_text = response_text[:-3]
-
-    data = json.loads(response_text.strip())
+    data = llm.parse_json_response(llm.generate_text(prompt, api_key))
 
     req_skills = [s.strip().lower() for s in data.get('required_skills', []) if isinstance(s, str)]
     pref_skills = [s.strip().lower() for s in data.get('preferred_skills', []) if isinstance(s, str)]

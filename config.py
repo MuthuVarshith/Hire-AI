@@ -4,6 +4,11 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Load .env for every entry point (web app and CLI) so they read the same settings.
+load_dotenv(Path(__file__).parent / ".env")
+
 @dataclass
 class ResumeProfile:
     """Structured representation of a parsed resume."""
@@ -52,12 +57,14 @@ WEIGHTS = {
 
 # Model configuration
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_MODEL = os.getenv("GEMINI_MODEL") or "gemini-3.8-flash"
+
+_API_KEY_PLACEHOLDER = "your_api_key_here"
 
 def get_api_key() -> Optional[str]:
     """Get Gemini API key from environment or .env file."""
     key = os.environ.get("GOOGLE_API_KEY")
-    if key:
+    if key and key != _API_KEY_PLACEHOLDER:
         return key
     env_path = Path(__file__).parent / ".env"
     if env_path.exists():

@@ -1,6 +1,8 @@
 """Module to rank candidates and generate reasoning."""
 from typing import List, Optional
-from config import CandidateScore, GEMINI_MODEL
+
+import llm
+from config import CandidateScore
 
 try:
     from colorama import Fore, Style
@@ -41,10 +43,6 @@ def _generate_reasoning_template(score: CandidateScore, rank: int) -> str:
 def _generate_reasoning_llm(score: CandidateScore, rank: int, api_key: str) -> str:
     """Use Gemini to generate a 2-3 sentence reasoning."""
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(GEMINI_MODEL)
-
         prompt = f"""You are evaluating a job candidate. Write a concise 2-3 sentence reasoning explaining why this candidate is ranked at position #{rank}. Highlight their strengths and key gaps. Do not use markdown formatting. Be specific.
 
 Candidate: {score.name}
@@ -57,8 +55,7 @@ Education: {score.education_score:.1f}/100
 Matched Skills: {', '.join(score.matched_skills) if score.matched_skills else 'None'}
 Missing Skills: {', '.join(score.missing_skills) if score.missing_skills else 'None'}"""
 
-        response = model.generate_content(prompt)
-        return response.text.strip()
+        return llm.generate_text(prompt, api_key)
     except Exception as e:
         print(f"{Fore.YELLOW}  [!] LLM reasoning failed for {score.name}, using template: {e}{Style.RESET_ALL}")
         return _generate_reasoning_template(score, rank)

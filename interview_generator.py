@@ -1,7 +1,8 @@
 """AI-powered interview question generator tailored to candidates."""
-import json
-from typing import List, Dict, Optional
-from config import JobRequirements, ResumeProfile, get_api_key, GEMINI_MODEL
+from typing import List, Dict
+
+import llm
+from config import get_api_key
 from models import ScreeningResult, Candidate, Job
 
 
@@ -48,10 +49,7 @@ def _generate_llm_questions(
 ) -> Dict[str, List[Dict]]:
     """Generate interview questions using Google Gemini."""
     try:
-        import google.generativeai as genai
         api_key = get_api_key()
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(GEMINI_MODEL)
 
         # Build context
         matched_skills_str = ", ".join(screening_result.matched_skills[:5])
@@ -87,18 +85,7 @@ For each question, include:
 Return JSON array format only. Example:
 [{{"question": "Tell us about...", "category": "behavioral", "evaluating": "...", "expected_competency": "...", "why_asked": "..."}}]"""
 
-        response = model.generate_content(prompt)
-        response_text = response.text.strip()
-
-        # Clean markdown if present
-        if response_text.startswith("```json"):
-            response_text = response_text[7:]
-        if response_text.startswith("```"):
-            response_text = response_text[3:]
-        if response_text.endswith("```"):
-            response_text = response_text[:-3]
-
-        questions_list = json.loads(response_text.strip())
+        questions_list = llm.parse_json_response(llm.generate_text(prompt, api_key))
 
         # Organize by category
         result = {
