@@ -10,7 +10,16 @@ import tempfile
 from pathlib import Path
 
 _TMP = Path(tempfile.mkdtemp(prefix="hireai-tests-"))
-os.environ["DATABASE_URL"] = f"sqlite:///{(_TMP / 'test.db').as_posix()}"
+# TEST_DATABASE_URL runs the suite on another database, e.g. PostgreSQL. Tests drop and
+# recreate every table, so only a database whose name says it is for tests is accepted.
+_TEST_DB = os.getenv("TEST_DATABASE_URL")
+if _TEST_DB:
+    from sqlalchemy.engine import make_url
+
+    if "test" not in (make_url(_TEST_DB).database or "").lower():
+        raise RuntimeError("TEST_DATABASE_URL must name a disposable database containing 'test'; "
+                           "tests drop all tables.")
+os.environ["DATABASE_URL"] = _TEST_DB or f"sqlite:///{(_TMP / 'test.db').as_posix()}"
 os.environ["GOOGLE_API_KEY"] = ""
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))

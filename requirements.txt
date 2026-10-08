@@ -13,6 +13,9 @@ google-genai>=1.0.0
 flask>=3.0.0
 flask-cors>=4.0.0
 sqlalchemy>=2.0.0
+alembic>=1.13.0
+psycopg[binary]>=3.1        # PostgreSQL driver (DATABASE_URL=postgresql+psycopg://...)
+pgvector>=0.3.0             # vector column type for PostgreSQL
 werkzeug>=3.0.0
 python-dotenv>=1.0.0
 
