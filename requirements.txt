@@ -23,6 +23,12 @@ python-dotenv>=1.0.0
 rank-bm25>=0.2.2            # BM25 keyword search
 langchain-core>=0.3         # LangChain retriever adapter
 
+# Agent (agent.py): LangGraph state graph and its SQLite checkpointer.
+# Tested with these versions. Optional agent LLM providers are not listed: install
+# openai or anthropic only if AGENT_LLM_PROVIDER selects them (ollama uses plain HTTP).
+langgraph>=1.2.14
+langgraph-checkpoint-sqlite>=3.1.1
+
 # Duplicate detection
 fuzzywuzzy>=0.18.0
 python-Levenshtein>=0.22.0
