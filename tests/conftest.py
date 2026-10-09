@@ -21,6 +21,10 @@ if _TEST_DB:
                            "tests drop all tables.")
 os.environ["DATABASE_URL"] = _TEST_DB or f"sqlite:///{(_TMP / 'test.db').as_posix()}"
 os.environ["GOOGLE_API_KEY"] = ""
+# Load Hugging Face models from the local cache only. Online, every model load waits on Hub
+# metadata checks, which made the suite take 10+ minutes on a slow network. setdefault lets a
+# first run (or a CI step that fills the cache) opt out with HF_HUB_OFFLINE=0.
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
