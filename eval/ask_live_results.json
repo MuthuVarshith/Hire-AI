@@ -1,0 +1,3501 @@
+{
+  "model": "gemini-3.8-flash",
+  "date": "2026-10-09",
+  "commit": "de11f27",
+  "route": "POST /api/ask (Flask test client, throwaway SQLite)",
+  "candidates_indexed": 26,
+  "pacing_seconds": 6.0,
+  "threshold": 0.25,
+  "results": [
+    {
+      "id": "q01",
+      "kind": "positive",
+      "question": "Who has run FastAPI services in production?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.5135118630127302,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 205,
+          "char_end": 600,
+          "similarity": 0.5135,
+          "labelled": true,
+          "text": "Staff Software Engineer, Tidewater Logistics (2020 - Present)\n- Led the migration of the shipment-tracking platform from a Django monolith to FastAPI\n  microservices running in production on Kubernetes (EKS), serving 40M requests per day.\n- Designed the Kafka-based event backbone (30+ topics) for real-time shipment status updates.\n- Mentored 6 engineers; introduced contract testing with Pact."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "summary",
+          "char_start": 87,
+          "char_end": 179,
+          "similarity": 0.4694,
+          "labelled": false,
+          "text": "Staff backend engineer with 11 years building high-throughput APIs and event-driven systems."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "projects",
+          "char_start": 244,
+          "char_end": 595,
+          "similarity": 0.3858,
+          "labelled": false,
+          "text": "Campus Chatbot (2025)\nBuilt a retrieval-augmented chatbot over university policy PDFs using LangChain, FAISS and a\nsmall open-source LLM. Answered 300+ student questions during orientation week.\n\nExpense Splitter API (2024)\nREST API in FastAPI with PostgreSQL and SQLAlchemy; containerized with Docker for a class demo.\nNot deployed beyond the course."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "projects",
+          "char_start": 195,
+          "char_end": 368,
+          "similarity": 0.3613,
+          "labelled": false,
+          "text": "Built a rate limiter service in Go backed by Redis, load-tested to 5k requests/second\non a laptop. Wrote a Kubernetes operator tutorial for a university club using minikube."
+        },
+        {
+          "number": 5,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 159,
+          "similarity": 0.3584,
+          "labelled": false,
+          "text": "Full-stack developer with a growing focus on AI integrations and LLM application architecture."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_05_priya_nair.txt",
+          "section": "experience",
+          "char_start": 255,
+          "char_end": 400,
+          "similarity": 0.3556,
+          "labelled": false,
+          "text": "2 years\nML Engineer | Finverse Labs | 2022-Present\nBuilt and deployed forecasting and classification models, and supported production monitoring."
+        },
+        {
+          "number": 7,
+          "candidate": "resume_06_owen_brooks.txt",
+          "section": "experience",
+          "char_start": 216,
+          "char_end": 369,
+          "similarity": 0.3534,
+          "labelled": false,
+          "text": "1 year\nOperations Analyst | BrightPoint AI | 2023-Present\nSupported internal automation and data reporting tasks with light scripting and analytics work."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "char_start": 981,
+          "char_end": 1102,
+          "similarity": 0.3446,
+          "labelled": false,
+          "text": "Python, FastAPI, Django, Flask, Kafka, PostgreSQL, MySQL, Redis, Docker, Kubernetes, AWS (EKS,\nRDS, SQS), Terraform, Pact"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v06_senior_rachel_kim.txt",
+        "varied/v07_ml_engineer_omar_haddad.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q02",
+      "kind": "positive",
+      "question": "Which candidates have built retrieval-augmented generation (RAG) systems?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.6418857878647795,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 158,
+          "char_end": 528,
+          "similarity": 0.6419,
+          "labelled": true,
+          "text": "Machine Learning Engineer, Northwind AI (2022 - Present)\nBuilt a retrieval-augmented generation (RAG) assistant over 2M support articles using pgvector,\na cross-encoder reranker and GPT-class models; cut average handling time by 18%.\nSet up offline evaluation with RAGAS and a 400-question golden set.\nDeployed model services with FastAPI and Docker on Google Cloud Run."
+        },
+        {
+          "number": 2,
+          "candidate": "resume_01_ananya_patel.txt",
+          "section": "experience",
+          "char_start": 323,
+          "char_end": 499,
+          "similarity": 0.4868,
+          "labelled": true,
+          "text": "6 years\nApplied AI Engineer | Nova AI Labs | 2019-Present\nBuilt retrieval-augmented generation systems, deployed LLM-powered workflows, and optimized model inference pipelines."
+        },
+        {
+          "number": 3,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "experience",
+          "char_start": 281,
+          "char_end": 439,
+          "similarity": 0.4063,
+          "labelled": false,
+          "text": "3 years\nPrompt Engineer | BrightBridge AI | 2021-Present\nBuilt LLM workflows, benchmarked prompt strategies, and connected retrieval systems to user products."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "skills",
+          "char_start": 680,
+          "char_end": 776,
+          "similarity": 0.3353,
+          "labelled": false,
+          "text": "Python, PyTorch, Hugging Face, LangChain, pgvector, FAISS, RAGAS, FastAPI, Docker, GCP, BigQuery"
+        },
+        {
+          "number": 5,
+          "candidate": "resume_09_emma_thompson.txt",
+          "section": "experience",
+          "char_start": 268,
+          "char_end": 407,
+          "similarity": 0.311,
+          "labelled": false,
+          "text": "6 years\nResearch Engineer | Insight Labs | 2018-Present\nDeveloped language models, benchmarked NLP systems, and built evaluation pipelines."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "summary",
+          "char_start": 63,
+          "char_end": 162,
+          "similarity": 0.299,
+          "labelled": false,
+          "text": "AI engineer specializing in prompt engineering, retrieval systems, and LLM application development."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "projects",
+          "char_start": 244,
+          "char_end": 595,
+          "similarity": 0.2828,
+          "labelled": true,
+          "text": "Campus Chatbot (2025)\nBuilt a retrieval-augmented chatbot over university policy PDFs using LangChain, FAISS and a\nsmall open-source LLM. Answered 300+ student questions during orientation week.\n\nExpense Splitter API (2024)\nREST API in FastAPI with PostgreSQL and SQLAlchemy; containerized with Docker for a class demo.\nNot deployed beyond the course."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "skills",
+          "char_start": 728,
+          "char_end": 797,
+          "similarity": 0.2781,
+          "labelled": false,
+          "text": "PyTorch, JAX, CUDA, quantization, knowledge distillation, Python, C++"
+        }
+      ],
+      "labelled_resumes": [
+        "resume_01_ananya_patel.txt",
+        "varied/v01_fresher_aarav_mehta.txt",
+        "varied/v07_ml_engineer_omar_haddad.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q03",
+      "kind": "positive",
+      "question": "Who has hands-on Kafka experience?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.4323950229824743,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 205,
+          "char_end": 600,
+          "similarity": 0.4324,
+          "labelled": true,
+          "text": "Staff Software Engineer, Tidewater Logistics (2020 - Present)\n- Led the migration of the shipment-tracking platform from a Django monolith to FastAPI\n  microservices running in production on Kubernetes (EKS), serving 40M requests per day.\n- Designed the Kafka-based event backbone (30+ topics) for real-time shipment status updates.\n- Mentored 6 engineers; introduced contract testing with Pact."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "projects",
+          "char_start": 138,
+          "char_end": 394,
+          "similarity": 0.3677,
+          "labelled": true,
+          "text": "City bike trips pipeline: Airflow DAG that ingests daily CSV dumps into a PostgreSQL warehouse,\nwith dbt models for daily station usage. Ran locally with Docker Compose.\n\nStreaming demo: Kafka producer and consumer in Python that simulated sensor readings."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "skills",
+          "char_start": 411,
+          "char_end": 483,
+          "similarity": 0.3628,
+          "labelled": false,
+          "text": "Python, SQL, Airflow, dbt, Kafka (demo only), PostgreSQL, Docker Compose"
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "experience",
+          "char_start": 395,
+          "char_end": 438,
+          "similarity": 0.3297,
+          "labelled": false,
+          "text": "Teacher, Westgate High School (2017 - 2023)"
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v09_no_headings_tom_baker.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 583,
+          "similarity": 0.2928,
+          "labelled": false,
+          "text": "Tom Baker, tom.baker@example.com, (555) 201-0009.\n\nI am a DevOps engineer with about seven years of experience. Most recently at Granite Cloud\n(2021 to now) I run the CI/CD platform: GitHub Actions and Argo CD deploying to three Kubernetes\nclusters, all managed with Terraform. Before that I was a systems administrator at Oakridge\nBank (2017 to 2021), where I automated Linux server patching with Ansible.\n\nI hold the Certified Kubernetes Administrator (CKA) certification and an AWS Solutions\nArchitect Associate certification. I studied Network Engineering at Midvale Polytechnic."
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 217,
+          "similarity": 0.2868,
+          "labelled": false,
+          "text": "Former high-school chemistry teacher (6 years) who moved into data analysis through a\nbootcamp. Strong at explaining results to non-technical audiences."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "summary",
+          "char_start": 101,
+          "char_end": 282,
+          "similarity": 0.2841,
+          "labelled": false,
+          "text": "Engineering manager and former full-stack engineer with 14 years of experience across fintech\nand e-commerce. Comfortable owning roadmaps, hiring, and hands-on architecture reviews."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "char_start": 981,
+          "char_end": 1102,
+          "similarity": 0.2719,
+          "labelled": false,
+          "text": "Python, FastAPI, Django, Flask, Kafka, PostgreSQL, MySQL, Redis, Docker, Kubernetes, AWS (EKS,\nRDS, SQS), Terraform, Pact"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v05_fresher_diego_ramos.txt",
+        "varied/v06_senior_rachel_kim.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q04",
+      "kind": "positive",
+      "question": "Find candidates with a Certified Kubernetes Administrator (CKA) certification.",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.624924912384472,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v09_no_headings_tom_baker.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 583,
+          "similarity": 0.6249,
+          "labelled": true,
+          "text": "Tom Baker, tom.baker@example.com, (555) 201-0009.\n\nI am a DevOps engineer with about seven years of experience. Most recently at Granite Cloud\n(2021 to now) I run the CI/CD platform: GitHub Actions and Argo CD deploying to three Kubernetes\nclusters, all managed with Terraform. Before that I was a systems administrator at Oakridge\nBank (2017 to 2021), where I automated Linux server patching with Ansible.\n\nI hold the Certified Kubernetes Administrator (CKA) certification and an AWS Solutions\nArchitect Associate certification. I studied Network Engineering at Midvale Polytechnic."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 54,
+          "similarity": 0.3836,
+          "labelled": false,
+          "text": "# Sara Okafor\nsara.okafor@example.com · (555) 201-0002"
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "projects",
+          "char_start": 195,
+          "char_end": 368,
+          "similarity": 0.3804,
+          "labelled": false,
+          "text": "Built a rate limiter service in Go backed by Redis, load-tested to 5k requests/second\non a laptop. Wrote a Kubernetes operator tutorial for a university club using minikube."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 205,
+          "char_end": 600,
+          "similarity": 0.3784,
+          "labelled": false,
+          "text": "Staff Software Engineer, Tidewater Logistics (2020 - Present)\n- Led the migration of the shipment-tracking platform from a Django monolith to FastAPI\n  microservices running in production on Kubernetes (EKS), serving 40M requests per day.\n- Designed the Kafka-based event backbone (30+ topics) for real-time shipment status updates.\n- Mentored 6 engineers; introduced contract testing with Pact."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "certifications",
+          "char_start": 648,
+          "char_end": 659,
+          "similarity": 0.3677,
+          "labelled": false,
+          "text": "OSCP, CISSP"
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 56,
+          "similarity": 0.3646,
+          "labelled": false,
+          "text": "Kwame Asante - kwame.asante@example.com - (555) 201-0011"
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "skills",
+          "char_start": 117,
+          "char_end": 184,
+          "similarity": 0.3526,
+          "labelled": false,
+          "text": "Go, Python, gRPC, Redis, Docker, Kubernetes (minikube), Linux, Bash"
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "char_start": 981,
+          "char_end": 1102,
+          "similarity": 0.3421,
+          "labelled": false,
+          "text": "Python, FastAPI, Django, Flask, Kafka, PostgreSQL, MySQL, Redis, Docker, Kubernetes, AWS (EKS,\nRDS, SQS), Terraform, Pact"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v09_no_headings_tom_baker.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q05",
+      "kind": "positive",
+      "question": "Who has security certifications such as OSCP or CISSP?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.8369815418650243,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "certifications",
+          "char_start": 648,
+          "char_end": 659,
+          "similarity": 0.837,
+          "labelled": true,
+          "text": "OSCP, CISSP"
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "certifications",
+          "char_start": 453,
+          "char_end": 533,
+          "similarity": 0.451,
+          "labelled": false,
+          "text": "Data Analytics Bootcamp, Codeway Academy, 2023 (12 weeks, Python, SQL, Power BI)"
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "skills",
+          "char_start": 678,
+          "char_end": 767,
+          "similarity": 0.4471,
+          "labelled": false,
+          "text": "Threat modelling, OWASP Top 10, Semgrep, Burp Suite, HashiCorp Vault, Python, Go, AWS IAM"
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "summary",
+          "char_start": 96,
+          "char_end": 185,
+          "similarity": 0.4423,
+          "labelled": false,
+          "text": "Security engineer specialising in application security, threat modelling and secure SDLC."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "education",
+          "char_start": 779,
+          "char_end": 826,
+          "similarity": 0.4203,
+          "labelled": false,
+          "text": "BSc Cybersecurity, Kingsbridge University, 2018"
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "experience",
+          "char_start": 206,
+          "char_end": 499,
+          "similarity": 0.4063,
+          "labelled": false,
+          "text": "Application Security Engineer, Ironclad Insurance (2021 - Present)\n* Ran threat-modelling sessions for 25 services; embedded SAST (Semgrep) and dependency scanning\n  in CI for 300 repositories.\n* Led the response to a leaked API key incident; rotated secrets and moved them to HashiCorp Vault."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "certifications",
+          "char_start": 1574,
+          "char_end": 1603,
+          "similarity": 0.3969,
+          "labelled": false,
+          "text": "- Professional Scrum Master I"
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 86,
+          "similarity": 0.3739,
+          "labelled": false,
+          "text": "FATIMA ZAHRA\nApplication Security Engineer | fatima.zahra@example.com | (555) 201-0013"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v13_security_fatima_zahra.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q06",
+      "kind": "positive",
+      "question": "Which candidates have managed or mentored engineers?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.5089216389217179,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "summary",
+          "char_start": 101,
+          "char_end": 282,
+          "similarity": 0.5089,
+          "labelled": false,
+          "text": "Engineering manager and former full-stack engineer with 14 years of experience across fintech\nand e-commerce. Comfortable owning roadmaps, hiring, and hands-on architecture reviews."
+        },
+        {
+          "number": 2,
+          "candidate": "resume_07_lina_fernandez.txt",
+          "section": "summary",
+          "char_start": 67,
+          "char_end": 146,
+          "similarity": 0.5037,
+          "labelled": false,
+          "text": "Senior ML engineer experienced in training, fine-tuning, and serving AI models."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 301,
+          "char_end": 695,
+          "similarity": 0.3976,
+          "labelled": true,
+          "text": "Engineering Manager, Lindenpay (2021 - Present)\n- Manage two teams (11 engineers) owning checkout and fraud detection.\n- Hired 9 engineers; built the interview loop and leveling guide.\n- Drove the adoption of feature flags and trunk-based development; deploy frequency rose from\n  weekly to 20+ times per day.\n- Partnered with data science to ship a fraud model that reduced chargebacks by 23%."
+        },
+        {
+          "number": 4,
+          "candidate": "resume_09_emma_thompson.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 147,
+          "similarity": 0.3742,
+          "labelled": false,
+          "text": "Research engineer with expertise in NLP, model evaluation, and applied AI systems."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "skills",
+          "char_start": 1395,
+          "char_end": 1557,
+          "similarity": 0.3728,
+          "labelled": false,
+          "text": "Leadership: hiring, mentoring, roadmap planning, incident management\nEngineering: TypeScript, React, Node.js, Ruby on Rails, PostgreSQL, Elasticsearch, Playwright"
+        },
+        {
+          "number": 6,
+          "candidate": "resume_05_priya_nair.txt",
+          "section": "experience",
+          "char_start": 255,
+          "char_end": 400,
+          "similarity": 0.3689,
+          "labelled": false,
+          "text": "2 years\nML Engineer | Finverse Labs | 2022-Present\nBuilt and deployed forecasting and classification models, and supported production monitoring."
+        },
+        {
+          "number": 7,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "experience",
+          "char_start": 281,
+          "char_end": 439,
+          "similarity": 0.3609,
+          "labelled": false,
+          "text": "3 years\nPrompt Engineer | BrightBridge AI | 2021-Present\nBuilt LLM workflows, benchmarked prompt strategies, and connected retrieval systems to user products."
+        },
+        {
+          "number": 8,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "char_start": 162,
+          "char_end": 246,
+          "similarity": 0.3585,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, AWS, Docker, Kubernetes, Git, GitHub, MLflow"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v06_senior_rachel_kim.txt",
+        "varied/v10_multipage_elena_petrova.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q07",
+      "kind": "positive",
+      "question": "Who has worked with Terraform?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.5188240419733505,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v09_no_headings_tom_baker.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 583,
+          "similarity": 0.5188,
+          "labelled": true,
+          "text": "Tom Baker, tom.baker@example.com, (555) 201-0009.\n\nI am a DevOps engineer with about seven years of experience. Most recently at Granite Cloud\n(2021 to now) I run the CI/CD platform: GitHub Actions and Argo CD deploying to three Kubernetes\nclusters, all managed with Terraform. Before that I was a systems administrator at Oakridge\nBank (2017 to 2021), where I automated Linux server patching with Ansible.\n\nI hold the Certified Kubernetes Administrator (CKA) certification and an AWS Solutions\nArchitect Associate certification. I studied Network Engineering at Midvale Polytechnic."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "char_start": 981,
+          "char_end": 1102,
+          "similarity": 0.4959,
+          "labelled": true,
+          "text": "Python, FastAPI, Django, Flask, Kafka, PostgreSQL, MySQL, Redis, Docker, Kubernetes, AWS (EKS,\nRDS, SQS), Terraform, Pact"
+        },
+        {
+          "number": 3,
+          "candidate": "resume_07_lina_fernandez.txt",
+          "section": "experience",
+          "char_start": 268,
+          "char_end": 414,
+          "similarity": 0.4224,
+          "labelled": false,
+          "text": "7 years\nSenior ML Engineer | Orbit Analytics | 2017-Present\nLed model training pipelines, evaluation frameworks, and production deployment on AWS."
+        },
+        {
+          "number": 4,
+          "candidate": "resume_07_lina_fernandez.txt",
+          "section": "skills",
+          "char_start": 165,
+          "char_end": 255,
+          "similarity": 0.3858,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, Hugging Face, AWS, Docker, Kubernetes, Git, GitHub"
+        },
+        {
+          "number": 5,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "char_start": 162,
+          "char_end": 246,
+          "similarity": 0.3749,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, AWS, Docker, Kubernetes, Git, GitHub, MLflow"
+        },
+        {
+          "number": 6,
+          "candidate": "resume_12_tariq_hassan.txt",
+          "section": "experience",
+          "char_start": 250,
+          "char_end": 399,
+          "similarity": 0.3605,
+          "labelled": false,
+          "text": "1 year\nJunior Data Scientist | LocalStack AI | 2023-Present\nSupported model experiments, data cleaning, and basic deployment tasks for AI prototypes."
+        },
+        {
+          "number": 7,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "skills",
+          "char_start": 181,
+          "char_end": 268,
+          "similarity": 0.3591,
+          "labelled": false,
+          "text": "Python, LLMs, LangChain, vector databases, embeddings, SQL, Docker, Git, GitHub, pandas"
+        },
+        {
+          "number": 8,
+          "candidate": "resume_02_michael_chen.txt",
+          "section": "skills",
+          "char_start": 172,
+          "char_end": 264,
+          "similarity": 0.3544,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, MLflow, pandas, NumPy, SQL, AWS, Docker, Git, GitHub"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v06_senior_rachel_kim.txt",
+        "varied/v09_no_headings_tom_baker.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q08",
+      "kind": "positive",
+      "question": "Find freshers who built a chatbot project.",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.5551831245791321,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "projects",
+          "char_start": 244,
+          "char_end": 595,
+          "similarity": 0.5552,
+          "labelled": true,
+          "text": "Campus Chatbot (2025)\nBuilt a retrieval-augmented chatbot over university policy PDFs using LangChain, FAISS and a\nsmall open-source LLM. Answered 300+ student questions during orientation week.\n\nExpense Splitter API (2024)\nREST API in FastAPI with PostgreSQL and SQLAlchemy; containerized with Docker for a class demo.\nNot deployed beyond the course."
+        },
+        {
+          "number": 2,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "experience",
+          "char_start": 281,
+          "char_end": 439,
+          "similarity": 0.4417,
+          "labelled": false,
+          "text": "3 years\nPrompt Engineer | BrightBridge AI | 2021-Present\nBuilt LLM workflows, benchmarked prompt strategies, and connected retrieval systems to user products."
+        },
+        {
+          "number": 3,
+          "candidate": "resume_01_ananya_patel.txt",
+          "section": "summary",
+          "char_start": 63,
+          "char_end": 170,
+          "similarity": 0.4274,
+          "labelled": false,
+          "text": "Applied AI engineer with 6 years of experience building NLP systems, LLM apps, and production ML pipelines."
+        },
+        {
+          "number": 4,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "experience",
+          "char_start": 275,
+          "char_end": 423,
+          "similarity": 0.4141,
+          "labelled": false,
+          "text": "3 years\nSoftware Engineer | BluePeak AI | 2021-Present\nImplemented AI features into web products and connected services with OpenAI-compatible APIs."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "projects",
+          "char_start": 1230,
+          "char_end": 1386,
+          "similarity": 0.4029,
+          "labelled": false,
+          "text": "- Open-source maintainer of a small React form-validation library (1.2k GitHub stars).\n- Speaker at a regional JavaScript meetup on trunk-based development."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_12_tariq_hassan.txt",
+          "section": "experience",
+          "char_start": 250,
+          "char_end": 399,
+          "similarity": 0.3945,
+          "labelled": false,
+          "text": "1 year\nJunior Data Scientist | LocalStack AI | 2023-Present\nSupported model experiments, data cleaning, and basic deployment tasks for AI prototypes."
+        },
+        {
+          "number": 7,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "skills",
+          "char_start": 150,
+          "char_end": 210,
+          "similarity": 0.3861,
+          "labelled": false,
+          "text": "Java, Python, REST APIs, SQL, Git, GitHub, Docker, basic NLP"
+        },
+        {
+          "number": 8,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "skills",
+          "char_start": 178,
+          "char_end": 262,
+          "similarity": 0.3858,
+          "labelled": false,
+          "text": "Python, JavaScript, TensorFlow, LLMs, REST APIs, LangChain, Docker, Git, GitHub, SQL"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v01_fresher_aarav_mehta.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q09",
+      "kind": "positive",
+      "question": "Who knows React and TypeScript?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.6588195894761184,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v03_fresher_liam_novak.txt",
+          "section": "skills",
+          "char_start": 401,
+          "char_end": 464,
+          "similarity": 0.6588,
+          "labelled": true,
+          "text": "JavaScript, TypeScript, React, HTML, CSS, Tailwind, Jest, Figma"
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 697,
+          "char_end": 905,
+          "similarity": 0.5521,
+          "labelled": true,
+          "text": "Tech Lead, Lindenpay (2018 - 2021)\n- Led the rebuild of the checkout frontend in React and TypeScript with a Node.js BFF.\n- Introduced end-to-end testing with Playwright, cutting checkout regressions by half."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "projects",
+          "char_start": 1230,
+          "char_end": 1386,
+          "similarity": 0.5208,
+          "labelled": false,
+          "text": "- Open-source maintainer of a small React form-validation library (1.2k GitHub stars).\n- Speaker at a regional JavaScript meetup on trunk-based development."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v03_fresher_liam_novak.txt",
+          "section": "projects",
+          "char_start": 179,
+          "char_end": 382,
+          "similarity": 0.4765,
+          "labelled": true,
+          "text": "* Recipe finder - React and TypeScript single-page app using a public recipes API; deployed on Netlify.\n* Accessibility audit tool - browser extension that flags missing alt text and low colour contrast."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "skills",
+          "char_start": 1395,
+          "char_end": 1557,
+          "similarity": 0.4214,
+          "labelled": true,
+          "text": "Leadership: hiring, mentoring, roadmap planning, incident management\nEngineering: TypeScript, React, Node.js, Ruby on Rails, PostgreSQL, Elasticsearch, Playwright"
+        },
+        {
+          "number": 6,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "skills",
+          "char_start": 178,
+          "char_end": 262,
+          "similarity": 0.3483,
+          "labelled": false,
+          "text": "Python, JavaScript, TensorFlow, LLMs, REST APIs, LangChain, Docker, Git, GitHub, SQL"
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "skills",
+          "char_start": 346,
+          "char_end": 410,
+          "similarity": 0.3397,
+          "labelled": false,
+          "text": "Kotlin, Jetpack Compose, Flutter, Dart, Firebase, REST APIs, Git"
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 907,
+          "char_end": 1122,
+          "similarity": 0.2789,
+          "labelled": false,
+          "text": "Senior Full-Stack Engineer, Marktplatz GmbH (2014 - 2018)\n- Built seller tools in Ruby on Rails and React; scaled the catalog search on Elasticsearch.\n- Ran the migration from MySQL to PostgreSQL with zero downtime."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v03_fresher_liam_novak.txt",
+        "varied/v10_multipage_elena_petrova.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q10",
+      "kind": "positive",
+      "question": "Who has built Android apps?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.6242925997253203,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "summary",
+          "char_start": 66,
+          "char_end": 120,
+          "similarity": 0.6243,
+          "labelled": false,
+          "text": "Mobile developer, 4 years, Android and cross-platform."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "experience",
+          "char_start": 133,
+          "char_end": 337,
+          "similarity": 0.5228,
+          "labelled": true,
+          "text": "Android Developer at Savanna Mobile (2022-present) - shipped a Kotlin and Jetpack\nCompose banking app with 500k installs; Junior Developer at Pixelcraft (2021-2022) - built\nFlutter prototypes for clients."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v03_fresher_liam_novak.txt",
+          "section": "summary",
+          "char_start": 74,
+          "char_end": 159,
+          "similarity": 0.3397,
+          "labelled": false,
+          "text": "Entry-level frontend developer looking for a first role building accessible web apps."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "skills",
+          "char_start": 346,
+          "char_end": 410,
+          "similarity": 0.3336,
+          "labelled": false,
+          "text": "Kotlin, Jetpack Compose, Flutter, Dart, Firebase, REST APIs, Git"
+        },
+        {
+          "number": 5,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 159,
+          "similarity": 0.3047,
+          "labelled": false,
+          "text": "Full-stack developer with a growing focus on AI integrations and LLM application architecture."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "experience",
+          "char_start": 275,
+          "char_end": 423,
+          "similarity": 0.2874,
+          "labelled": false,
+          "text": "3 years\nSoftware Engineer | BluePeak AI | 2021-Present\nImplemented AI features into web products and connected services with OpenAI-compatible APIs."
+        },
+        {
+          "number": 7,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "education",
+          "char_start": 451,
+          "char_end": 511,
+          "similarity": 0.2773,
+          "labelled": false,
+          "text": "Bachelor's in Software Engineering, Arizona State University"
+        },
+        {
+          "number": 8,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "experience",
+          "char_start": 223,
+          "char_end": 366,
+          "similarity": 0.2765,
+          "labelled": false,
+          "text": "4 years\nSoftware Engineer | Nexora Technologies | 2020-Present\nBuilt enterprise services and integrated simple AI features into internal tools."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v11_inline_headings_kwame_asante.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q11",
+      "kind": "positive",
+      "question": "Which candidate has compressed large language models to run on a laptop?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.5682900499622568,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "experience",
+          "char_start": 308,
+          "char_end": 454,
+          "similarity": 0.5683,
+          "labelled": true,
+          "text": "Research Scientist, Corvid Labs (2024 - Present)\nQuantized 7B-parameter language models to 4-bit for laptop inference with under 2% accuracy loss."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "education",
+          "char_start": 142,
+          "char_end": 295,
+          "similarity": 0.4667,
+          "labelled": false,
+          "text": "Ph.D. Computer Science, Ashford University, 2024. Thesis: \"Structured pruning for small language models\".\nM.S. Computer Science, Ashford University, 2020"
+        },
+        {
+          "number": 3,
+          "candidate": "resume_01_ananya_patel.txt",
+          "section": "skills",
+          "char_start": 189,
+          "char_end": 310,
+          "similarity": 0.427,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, Large Language Models, LangChain, Hugging Face, pandas, NumPy, SQL, Git, GitHub, Docker"
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "summary",
+          "char_start": 67,
+          "char_end": 130,
+          "similarity": 0.4055,
+          "labelled": false,
+          "text": "Efficient transformers, model compression, on-device inference."
+        },
+        {
+          "number": 5,
+          "candidate": "resume_09_emma_thompson.txt",
+          "section": "experience",
+          "char_start": 268,
+          "char_end": 407,
+          "similarity": 0.4026,
+          "labelled": false,
+          "text": "6 years\nResearch Engineer | Insight Labs | 2018-Present\nDeveloped language models, benchmarked NLP systems, and built evaluation pipelines."
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "other",
+          "char_start": 587,
+          "char_end": 719,
+          "similarity": 0.3858,
+          "labelled": false,
+          "text": "- \"Pruning Heads You Can Afford to Lose\", workshop paper, 2023\n- \"Tiny but Mighty: Distilling Speech Models\", conference paper, 2022"
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 158,
+          "char_end": 528,
+          "similarity": 0.3569,
+          "labelled": false,
+          "text": "Machine Learning Engineer, Northwind AI (2022 - Present)\nBuilt a retrieval-augmented generation (RAG) assistant over 2M support articles using pgvector,\na cross-encoder reranker and GPT-class models; cut average handling time by 18%.\nSet up offline evaluation with RAGAS and a 400-question golden set.\nDeployed model services with FastAPI and Docker on Google Cloud Run."
+        },
+        {
+          "number": 8,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "char_start": 162,
+          "char_end": 246,
+          "similarity": 0.3466,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, AWS, Docker, Kubernetes, Git, GitHub, MLflow"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v14_research_scientist_chen_wei.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q12",
+      "kind": "positive",
+      "question": "Who has published research papers?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.29470944817124306,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "resume_09_emma_thompson.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 147,
+          "similarity": 0.2947,
+          "labelled": false,
+          "text": "Research engineer with expertise in NLP, model evaluation, and applied AI systems."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 907,
+          "char_end": 1122,
+          "similarity": 0.2717,
+          "labelled": false,
+          "text": "Senior Full-Stack Engineer, Marktplatz GmbH (2014 - 2018)\n- Built seller tools in Ruby on Rails and React; scaled the catalog search on Elasticsearch.\n- Ran the migration from MySQL to PostgreSQL with zero downtime."
+        },
+        {
+          "number": 3,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "skills",
+          "char_start": 181,
+          "char_end": 268,
+          "similarity": 0.2503,
+          "labelled": false,
+          "text": "Python, LLMs, LangChain, vector databases, embeddings, SQL, Docker, Git, GitHub, pandas"
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 217,
+          "similarity": 0.2151,
+          "labelled": false,
+          "text": "Former high-school chemistry teacher (6 years) who moved into data analysis through a\nbootcamp. Strong at explaining results to non-technical audiences."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "char_start": 981,
+          "char_end": 1102,
+          "similarity": 0.214,
+          "labelled": false,
+          "text": "Python, FastAPI, Django, Flask, Kafka, PostgreSQL, MySQL, Redis, Docker, Kubernetes, AWS (EKS,\nRDS, SQS), Terraform, Pact"
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v03_fresher_liam_novak.txt",
+          "section": "projects",
+          "char_start": 179,
+          "char_end": 382,
+          "similarity": 0.2126,
+          "labelled": false,
+          "text": "* Recipe finder - React and TypeScript single-page app using a public recipes API; deployed on Netlify.\n* Accessibility audit tool - browser extension that flags missing alt text and low colour contrast."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "experience",
+          "char_start": 538,
+          "char_end": 633,
+          "similarity": 0.2115,
+          "labelled": false,
+          "text": "Teaching Assistant, Northfield University (2024-2025): ran weekly labs for Intro to Statistics."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 46,
+          "similarity": 0.2086,
+          "labelled": false,
+          "text": "Chen Wei\nchen.wei@example.com | (555) 201-0014"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v14_research_scientist_chen_wei.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q13",
+      "kind": "positive",
+      "question": "Who has built data pipelines with Airflow or dbt?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.6552402993847872,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "projects",
+          "char_start": 138,
+          "char_end": 394,
+          "similarity": 0.6552,
+          "labelled": true,
+          "text": "City bike trips pipeline: Airflow DAG that ingests daily CSV dumps into a PostgreSQL warehouse,\nwith dbt models for daily station usage. Ran locally with Docker Compose.\n\nStreaming demo: Kafka producer and consumer in Python that simulated sensor readings."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "skills",
+          "char_start": 411,
+          "char_end": 483,
+          "similarity": 0.5053,
+          "labelled": false,
+          "text": "Python, SQL, Airflow, dbt, Kafka (demo only), PostgreSQL, Docker Compose"
+        },
+        {
+          "number": 3,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "summary",
+          "char_start": 61,
+          "char_end": 131,
+          "similarity": 0.4796,
+          "labelled": false,
+          "text": "Developer with experience in data pipelines and basic AI integrations."
+        },
+        {
+          "number": 4,
+          "candidate": "resume_02_michael_chen.txt",
+          "section": "experience",
+          "char_start": 277,
+          "char_end": 418,
+          "similarity": 0.4262,
+          "labelled": false,
+          "text": "4 years\nML Engineer | Northwind AI | 2020-Present\nDeveloped fine-tuning pipelines, experiment tracking systems, and cloud-hosted AI services."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "summary",
+          "char_start": 72,
+          "char_end": 119,
+          "similarity": 0.3763,
+          "labelled": false,
+          "text": "Final-year student focused on data engineering."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "char_start": 162,
+          "char_end": 246,
+          "similarity": 0.3706,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, AWS, Docker, Kubernetes, Git, GitHub, MLflow"
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "summary",
+          "char_start": 87,
+          "char_end": 179,
+          "similarity": 0.3578,
+          "labelled": false,
+          "text": "Staff backend engineer with 11 years building high-throughput APIs and event-driven systems."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "certifications",
+          "char_start": 453,
+          "char_end": 533,
+          "similarity": 0.3551,
+          "labelled": false,
+          "text": "Data Analytics Bootcamp, Codeway Academy, 2023 (12 weeks, Python, SQL, Power BI)"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v05_fresher_diego_ramos.txt",
+        "varied/v08_two_column_style_priya_s.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q14",
+      "kind": "positive",
+      "question": "Who has built dashboards in Power BI?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.511437089560792,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "experience",
+          "char_start": 239,
+          "char_end": 393,
+          "similarity": 0.5114,
+          "labelled": true,
+          "text": "Junior Data Analyst, Brightfield Schools Network (2024 - Present)\nBuilt attendance and grade dashboards in Power BI; wrote SQL queries against SQL Server."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "experience",
+          "char_start": 688,
+          "char_end": 802,
+          "similarity": 0.3561,
+          "labelled": false,
+          "text": "Data Intern, Lumen Analytics (Summer 2025, 10 weeks)\nCleaned survey data with pandas and built Tableau dashboards."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "experience",
+          "char_start": 133,
+          "char_end": 337,
+          "similarity": 0.3039,
+          "labelled": false,
+          "text": "Android Developer at Savanna Mobile (2022-present) - shipped a Kotlin and Jetpack\nCompose banking app with 500k installs; Junior Developer at Pixelcraft (2021-2022) - built\nFlutter prototypes for clients."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 530,
+          "char_end": 671,
+          "similarity": 0.2988,
+          "labelled": false,
+          "text": "Data Scientist, Bluepeak Retail (2020 - 2022)\nForecasted weekly demand for 3,000 products with LightGBM; owned the feature store in BigQuery."
+        },
+        {
+          "number": 5,
+          "candidate": "resume_06_owen_brooks.txt",
+          "section": "experience",
+          "char_start": 216,
+          "char_end": 369,
+          "similarity": 0.2865,
+          "labelled": false,
+          "text": "1 year\nOperations Analyst | BrightPoint AI | 2023-Present\nSupported internal automation and data reporting tasks with light scripting and analytics work."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "experience",
+          "char_start": 281,
+          "char_end": 439,
+          "similarity": 0.2724,
+          "labelled": false,
+          "text": "3 years\nPrompt Engineer | BrightBridge AI | 2021-Present\nBuilt LLM workflows, benchmarked prompt strategies, and connected retrieval systems to user products."
+        },
+        {
+          "number": 7,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "experience",
+          "char_start": 259,
+          "char_end": 409,
+          "similarity": 0.2536,
+          "labelled": false,
+          "text": "5 years\nApplied AI Engineer | Northwind Cloud | 2019-Present\nDelivered AI-powered services, model monitoring solutions, and cloud-native ML platforms."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "projects",
+          "char_start": 138,
+          "char_end": 394,
+          "similarity": 0.2452,
+          "labelled": false,
+          "text": "City bike trips pipeline: Airflow DAG that ingests daily CSV dumps into a PostgreSQL warehouse,\nwith dbt models for daily station usage. Ran locally with Docker Compose.\n\nStreaming demo: Kafka producer and consumer in Python that simulated sensor readings."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v12_career_changer_hannah_lee.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q15",
+      "kind": "positive",
+      "question": "Find a candidate who moved into tech from teaching.",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.41719273637638,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 217,
+          "similarity": 0.4172,
+          "labelled": true,
+          "text": "Former high-school chemistry teacher (6 years) who moved into data analysis through a\nbootcamp. Strong at explaining results to non-technical audiences."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "experience",
+          "char_start": 395,
+          "char_end": 438,
+          "similarity": 0.4138,
+          "labelled": false,
+          "text": "Teacher, Westgate High School (2017 - 2023)"
+        },
+        {
+          "number": 3,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "education",
+          "char_start": 435,
+          "char_end": 503,
+          "similarity": 0.4119,
+          "labelled": false,
+          "text": "Bachelor's in Computer Engineering, Illinois Institute of Technology"
+        },
+        {
+          "number": 4,
+          "candidate": "resume_06_owen_brooks.txt",
+          "section": "education",
+          "char_start": 381,
+          "char_end": 431,
+          "similarity": 0.381,
+          "labelled": false,
+          "text": "Associate's in Information Systems, Boston College"
+        },
+        {
+          "number": 5,
+          "candidate": "resume_03_sophia_nguyen.txt",
+          "section": "education",
+          "char_start": 450,
+          "char_end": 507,
+          "similarity": 0.3762,
+          "labelled": false,
+          "text": "Bachelor's in Computer Science, San Jose State University"
+        },
+        {
+          "number": 6,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "education",
+          "char_start": 421,
+          "char_end": 482,
+          "similarity": 0.3759,
+          "labelled": false,
+          "text": "Master's in Computer Science, Georgia Institute of Technology"
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "experience",
+          "char_start": 538,
+          "char_end": 633,
+          "similarity": 0.3731,
+          "labelled": false,
+          "text": "Teaching Assistant, Northfield University (2024-2025): ran weekly labs for Intro to Statistics."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "education",
+          "char_start": 422,
+          "char_end": 478,
+          "similarity": 0.3705,
+          "labelled": false,
+          "text": "B.Sc. Computer Science, Accra Technical University, 2021"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v12_career_changer_hannah_lee.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q16",
+      "kind": "positive",
+      "question": "Who has experience with vector databases or semantic search?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.5533714951480725,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "resume_03_sophia_nguyen.txt",
+          "section": "experience",
+          "char_start": 295,
+          "char_end": 438,
+          "similarity": 0.5534,
+          "labelled": true,
+          "text": "5 years\nAI Engineer | VectorWorks | 2018-Present\nBuilt semantic search systems, ranking pipelines, and APIs for AI-driven knowledge assistants."
+        },
+        {
+          "number": 2,
+          "candidate": "resume_03_sophia_nguyen.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 154,
+          "similarity": 0.4875,
+          "labelled": false,
+          "text": "AI engineer with experience in production ML, embeddings, and vector search applications."
+        },
+        {
+          "number": 3,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "skills",
+          "char_start": 181,
+          "char_end": 268,
+          "similarity": 0.4838,
+          "labelled": true,
+          "text": "Python, LLMs, LangChain, vector databases, embeddings, SQL, Docker, Git, GitHub, pandas"
+        },
+        {
+          "number": 4,
+          "candidate": "resume_03_sophia_nguyen.txt",
+          "section": "skills",
+          "char_start": 173,
+          "char_end": 282,
+          "similarity": 0.4507,
+          "labelled": true,
+          "text": "Python, PyTorch, NLP, embeddings, vector databases, LangChain, Hugging Face, SQL, pandas, Git, GitHub, pytest"
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 907,
+          "char_end": 1122,
+          "similarity": 0.4232,
+          "labelled": false,
+          "text": "Senior Full-Stack Engineer, Marktplatz GmbH (2014 - 2018)\n- Built seller tools in Ruby on Rails and React; scaled the catalog search on Elasticsearch.\n- Ran the migration from MySQL to PostgreSQL with zero downtime."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_05_priya_nair.txt",
+          "section": "skills",
+          "char_start": 167,
+          "char_end": 242,
+          "similarity": 0.4211,
+          "labelled": false,
+          "text": "Python, PyTorch, pandas, NumPy, SQL, NLP, Docker, Git, GitHub, scikit-learn"
+        },
+        {
+          "number": 7,
+          "candidate": "resume_12_tariq_hassan.txt",
+          "section": "skills",
+          "char_start": 173,
+          "char_end": 237,
+          "similarity": 0.4103,
+          "labelled": false,
+          "text": "Python, pandas, NumPy, SQL, scikit-learn, Git, GitHub, basic NLP"
+        },
+        {
+          "number": 8,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "summary",
+          "char_start": 61,
+          "char_end": 131,
+          "similarity": 0.4049,
+          "labelled": false,
+          "text": "Developer with experience in data pipelines and basic AI integrations."
+        }
+      ],
+      "labelled_resumes": [
+        "resume_03_sophia_nguyen.txt",
+        "resume_10_javier_lopez.txt",
+        "varied/v01_fresher_aarav_mehta.txt",
+        "varied/v07_ml_engineer_omar_haddad.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q17",
+      "kind": "positive",
+      "question": "Who has evaluated an LLM system with a golden dataset?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.4606234703618899,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "experience",
+          "char_start": 281,
+          "char_end": 439,
+          "similarity": 0.4606,
+          "labelled": false,
+          "text": "3 years\nPrompt Engineer | BrightBridge AI | 2021-Present\nBuilt LLM workflows, benchmarked prompt strategies, and connected retrieval systems to user products."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "summary",
+          "char_start": 62,
+          "char_end": 145,
+          "similarity": 0.4002,
+          "labelled": false,
+          "text": "Machine learning engineer with 5 years of experience shipping NLP and LLM features."
+        },
+        {
+          "number": 3,
+          "candidate": "resume_05_priya_nair.txt",
+          "section": "experience",
+          "char_start": 255,
+          "char_end": 400,
+          "similarity": 0.3745,
+          "labelled": false,
+          "text": "2 years\nML Engineer | Finverse Labs | 2022-Present\nBuilt and deployed forecasting and classification models, and supported production monitoring."
+        },
+        {
+          "number": 4,
+          "candidate": "resume_01_ananya_patel.txt",
+          "section": "experience",
+          "char_start": 323,
+          "char_end": 499,
+          "similarity": 0.3723,
+          "labelled": false,
+          "text": "6 years\nApplied AI Engineer | Nova AI Labs | 2019-Present\nBuilt retrieval-augmented generation systems, deployed LLM-powered workflows, and optimized model inference pipelines."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 530,
+          "char_end": 671,
+          "similarity": 0.3702,
+          "labelled": false,
+          "text": "Data Scientist, Bluepeak Retail (2020 - 2022)\nForecasted weekly demand for 3,000 products with LightGBM; owned the feature store in BigQuery."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "summary",
+          "char_start": 63,
+          "char_end": 162,
+          "similarity": 0.3591,
+          "labelled": false,
+          "text": "AI engineer specializing in prompt engineering, retrieval systems, and LLM application development."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 158,
+          "char_end": 528,
+          "similarity": 0.345,
+          "labelled": true,
+          "text": "Machine Learning Engineer, Northwind AI (2022 - Present)\nBuilt a retrieval-augmented generation (RAG) assistant over 2M support articles using pgvector,\na cross-encoder reranker and GPT-class models; cut average handling time by 18%.\nSet up offline evaluation with RAGAS and a 400-question golden set.\nDeployed model services with FastAPI and Docker on Google Cloud Run."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "experience",
+          "char_start": 239,
+          "char_end": 393,
+          "similarity": 0.3348,
+          "labelled": false,
+          "text": "Junior Data Analyst, Brightfield Schools Network (2024 - Present)\nBuilt attendance and grade dashboards in Power BI; wrote SQL queries against SQL Server."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v07_ml_engineer_omar_haddad.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q18",
+      "kind": "positive",
+      "question": "Which candidates list MLflow experience?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.5884319973970926,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "char_start": 162,
+          "char_end": 246,
+          "similarity": 0.5884,
+          "labelled": true,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, AWS, Docker, Kubernetes, Git, GitHub, MLflow"
+        },
+        {
+          "number": 2,
+          "candidate": "resume_07_lina_fernandez.txt",
+          "section": "summary",
+          "char_start": 67,
+          "char_end": 146,
+          "similarity": 0.5336,
+          "labelled": false,
+          "text": "Senior ML engineer experienced in training, fine-tuning, and serving AI models."
+        },
+        {
+          "number": 3,
+          "candidate": "resume_02_michael_chen.txt",
+          "section": "skills",
+          "char_start": 172,
+          "char_end": 264,
+          "similarity": 0.5277,
+          "labelled": true,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, MLflow, pandas, NumPy, SQL, AWS, Docker, Git, GitHub"
+        },
+        {
+          "number": 4,
+          "candidate": "resume_02_michael_chen.txt",
+          "section": "experience",
+          "char_start": 277,
+          "char_end": 418,
+          "similarity": 0.5156,
+          "labelled": false,
+          "text": "4 years\nML Engineer | Northwind AI | 2020-Present\nDeveloped fine-tuning pipelines, experiment tracking systems, and cloud-hosted AI services."
+        },
+        {
+          "number": 5,
+          "candidate": "resume_02_michael_chen.txt",
+          "section": "summary",
+          "char_start": 63,
+          "char_end": 153,
+          "similarity": 0.5039,
+          "labelled": false,
+          "text": "Machine learning engineer focused on generative AI, model evaluation, and MLOps workflows."
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "summary",
+          "char_start": 62,
+          "char_end": 145,
+          "similarity": 0.4968,
+          "labelled": false,
+          "text": "Machine learning engineer with 5 years of experience shipping NLP and LLM features."
+        },
+        {
+          "number": 7,
+          "candidate": "resume_01_ananya_patel.txt",
+          "section": "summary",
+          "char_start": 63,
+          "char_end": 170,
+          "similarity": 0.4793,
+          "labelled": false,
+          "text": "Applied AI engineer with 6 years of experience building NLP systems, LLM apps, and production ML pipelines."
+        },
+        {
+          "number": 8,
+          "candidate": "resume_07_lina_fernandez.txt",
+          "section": "skills",
+          "char_start": 165,
+          "char_end": 255,
+          "similarity": 0.4781,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, Hugging Face, AWS, Docker, Kubernetes, Git, GitHub"
+        }
+      ],
+      "labelled_resumes": [
+        "resume_02_michael_chen.txt",
+        "resume_11_maya_chen.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q19",
+      "kind": "positive",
+      "question": "Which candidates hold a PhD?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.27683544615680916,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "char_start": 981,
+          "char_end": 1102,
+          "similarity": 0.2768,
+          "labelled": false,
+          "text": "Python, FastAPI, Django, Flask, Kafka, PostgreSQL, MySQL, Redis, Docker, Kubernetes, AWS (EKS,\nRDS, SQS), Terraform, Pact"
+        },
+        {
+          "number": 2,
+          "candidate": "resume_02_michael_chen.txt",
+          "section": "skills",
+          "char_start": 172,
+          "char_end": 264,
+          "similarity": 0.2765,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, MLflow, pandas, NumPy, SQL, AWS, Docker, Git, GitHub"
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "education",
+          "char_start": 69,
+          "char_end": 164,
+          "similarity": 0.2643,
+          "labelled": false,
+          "text": "- MSc Data Science, Northfield University (2025)\n- BSc Statistics, Northfield University (2023)"
+        },
+        {
+          "number": 4,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "char_start": 162,
+          "char_end": 246,
+          "similarity": 0.2634,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, AWS, Docker, Kubernetes, Git, GitHub, MLflow"
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "other",
+          "char_start": 1688,
+          "char_end": 1739,
+          "similarity": 0.2631,
+          "labelled": false,
+          "text": "English (fluent), German (native), Russian (native)"
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "skills",
+          "char_start": 1395,
+          "char_end": 1557,
+          "similarity": 0.2621,
+          "labelled": false,
+          "text": "Leadership: hiring, mentoring, roadmap planning, incident management\nEngineering: TypeScript, React, Node.js, Ruby on Rails, PostgreSQL, Elasticsearch, Playwright"
+        },
+        {
+          "number": 7,
+          "candidate": "resume_07_lina_fernandez.txt",
+          "section": "skills",
+          "char_start": 165,
+          "char_end": 255,
+          "similarity": 0.2558,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, Hugging Face, AWS, Docker, Kubernetes, Git, GitHub"
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "skills",
+          "char_start": 680,
+          "char_end": 776,
+          "similarity": 0.2535,
+          "labelled": false,
+          "text": "Python, PyTorch, Hugging Face, LangChain, pgvector, FAISS, RAGAS, FastAPI, Docker, GCP, BigQuery"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v14_research_scientist_chen_wei.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q20",
+      "kind": "positive",
+      "question": "Who has fine-tuned transformer models?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.4181077264982385,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "summary",
+          "char_start": 67,
+          "char_end": 130,
+          "similarity": 0.4181,
+          "labelled": false,
+          "text": "Efficient transformers, model compression, on-device inference."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "projects",
+          "char_start": 178,
+          "char_end": 431,
+          "similarity": 0.2923,
+          "labelled": true,
+          "text": "### Churn prediction for a telecom dataset\nGradient-boosted trees (XGBoost) with SHAP explanations; AUC 0.87 on a held-out set.\n\n### Reproducing a sentiment paper\nFine-tuned a DistilBERT model with PyTorch and Hugging Face Transformers on movie reviews."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "skills",
+          "char_start": 443,
+          "char_end": 522,
+          "similarity": 0.2865,
+          "labelled": false,
+          "text": "Python, PyTorch, scikit-learn, XGBoost, SHAP, Hugging Face Transformers, SQL, R"
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "other",
+          "char_start": 587,
+          "char_end": 719,
+          "similarity": 0.2732,
+          "labelled": false,
+          "text": "- \"Pruning Heads You Can Afford to Lose\", workshop paper, 2023\n- \"Tiny but Mighty: Distilling Speech Models\", conference paper, 2022"
+        },
+        {
+          "number": 5,
+          "candidate": "resume_05_priya_nair.txt",
+          "section": "experience",
+          "char_start": 255,
+          "char_end": 400,
+          "similarity": 0.2683,
+          "labelled": false,
+          "text": "2 years\nML Engineer | Finverse Labs | 2022-Present\nBuilt and deployed forecasting and classification models, and supported production monitoring."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "char_start": 162,
+          "char_end": 246,
+          "similarity": 0.2615,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, AWS, Docker, Kubernetes, Git, GitHub, MLflow"
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 46,
+          "similarity": 0.2601,
+          "labelled": false,
+          "text": "Chen Wei\nchen.wei@example.com | (555) 201-0014"
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 158,
+          "char_end": 528,
+          "similarity": 0.2563,
+          "labelled": false,
+          "text": "Machine Learning Engineer, Northwind AI (2022 - Present)\nBuilt a retrieval-augmented generation (RAG) assistant over 2M support articles using pgvector,\na cross-encoder reranker and GPT-class models; cut average handling time by 18%.\nSet up offline evaluation with RAGAS and a 400-question golden set.\nDeployed model services with FastAPI and Docker on Google Cloud Run."
+        }
+      ],
+      "labelled_resumes": [
+        "resume_02_michael_chen.txt",
+        "varied/v02_fresher_sara_okafor.md"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q21",
+      "kind": "positive",
+      "question": "Who made a slow nightly batch job much faster?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.3689275439919344,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 602,
+          "char_end": 878,
+          "similarity": 0.3689,
+          "labelled": true,
+          "text": "Senior Software Engineer, Brightline Payments (2016 - 2020)\n- Built the payment-reconciliation service in Python and PostgreSQL; reduced nightly job time\n  from 5 hours to 40 minutes with partitioned tables.\n- Owned on-call for the ledger service; wrote the incident runbooks."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "summary",
+          "char_start": 87,
+          "char_end": 179,
+          "similarity": 0.2823,
+          "labelled": false,
+          "text": "Staff backend engineer with 11 years building high-throughput APIs and event-driven systems."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 205,
+          "char_end": 600,
+          "similarity": 0.2807,
+          "labelled": false,
+          "text": "Staff Software Engineer, Tidewater Logistics (2020 - Present)\n- Led the migration of the shipment-tracking platform from a Django monolith to FastAPI\n  microservices running in production on Kubernetes (EKS), serving 40M requests per day.\n- Designed the Kafka-based event backbone (30+ topics) for real-time shipment status updates.\n- Mentored 6 engineers; introduced contract testing with Pact."
+        },
+        {
+          "number": 4,
+          "candidate": "resume_02_michael_chen.txt",
+          "section": "experience",
+          "char_start": 277,
+          "char_end": 418,
+          "similarity": 0.2796,
+          "labelled": false,
+          "text": "4 years\nML Engineer | Northwind AI | 2020-Present\nDeveloped fine-tuning pipelines, experiment tracking systems, and cloud-hosted AI services."
+        },
+        {
+          "number": 5,
+          "candidate": "resume_05_priya_nair.txt",
+          "section": "experience",
+          "char_start": 255,
+          "char_end": 400,
+          "similarity": 0.271,
+          "labelled": false,
+          "text": "2 years\nML Engineer | Finverse Labs | 2022-Present\nBuilt and deployed forecasting and classification models, and supported production monitoring."
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "experience",
+          "char_start": 688,
+          "char_end": 802,
+          "similarity": 0.2669,
+          "labelled": false,
+          "text": "Data Intern, Lumen Analytics (Summer 2025, 10 weeks)\nCleaned survey data with pandas and built Tableau dashboards."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 301,
+          "char_end": 695,
+          "similarity": 0.2644,
+          "labelled": false,
+          "text": "Engineering Manager, Lindenpay (2021 - Present)\n- Manage two teams (11 engineers) owning checkout and fraud detection.\n- Hired 9 engineers; built the interview loop and leveling guide.\n- Drove the adoption of feature flags and trunk-based development; deploy frequency rose from\n  weekly to 20+ times per day.\n- Partnered with data science to ship a fraud model that reduced chargebacks by 23%."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 158,
+          "char_end": 528,
+          "similarity": 0.2625,
+          "labelled": false,
+          "text": "Machine Learning Engineer, Northwind AI (2022 - Present)\nBuilt a retrieval-augmented generation (RAG) assistant over 2M support articles using pgvector,\na cross-encoder reranker and GPT-class models; cut average handling time by 18%.\nSet up offline evaluation with RAGAS and a 400-question golden set.\nDeployed model services with FastAPI and Docker on Google Cloud Run."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v06_senior_rachel_kim.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q22",
+      "kind": "positive",
+      "question": "Who has led a migration from a monolith to microservices?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.3639845812490485,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 205,
+          "char_end": 600,
+          "similarity": 0.364,
+          "labelled": true,
+          "text": "Staff Software Engineer, Tidewater Logistics (2020 - Present)\n- Led the migration of the shipment-tracking platform from a Django monolith to FastAPI\n  microservices running in production on Kubernetes (EKS), serving 40M requests per day.\n- Designed the Kafka-based event backbone (30+ topics) for real-time shipment status updates.\n- Mentored 6 engineers; introduced contract testing with Pact."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "summary",
+          "char_start": 101,
+          "char_end": 282,
+          "similarity": 0.2973,
+          "labelled": false,
+          "text": "Engineering manager and former full-stack engineer with 14 years of experience across fintech\nand e-commerce. Comfortable owning roadmaps, hiring, and hands-on architecture reviews."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "other",
+          "char_start": 380,
+          "char_end": 454,
+          "similarity": 0.2917,
+          "labelled": false,
+          "text": "distributed systems, competitive programming (ICPC regional finalist 2025)"
+        },
+        {
+          "number": 4,
+          "candidate": "resume_05_priya_nair.txt",
+          "section": "experience",
+          "char_start": 255,
+          "char_end": 400,
+          "similarity": 0.2888,
+          "labelled": false,
+          "text": "2 years\nML Engineer | Finverse Labs | 2022-Present\nBuilt and deployed forecasting and classification models, and supported production monitoring."
+        },
+        {
+          "number": 5,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "experience",
+          "char_start": 223,
+          "char_end": 366,
+          "similarity": 0.2867,
+          "labelled": false,
+          "text": "4 years\nSoftware Engineer | Nexora Technologies | 2020-Present\nBuilt enterprise services and integrated simple AI features into internal tools."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 159,
+          "similarity": 0.2736,
+          "labelled": false,
+          "text": "Full-stack developer with a growing focus on AI integrations and LLM application architecture."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 602,
+          "char_end": 878,
+          "similarity": 0.2613,
+          "labelled": false,
+          "text": "Senior Software Engineer, Brightline Payments (2016 - 2020)\n- Built the payment-reconciliation service in Python and PostgreSQL; reduced nightly job time\n  from 5 hours to 40 minutes with partitioned tables.\n- Owned on-call for the ledger service; wrote the incident runbooks."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v09_no_headings_tom_baker.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 583,
+          "similarity": 0.2569,
+          "labelled": false,
+          "text": "Tom Baker, tom.baker@example.com, (555) 201-0009.\n\nI am a DevOps engineer with about seven years of experience. Most recently at Granite Cloud\n(2021 to now) I run the CI/CD platform: GitHub Actions and Argo CD deploying to three Kubernetes\nclusters, all managed with Terraform. Before that I was a systems administrator at Oakridge\nBank (2017 to 2021), where I automated Linux server patching with Ansible.\n\nI hold the Certified Kubernetes Administrator (CKA) certification and an AWS Solutions\nArchitect Associate certification. I studied Network Engineering at Midvale Polytechnic."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v06_senior_rachel_kim.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q23",
+      "kind": "positive",
+      "question": "Who has introduced feature flags or trunk-based development?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.3170894869614371,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "projects",
+          "char_start": 1230,
+          "char_end": 1386,
+          "similarity": 0.3171,
+          "labelled": true,
+          "text": "- Open-source maintainer of a small React form-validation library (1.2k GitHub stars).\n- Speaker at a regional JavaScript meetup on trunk-based development."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 301,
+          "char_end": 695,
+          "similarity": 0.3114,
+          "labelled": true,
+          "text": "Engineering Manager, Lindenpay (2021 - Present)\n- Manage two teams (11 engineers) owning checkout and fraud detection.\n- Hired 9 engineers; built the interview loop and leveling guide.\n- Drove the adoption of feature flags and trunk-based development; deploy frequency rose from\n  weekly to 20+ times per day.\n- Partnered with data science to ship a fraud model that reduced chargebacks by 23%."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "experience",
+          "char_start": 133,
+          "char_end": 337,
+          "similarity": 0.2711,
+          "labelled": false,
+          "text": "Android Developer at Savanna Mobile (2022-present) - shipped a Kotlin and Jetpack\nCompose banking app with 500k installs; Junior Developer at Pixelcraft (2021-2022) - built\nFlutter prototypes for clients."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "summary",
+          "char_start": 66,
+          "char_end": 120,
+          "similarity": 0.2684,
+          "labelled": false,
+          "text": "Mobile developer, 4 years, Android and cross-platform."
+        },
+        {
+          "number": 5,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 159,
+          "similarity": 0.2562,
+          "labelled": false,
+          "text": "Full-stack developer with a growing focus on AI integrations and LLM application architecture."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "skills",
+          "char_start": 150,
+          "char_end": 210,
+          "similarity": 0.2538,
+          "labelled": false,
+          "text": "Java, Python, REST APIs, SQL, Git, GitHub, Docker, basic NLP"
+        },
+        {
+          "number": 7,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "experience",
+          "char_start": 223,
+          "char_end": 366,
+          "similarity": 0.2422,
+          "labelled": false,
+          "text": "4 years\nSoftware Engineer | Nexora Technologies | 2020-Present\nBuilt enterprise services and integrated simple AI features into internal tools."
+        },
+        {
+          "number": 8,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "skills",
+          "char_start": 178,
+          "char_end": 262,
+          "similarity": 0.2348,
+          "labelled": false,
+          "text": "Python, JavaScript, TensorFlow, LLMs, REST APIs, LangChain, Docker, Git, GitHub, SQL"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v10_multipage_elena_petrova.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q24",
+      "kind": "positive",
+      "question": "Who has worked on fraud detection?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.5099124887193595,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 301,
+          "char_end": 695,
+          "similarity": 0.5099,
+          "labelled": true,
+          "text": "Engineering Manager, Lindenpay (2021 - Present)\n- Manage two teams (11 engineers) owning checkout and fraud detection.\n- Hired 9 engineers; built the interview loop and leveling guide.\n- Drove the adoption of feature flags and trunk-based development; deploy frequency rose from\n  weekly to 20+ times per day.\n- Partnered with data science to ship a fraud model that reduced chargebacks by 23%."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "certifications",
+          "char_start": 453,
+          "char_end": 533,
+          "similarity": 0.2828,
+          "labelled": false,
+          "text": "Data Analytics Bootcamp, Codeway Academy, 2023 (12 weeks, Python, SQL, Power BI)"
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "experience",
+          "char_start": 501,
+          "char_end": 631,
+          "similarity": 0.2761,
+          "labelled": false,
+          "text": "Security Analyst, Northstar Bank (2018 - 2021)\n* Triaged penetration-test findings and tracked remediation with engineering teams."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 217,
+          "similarity": 0.2724,
+          "labelled": false,
+          "text": "Former high-school chemistry teacher (6 years) who moved into data analysis through a\nbootcamp. Strong at explaining results to non-technical audiences."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 602,
+          "char_end": 878,
+          "similarity": 0.2706,
+          "labelled": false,
+          "text": "Senior Software Engineer, Brightline Payments (2016 - 2020)\n- Built the payment-reconciliation service in Python and PostgreSQL; reduced nightly job time\n  from 5 hours to 40 minutes with partitioned tables.\n- Owned on-call for the ledger service; wrote the incident runbooks."
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "experience",
+          "char_start": 206,
+          "char_end": 499,
+          "similarity": 0.2664,
+          "labelled": false,
+          "text": "Application Security Engineer, Ironclad Insurance (2021 - Present)\n* Ran threat-modelling sessions for 25 services; embedded SAST (Semgrep) and dependency scanning\n  in CI for 300 repositories.\n* Led the response to a leaked API key incident; rotated secrets and moved them to HashiCorp Vault."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "projects",
+          "char_start": 178,
+          "char_end": 431,
+          "similarity": 0.2637,
+          "labelled": false,
+          "text": "### Churn prediction for a telecom dataset\nGradient-boosted trees (XGBoost) with SHAP explanations; AUC 0.87 on a held-out set.\n\n### Reproducing a sentiment paper\nFine-tuned a DistilBERT model with PyTorch and Hugging Face Transformers on movie reviews."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "skills",
+          "char_start": 678,
+          "char_end": 767,
+          "similarity": 0.2527,
+          "labelled": false,
+          "text": "Threat modelling, OWASP Top 10, Semgrep, Burp Suite, HashiCorp Vault, Python, Go, AWS IAM"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v10_multipage_elena_petrova.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q25",
+      "kind": "positive",
+      "question": "Who speaks German?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.49614046051251715,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "other",
+          "char_start": 1688,
+          "char_end": 1739,
+          "similarity": 0.4961,
+          "labelled": true,
+          "text": "English (fluent), German (native), Russian (native)"
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 91,
+          "similarity": 0.2838,
+          "labelled": false,
+          "text": "Elena Petrova\nelena.petrova@example.com | (555) 201-0010 | Berlin, Germany (open to remote)"
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "experience",
+          "char_start": 308,
+          "char_end": 454,
+          "similarity": 0.2286,
+          "labelled": false,
+          "text": "Research Scientist, Corvid Labs (2024 - Present)\nQuantized 7B-parameter language models to 4-bit for laptop inference with under 2% accuracy loss."
+        },
+        {
+          "number": 4,
+          "candidate": "resume_09_emma_thompson.txt",
+          "section": "experience",
+          "char_start": 268,
+          "char_end": 407,
+          "similarity": 0.2246,
+          "labelled": false,
+          "text": "6 years\nResearch Engineer | Insight Labs | 2018-Present\nDeveloped language models, benchmarked NLP systems, and built evaluation pipelines."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 33,
+          "similarity": 0.2124,
+          "labelled": false,
+          "text": "Mei Tanaka\nmei.tanaka@example.com"
+        },
+        {
+          "number": 6,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 53,
+          "similarity": 0.1816,
+          "labelled": false,
+          "text": "Javier Lopez\njavier.lopez@email.com\n+1 (949) 555-1000"
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "projects",
+          "char_start": 1230,
+          "char_end": 1386,
+          "similarity": 0.1804,
+          "labelled": false,
+          "text": "- Open-source maintainer of a small React form-validation library (1.2k GitHub stars).\n- Speaker at a regional JavaScript meetup on trunk-based development."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "other",
+          "char_start": 587,
+          "char_end": 719,
+          "similarity": 0.1783,
+          "labelled": false,
+          "text": "- \"Pruning Heads You Can Afford to Lose\", workshop paper, 2023\n- \"Tiny but Mighty: Distilling Speech Models\", conference paper, 2022"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v10_multipage_elena_petrova.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q26",
+      "kind": "positive",
+      "question": "Who knows the Go programming language?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.4202557503440526,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "skills",
+          "char_start": 117,
+          "char_end": 184,
+          "similarity": 0.4203,
+          "labelled": true,
+          "text": "Go, Python, gRPC, Redis, Docker, Kubernetes (minikube), Linux, Bash"
+        },
+        {
+          "number": 2,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "skills",
+          "char_start": 178,
+          "char_end": 262,
+          "similarity": 0.3899,
+          "labelled": false,
+          "text": "Python, JavaScript, TensorFlow, LLMs, REST APIs, LangChain, Docker, Git, GitHub, SQL"
+        },
+        {
+          "number": 3,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "experience",
+          "char_start": 281,
+          "char_end": 439,
+          "similarity": 0.3691,
+          "labelled": false,
+          "text": "3 years\nPrompt Engineer | BrightBridge AI | 2021-Present\nBuilt LLM workflows, benchmarked prompt strategies, and connected retrieval systems to user products."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "education",
+          "char_start": 46,
+          "char_end": 108,
+          "similarity": 0.3689,
+          "labelled": false,
+          "text": "B.Sc. Software Engineering, Eastvale University, expected 2026"
+        },
+        {
+          "number": 5,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "skills",
+          "char_start": 150,
+          "char_end": 210,
+          "similarity": 0.3661,
+          "labelled": false,
+          "text": "Java, Python, REST APIs, SQL, Git, GitHub, Docker, basic NLP"
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "skills",
+          "char_start": 604,
+          "char_end": 675,
+          "similarity": 0.3549,
+          "labelled": false,
+          "text": "Python, FastAPI, PostgreSQL, Docker (coursework), LangChain, FAISS, Git"
+        },
+        {
+          "number": 7,
+          "candidate": "resume_02_michael_chen.txt",
+          "section": "skills",
+          "char_start": 172,
+          "char_end": 264,
+          "similarity": 0.3446,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, MLflow, pandas, NumPy, SQL, AWS, Docker, Git, GitHub"
+        },
+        {
+          "number": 8,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 159,
+          "similarity": 0.3443,
+          "labelled": false,
+          "text": "Full-stack developer with a growing focus on AI integrations and LLM application architecture."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v04_fresher_mei_tanaka.txt",
+        "varied/v13_security_fatima_zahra.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q27",
+      "kind": "positive",
+      "question": "Who has used gradient boosting models such as XGBoost or LightGBM?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.6134649216220938,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "projects",
+          "char_start": 178,
+          "char_end": 431,
+          "similarity": 0.6135,
+          "labelled": true,
+          "text": "### Churn prediction for a telecom dataset\nGradient-boosted trees (XGBoost) with SHAP explanations; AUC 0.87 on a held-out set.\n\n### Reproducing a sentiment paper\nFine-tuned a DistilBERT model with PyTorch and Hugging Face Transformers on movie reviews."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 530,
+          "char_end": 671,
+          "similarity": 0.4771,
+          "labelled": true,
+          "text": "Data Scientist, Bluepeak Retail (2020 - 2022)\nForecasted weekly demand for 3,000 products with LightGBM; owned the feature store in BigQuery."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "skills",
+          "char_start": 443,
+          "char_end": 522,
+          "similarity": 0.3541,
+          "labelled": false,
+          "text": "Python, PyTorch, scikit-learn, XGBoost, SHAP, Hugging Face Transformers, SQL, R"
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 158,
+          "char_end": 528,
+          "similarity": 0.3226,
+          "labelled": false,
+          "text": "Machine Learning Engineer, Northwind AI (2022 - Present)\nBuilt a retrieval-augmented generation (RAG) assistant over 2M support articles using pgvector,\na cross-encoder reranker and GPT-class models; cut average handling time by 18%.\nSet up offline evaluation with RAGAS and a 400-question golden set.\nDeployed model services with FastAPI and Docker on Google Cloud Run."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "summary",
+          "char_start": 62,
+          "char_end": 145,
+          "similarity": 0.3118,
+          "labelled": false,
+          "text": "Machine learning engineer with 5 years of experience shipping NLP and LLM features."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_07_lina_fernandez.txt",
+          "section": "experience",
+          "char_start": 268,
+          "char_end": 414,
+          "similarity": 0.2861,
+          "labelled": false,
+          "text": "7 years\nSenior ML Engineer | Orbit Analytics | 2017-Present\nLed model training pipelines, evaluation frameworks, and production deployment on AWS."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "experience",
+          "char_start": 239,
+          "char_end": 393,
+          "similarity": 0.2736,
+          "labelled": false,
+          "text": "Junior Data Analyst, Brightfield Schools Network (2024 - Present)\nBuilt attendance and grade dashboards in Power BI; wrote SQL queries against SQL Server."
+        },
+        {
+          "number": 8,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "char_start": 162,
+          "char_end": 246,
+          "similarity": 0.2694,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, AWS, Docker, Kubernetes, Git, GitHub, MLflow"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v02_fresher_sara_okafor.md",
+        "varied/v07_ml_engineer_omar_haddad.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q28",
+      "kind": "positive",
+      "question": "Who has managed secrets with a tool like HashiCorp Vault?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.6028427023260643,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "experience",
+          "char_start": 206,
+          "char_end": 499,
+          "similarity": 0.6028,
+          "labelled": true,
+          "text": "Application Security Engineer, Ironclad Insurance (2021 - Present)\n* Ran threat-modelling sessions for 25 services; embedded SAST (Semgrep) and dependency scanning\n  in CI for 300 repositories.\n* Led the response to a leaked API key incident; rotated secrets and moved them to HashiCorp Vault."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "skills",
+          "char_start": 678,
+          "char_end": 767,
+          "similarity": 0.416,
+          "labelled": false,
+          "text": "Threat modelling, OWASP Top 10, Semgrep, Burp Suite, HashiCorp Vault, Python, Go, AWS IAM"
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "char_start": 981,
+          "char_end": 1102,
+          "similarity": 0.2877,
+          "labelled": false,
+          "text": "Python, FastAPI, Django, Flask, Kafka, PostgreSQL, MySQL, Redis, Docker, Kubernetes, AWS (EKS,\nRDS, SQS), Terraform, Pact"
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "summary",
+          "char_start": 96,
+          "char_end": 185,
+          "similarity": 0.2835,
+          "labelled": false,
+          "text": "Security engineer specialising in application security, threat modelling and secure SDLC."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 880,
+          "char_end": 972,
+          "similarity": 0.2735,
+          "labelled": false,
+          "text": "Software Engineer, Quarry Labs (2014 - 2016)\n- Maintained internal tools in Flask and MySQL."
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 301,
+          "char_end": 695,
+          "similarity": 0.2663,
+          "labelled": false,
+          "text": "Engineering Manager, Lindenpay (2021 - Present)\n- Manage two teams (11 engineers) owning checkout and fraud detection.\n- Hired 9 engineers; built the interview loop and leveling guide.\n- Drove the adoption of feature flags and trunk-based development; deploy frequency rose from\n  weekly to 20+ times per day.\n- Partnered with data science to ship a fraud model that reduced chargebacks by 23%."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "skills",
+          "char_start": 604,
+          "char_end": 675,
+          "similarity": 0.2583,
+          "labelled": false,
+          "text": "Python, FastAPI, PostgreSQL, Docker (coursework), LangChain, FAISS, Git"
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "skills",
+          "char_start": 680,
+          "char_end": 776,
+          "similarity": 0.2462,
+          "labelled": false,
+          "text": "Python, PyTorch, Hugging Face, LangChain, pgvector, FAISS, RAGAS, FastAPI, Docker, GCP, BigQuery"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v13_security_fatima_zahra.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q29",
+      "kind": "positive",
+      "question": "Who built a high-throughput rate limiter?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.4390828928261621,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "projects",
+          "char_start": 195,
+          "char_end": 368,
+          "similarity": 0.4391,
+          "labelled": true,
+          "text": "Built a rate limiter service in Go backed by Redis, load-tested to 5k requests/second\non a laptop. Wrote a Kubernetes operator tutorial for a university club using minikube."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "summary",
+          "char_start": 87,
+          "char_end": 179,
+          "similarity": 0.2102,
+          "labelled": false,
+          "text": "Staff backend engineer with 11 years building high-throughput APIs and event-driven systems."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 530,
+          "char_end": 671,
+          "similarity": 0.2091,
+          "labelled": false,
+          "text": "Data Scientist, Bluepeak Retail (2020 - 2022)\nForecasted weekly demand for 3,000 products with LightGBM; owned the feature store in BigQuery."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "projects",
+          "char_start": 138,
+          "char_end": 394,
+          "similarity": 0.2049,
+          "labelled": false,
+          "text": "City bike trips pipeline: Airflow DAG that ingests daily CSV dumps into a PostgreSQL warehouse,\nwith dbt models for daily station usage. Ran locally with Docker Compose.\n\nStreaming demo: Kafka producer and consumer in Python that simulated sensor readings."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 301,
+          "char_end": 695,
+          "similarity": 0.1971,
+          "labelled": false,
+          "text": "Engineering Manager, Lindenpay (2021 - Present)\n- Manage two teams (11 engineers) owning checkout and fraud detection.\n- Hired 9 engineers; built the interview loop and leveling guide.\n- Drove the adoption of feature flags and trunk-based development; deploy frequency rose from\n  weekly to 20+ times per day.\n- Partnered with data science to ship a fraud model that reduced chargebacks by 23%."
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 602,
+          "char_end": 878,
+          "similarity": 0.1915,
+          "labelled": false,
+          "text": "Senior Software Engineer, Brightline Payments (2016 - 2020)\n- Built the payment-reconciliation service in Python and PostgreSQL; reduced nightly job time\n  from 5 hours to 40 minutes with partitioned tables.\n- Owned on-call for the ledger service; wrote the incident runbooks."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 205,
+          "char_end": 600,
+          "similarity": 0.1866,
+          "labelled": false,
+          "text": "Staff Software Engineer, Tidewater Logistics (2020 - Present)\n- Led the migration of the shipment-tracking platform from a Django monolith to FastAPI\n  microservices running in production on Kubernetes (EKS), serving 40M requests per day.\n- Designed the Kafka-based event backbone (30+ topics) for real-time shipment status updates.\n- Mentored 6 engineers; introduced contract testing with Pact."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "projects",
+          "char_start": 178,
+          "char_end": 431,
+          "similarity": 0.1773,
+          "labelled": false,
+          "text": "### Churn prediction for a telecom dataset\nGradient-boosted trees (XGBoost) with SHAP explanations; AUC 0.87 on a held-out set.\n\n### Reproducing a sentiment paper\nFine-tuned a DistilBERT model with PyTorch and Hugging Face Transformers on movie reviews."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v04_fresher_mei_tanaka.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "q30",
+      "kind": "positive",
+      "question": "Who has worked as a teaching assistant?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.5356127815395885,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "experience",
+          "char_start": 395,
+          "char_end": 438,
+          "similarity": 0.5356,
+          "labelled": false,
+          "text": "Teacher, Westgate High School (2017 - 2023)"
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "experience",
+          "char_start": 538,
+          "char_end": 633,
+          "similarity": 0.4162,
+          "labelled": true,
+          "text": "Teaching Assistant, Northfield University (2024-2025): ran weekly labs for Intro to Statistics."
+        },
+        {
+          "number": 3,
+          "candidate": "resume_06_owen_brooks.txt",
+          "section": "education",
+          "char_start": 381,
+          "char_end": 431,
+          "similarity": 0.3953,
+          "labelled": false,
+          "text": "Associate's in Information Systems, Boston College"
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 217,
+          "similarity": 0.3696,
+          "labelled": false,
+          "text": "Former high-school chemistry teacher (6 years) who moved into data analysis through a\nbootcamp. Strong at explaining results to non-technical audiences."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "certifications",
+          "char_start": 1574,
+          "char_end": 1603,
+          "similarity": 0.3402,
+          "labelled": false,
+          "text": "- Professional Scrum Master I"
+        },
+        {
+          "number": 6,
+          "candidate": "resume_07_lina_fernandez.txt",
+          "section": "summary",
+          "char_start": 67,
+          "char_end": 146,
+          "similarity": 0.3283,
+          "labelled": false,
+          "text": "Senior ML engineer experienced in training, fine-tuning, and serving AI models."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "skills",
+          "char_start": 728,
+          "char_end": 797,
+          "similarity": 0.3163,
+          "labelled": false,
+          "text": "PyTorch, JAX, CUDA, quantization, knowledge distillation, Python, C++"
+        },
+        {
+          "number": 8,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "skills",
+          "char_start": 178,
+          "char_end": 262,
+          "similarity": 0.3159,
+          "labelled": false,
+          "text": "Python, JavaScript, TensorFlow, LLMs, REST APIs, LangChain, Docker, Git, GitHub, SQL"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v02_fresher_sara_okafor.md"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "n01",
+      "kind": "negative",
+      "question": "Who has COBOL mainframe experience?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.3593186273607781,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "summary",
+          "char_start": 101,
+          "char_end": 282,
+          "similarity": 0.3593,
+          "labelled": false,
+          "text": "Engineering manager and former full-stack engineer with 14 years of experience across fintech\nand e-commerce. Comfortable owning roadmaps, hiring, and hands-on architecture reviews."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "summary",
+          "char_start": 87,
+          "char_end": 179,
+          "similarity": 0.3593,
+          "labelled": false,
+          "text": "Staff backend engineer with 11 years building high-throughput APIs and event-driven systems."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "experience",
+          "char_start": 133,
+          "char_end": 337,
+          "similarity": 0.3425,
+          "labelled": false,
+          "text": "Android Developer at Savanna Mobile (2022-present) - shipped a Kotlin and Jetpack\nCompose banking app with 500k installs; Junior Developer at Pixelcraft (2021-2022) - built\nFlutter prototypes for clients."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "experience",
+          "char_start": 538,
+          "char_end": 633,
+          "similarity": 0.3421,
+          "labelled": false,
+          "text": "Teaching Assistant, Northfield University (2024-2025): ran weekly labs for Intro to Statistics."
+        },
+        {
+          "number": 5,
+          "candidate": "resume_02_michael_chen.txt",
+          "section": "skills",
+          "char_start": 172,
+          "char_end": 264,
+          "similarity": 0.3266,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, MLflow, pandas, NumPy, SQL, AWS, Docker, Git, GitHub"
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "summary",
+          "char_start": 66,
+          "char_end": 120,
+          "similarity": 0.3262,
+          "labelled": false,
+          "text": "Mobile developer, 4 years, Android and cross-platform."
+        },
+        {
+          "number": 7,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "experience",
+          "char_start": 223,
+          "char_end": 366,
+          "similarity": 0.3178,
+          "labelled": false,
+          "text": "4 years\nSoftware Engineer | Nexora Technologies | 2020-Present\nBuilt enterprise services and integrated simple AI features into internal tools."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "skills",
+          "char_start": 680,
+          "char_end": 776,
+          "similarity": 0.3155,
+          "labelled": false,
+          "text": "Python, PyTorch, Hugging Face, LangChain, pgvector, FAISS, RAGAS, FastAPI, Docker, GCP, BigQuery"
+        }
+      ],
+      "labelled_resumes": [],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    },
+    {
+      "id": "n02",
+      "kind": "negative",
+      "question": "Who is a licensed medical doctor?",
+      "http_status": 200,
+      "answer": "Not found in resumes.",
+      "found": false,
+      "generated": false,
+      "summary_unavailable": false,
+      "summary_unavailable_reason": null,
+      "top_similarity": 0.24829226794824016,
+      "citations": [],
+      "labelled_resumes": [],
+      "llm_errors": [],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged as an answer: retrieval floor returned Not found (top similarity below 0.25) without calling Gemini; correct refusal for a negative."
+      },
+      "not_found": true
+    },
+    {
+      "id": "n03",
+      "kind": "negative",
+      "question": "Who is a certified Salesforce administrator?",
+      "http_status": 200,
+      "answer": "Summary unavailable. Showing the relevant resume passages instead.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.4866750308472936,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "certifications",
+          "char_start": 1574,
+          "char_end": 1603,
+          "similarity": 0.4867,
+          "labelled": false,
+          "text": "- Professional Scrum Master I"
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "certifications",
+          "char_start": 648,
+          "char_end": 659,
+          "similarity": 0.4295,
+          "labelled": false,
+          "text": "OSCP, CISSP"
+        },
+        {
+          "number": 3,
+          "candidate": "resume_06_owen_brooks.txt",
+          "section": "education",
+          "char_start": 381,
+          "char_end": 431,
+          "similarity": 0.4288,
+          "labelled": false,
+          "text": "Associate's in Information Systems, Boston College"
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "certifications",
+          "char_start": 453,
+          "char_end": 533,
+          "similarity": 0.4219,
+          "labelled": false,
+          "text": "Data Analytics Bootcamp, Codeway Academy, 2023 (12 weeks, Python, SQL, Power BI)"
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "summary",
+          "char_start": 96,
+          "char_end": 185,
+          "similarity": 0.3505,
+          "labelled": false,
+          "text": "Security engineer specialising in application security, threat modelling and secure SDLC."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "education",
+          "char_start": 421,
+          "char_end": 482,
+          "similarity": 0.345,
+          "labelled": false,
+          "text": "Master's in Computer Science, Georgia Institute of Technology"
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v09_no_headings_tom_baker.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 583,
+          "similarity": 0.3375,
+          "labelled": false,
+          "text": "Tom Baker, tom.baker@example.com, (555) 201-0009.\n\nI am a DevOps engineer with about seven years of experience. Most recently at Granite Cloud\n(2021 to now) I run the CI/CD platform: GitHub Actions and Argo CD deploying to three Kubernetes\nclusters, all managed with Terraform. Before that I was a systems administrator at Oakridge\nBank (2017 to 2021), where I automated Linux server patching with Ansible.\n\nI hold the Certified Kubernetes Administrator (CKA) certification and an AWS Solutions\nArchitect Associate certification. I studied Network Engineering at Midvale Polytechnic."
+        },
+        {
+          "number": 8,
+          "candidate": "resume_07_lina_fernandez.txt",
+          "section": "education",
+          "char_start": 426,
+          "char_end": 485,
+          "similarity": 0.3336,
+          "labelled": false,
+          "text": "Master's in Computer Science, University of Texas at Dallas"
+        }
+      ],
+      "labelled_resumes": [],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": {
+        "by": "Claude Opus 5.5 (opinion of the checking model, not a metric)",
+        "correct": null,
+        "citations_support_claims": null,
+        "reason": "Not judged: no generated answer; Gemini returned 429 daily quota exhausted, route fell back to passages only."
+      },
+      "not_found": false
+    }
+  ]
+}
