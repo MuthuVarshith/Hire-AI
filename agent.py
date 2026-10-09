@@ -59,7 +59,8 @@ class _Action(BaseModel):
 
 class CallTool(_Action):
     action: Literal["call_tool"]
-    tool: str                       # checked against the allow-list by the tools node, so refusals are recorded
+    # Checked against the allow-list by the tools node, so refusals are recorded; capped because it is echoed back.
+    tool: str = Field(min_length=1, max_length=64)
     args: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -120,9 +121,11 @@ def parse_action(raw: Any) -> tuple[CallTool | ProposeShortlist | Finish | None,
 
 # --- guards (module-level so the injection tests can show each one matters) -------------
 _DELIMITER = re.compile(r"<\s*/?\s*(?:tool_results|excerpts)\s*>", re.IGNORECASE)
-# Score-like numbers in model text: "100/100", "95%", "92 points", "score: 9", "composite 88".
-_SCORE_TEXT = re.compile(r"\d+(?:\.\d+)?\s*(?:/\s*\d+|%|points?\b|pts\b)"
-                         r"|\b(?:scores?|scored|rating|rated|composite)\b\W{0,3}(?:of|is|=|at)?\s*\d", re.IGNORECASE)
+# Score-like numbers in model text: "100/100", "95%", "100 out of 100", "92 points", "scored a 100",
+# "rated as 9", "score for Ada is 97", "composite: 88", "ranked 1st". A false positive only withholds text.
+_SCORE_TEXT = re.compile(r"\d+(?:\.\d+)?\s*(?:/\s*\d+|%|percent\b|out\s+of\s+\d+|points?\b|pts\b|marks?\b)"
+                         r"|\b(?:scor\w*|rat(?:ed|ings?)|rank\w*|composite|grade[ds]?)\b[^.\d]{0,20}\d",
+                         re.IGNORECASE)
 
 
 def _defang(value: str) -> str:

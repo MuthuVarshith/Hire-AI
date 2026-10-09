@@ -764,9 +764,12 @@
             document.getElementById('agent-result').classList.remove('hidden');
             document.getElementById('agent-message').innerHTML =
                 `<span class="badge">${escapeHtml(body.status)}</span> ${escapeHtml(body.message)}`;
+            // Step errors can carry model-written text, so only fixed labels are shown here.
+            const tools = ['search_candidates', 'get_candidate_profile', 'score_candidate', 'compare_candidates',
+                           'skill_gap_report'];
             const steps = (body.steps || []).map(s => s.type === 'tool'
-                ? `${escapeHtml(s.tool)}${s.ok ? '' : ' (error: ' + escapeHtml(s.error) + ')'}`
-                : `refused: ${escapeHtml(s.error)}`);
+                ? `${tools.includes(s.tool) ? s.tool : 'unknown tool'}${s.ok ? '' : ' (failed)'}`
+                : 'reply refused');
             document.getElementById('agent-steps').innerHTML = steps.length ? 'Steps: ' + steps.join(' → ') : '';
 
             const target = document.getElementById('agent-proposal');
