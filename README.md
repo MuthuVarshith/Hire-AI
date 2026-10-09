@@ -315,7 +315,8 @@ How it answers:
 - **Retrieval:** vector search, chosen by a benchmark (see [Retrieval evaluation](#retrieval-evaluation)).
 - **Refusal:** a question whose best match is below 0.25 similarity is answered "Not found in resumes." with no LLM call.
 - **Grounding:** the LLM sees only numbered excerpts, and an answer without a valid citation becomes "Not found in resumes.".
-- **Fallback:** if Gemini is off or unavailable, you get the cited passages without a summary.
+- **Fallback:** if Gemini is off or unavailable, you get the cited passages with `summary_unavailable: true` and a reason (`llm_disabled` or `llm_error`), so a client never shows passages as a generated answer.
+- **Injection guards:** excerpts sit in a delimited data block (delimiter tags in resume text are stripped) under a "data, not instructions" rule, and replies are parsed strictly. These reduce prompt injection but don't stop it; see [docs/security-injection.md](docs/security-injection.md).
 - **Scores:** candidate scores are never read or changed by this endpoint.
 
 ### Analytics and health
@@ -442,7 +443,8 @@ The tests drop and recreate every table, so `TEST_DATABASE_URL` is refused unles
 ## Limitations
 
 - **Single user, no login.** Anyone who can reach the server can see and change all data. Don't expose it to the internet as-is.
-- **Retrieval misses some wordings.** "PhD" vs "Ph.D." and "papers" vs "paper" defeated every method in the benchmark (q12, q19). A sound fix needs a new question set, because the current one is a frozen test set.
+- **Retrieval misses some wordings.** "PhD" vs "Ph.D." and "papers" vs "paper" defeated every method in the benchmark (q19 and q12). A sound fix needs a new question set, because the current one is a frozen test set.
+- **Prompt injection is reduced, not solved.** A model can still make a false claim while citing a real passage, and keyword stuffing raises the deterministic skill score (+22.5 points in the injection tests). Details in [docs/security-injection.md](docs/security-injection.md).
 - **The not-found floor is weak.** Similarity alone can't separate answerable from unanswerable questions; refusals rely mainly on the LLM's citation check, and only three negative questions have been tried.
 - **Small benchmark.** 30 questions over 26 synthetic resumes; confidence intervals are wide. At this size PostgreSQL scans every row instead of using the HNSW index, which is exact.
 - **SQLite searches by brute force.** That's fine for hundreds of resumes; use PostgreSQL + pgvector beyond that.
