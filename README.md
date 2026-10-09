@@ -196,6 +196,7 @@ Everything works without editing `.env`. The settings you're most likely to chan
 | `DATABASE_URL` | `sqlite:///recruiting_agent.db` | SQLAlchemy connection string; see [Database setup](#3-database-setup) for PostgreSQL |
 | `EMBEDDING_PROVIDER` | `sentence-transformers` | Embeddings for retrieval: `sentence-transformers` (local, offline) or `gemini`. Never affects scores |
 | `EMBEDDING_API_MODEL` / `EMBEDDING_API_DIM` | `gemini-embedding-001` / `768` | Used when `EMBEDDING_PROVIDER=gemini` |
+| `ASK_LLM_ENABLED` | `false` | Lets "Ask the candidate pool" send retrieved resume excerpts to Gemini for a written, cited answer. Synthetic data only. When `false`, `/api/ask` returns the cited passages without a summary |
 | `MAX_RESUME_SIZE_MB` | `10` | Upload size limit |
 | `ALLOWED_RESUME_EXTENSIONS` | `.txt,.pdf,.docx` | Accepted resume file types |
 | `HOST` / `PORT` | `127.0.0.1` / `5000` | Server address, used by `python app.py` |
@@ -304,6 +305,19 @@ All endpoints return JSON. Errors come back as `{"error": "..."}` with a matchin
 | `POST` | `/api/scoring-templates` | Create a template. The four weights must sum to 1.0 |
 | `GET` / `PUT` / `DELETE` | `/api/scoring-templates/<id>` | Read, update or delete a template. The default template can't be deleted |
 
+### Ask the candidate pool
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/ask` | Body `{"question": "...", "job_id": 1}` (`job_id` optional). Returns `found`, `answer` and `citations`; each citation has the candidate, section, exact passage and its character offsets in the resume |
+
+How it answers:
+- **Retrieval:** vector search, chosen by a benchmark (see [Retrieval evaluation](#retrieval-evaluation)).
+- **Refusal:** a question whose best match is below 0.25 similarity is answered "Not found in resumes." with no LLM call.
+- **Grounding:** the LLM sees only numbered excerpts, and an answer without a valid citation becomes "Not found in resumes.".
+- **Fallback:** if Gemini is off or unavailable, you get the cited passages without a summary.
+- **Scores:** candidate scores are never read or changed by this endpoint.
+
 ### Analytics and health
 
 | Method | Endpoint | Description |
@@ -326,6 +340,25 @@ curl -X POST "http://127.0.0.1:5000/api/candidates?job_id=1" -F "resume=@sample_
 ```bash
 curl -X POST http://127.0.0.1:5000/api/screen/1/1
 ```
+
+---
+
+## Retrieval evaluation
+
+A benchmark of 30 recruiter-style questions with 52 hand-checked relevant chunks over 26 synthetic resumes. The protocol (`eval/retrieval_protocol.md`) was frozen and committed before the single measurement run on PostgreSQL + pgvector:
+
+| Configuration | Recall@1 | Recall@5 | Recall@10 | MRR@10 |
+|---|---|---|---|---|
+| vector | 0.552 | 0.781 | 0.830 | 0.833 |
+| bm25 | 0.519 | 0.886 | 0.886 | 0.776 |
+| hybrid (RRF) | 0.581 | 0.842 | 0.919 | 0.850 |
+| hybrid + reranker | 0.652 | 0.864 | 0.914 | 0.889 |
+
+Neither fusion nor the reranker improved MRR@10 by a statistically reliable margin:
+- Hybrid vs vector: +0.017, paired bootstrap 95% CI [−0.071, +0.106].
+- Reranker vs hybrid: +0.039, 95% CI [−0.056, +0.133].
+
+So the app uses **vector search**. The full method and per-question results are in [eval/retrieval_results.md](eval/retrieval_results.md), and the not-found threshold in [eval/ask_calibration.md](eval/ask_calibration.md).
 
 ---
 
@@ -409,7 +442,10 @@ The tests drop and recreate every table, so `TEST_DATABASE_URL` is refused unles
 ## Limitations
 
 - **Single user, no login.** Anyone who can reach the server can see and change all data. Don't expose it to the internet as-is.
-- **No vector index yet.** Embeddings are stored but not yet searched; retrieval and an approximate-nearest-neighbour index arrive with the next phase. SQLite will always search by brute force.
+- **Retrieval misses some wordings.** "PhD" vs "Ph.D." and "papers" vs "paper" defeated every method in the benchmark (q12, q19). A sound fix needs a new question set, because the current one is a frozen test set.
+- **The not-found floor is weak.** Similarity alone can't separate answerable from unanswerable questions; refusals rely mainly on the LLM's citation check, and only three negative questions have been tried.
+- **Small benchmark.** 30 questions over 26 synthetic resumes; confidence intervals are wide. At this size PostgreSQL scans every row instead of using the HNSW index, which is exact.
+- **SQLite searches by brute force.** That's fine for hundreds of resumes; use PostgreSQL + pgvector beyond that.
 - **Chunking relies on recognizable headings.** A resume without standard section headings (or a PDF whose text extraction loses them) is chunked by paragraph without section labels.
 - **Skill extraction without an API key uses a fixed keyword list.** Skills not on that list, and job descriptions that don't use recognizable section headings, can produce fewer required skills. A job with no extracted required skills gives every candidate a full skill score.
 - **Scoring templates and interview questions are API-only.** Jobs use the default weights unless a template ID is set through the API.
