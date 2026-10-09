@@ -448,6 +448,9 @@
                 <li class="nav-item">
                     <a class="nav-link" data-view="analytics">📈 Analytics</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="agent">🧭 Agent</a>
+                </li>
             </ul>
         </div>
 
@@ -606,6 +609,30 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Agent: ask, review the proposed shortlist, approve or reject -->
+                <div id="agent" class="view">
+                    <div class="card">
+                        <div class="card-title">Ask the agent</div>
+                        <div class="form-group">
+                            <label>Job (needed for a shortlist)</label>
+                            <select id="agent-job-select"><option value="">Loading...</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Request</label>
+                            <textarea id="agent-request" rows="2" maxlength="500"
+                                      placeholder="e.g., Shortlist the top 3 candidates with Python and Docker"></textarea>
+                        </div>
+                        <button class="btn btn-primary" id="agent-run-btn" onclick="runAgent()">Run</button>
+                        <div id="agent-error" class="alert alert-error hidden" style="margin-top: 12px;"></div>
+                    </div>
+                    <div class="card hidden" id="agent-result">
+                        <div class="card-title">Result</div>
+                        <div id="agent-message"></div>
+                        <div id="agent-steps" class="text-muted" style="font-size: 12px; margin: 8px 0;"></div>
+                        <div id="agent-proposal"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -677,7 +704,8 @@
             dashboard: { title: 'Dashboard', render: () => loadDashboard() },
             jobs: { title: 'Jobs', render: () => loadJobs() },
             candidates: { title: 'Candidates', render: () => loadCandidates() },
-            analytics: { title: 'Analytics', render: () => loadAnalytics() }
+            analytics: { title: 'Analytics', render: () => loadAnalytics() },
+            agent: { title: 'Agent', render: () => loadAgent() }
         };
 
         function setupNavigation() {
@@ -709,6 +737,106 @@
             return String(value ?? '').replace(/[&<>"']/g, c => (
                 { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
             ));
+        }
+
+        // --- Agent ------------------------------------------------------------------
+        // The agent proposes; only these buttons (POST /api/agent/approve) save a shortlist.
+        let agentThreadId = null;
+
+        async function loadAgent() {
+            const select = document.getElementById('agent-job-select');
+            try {
+                const jobs = await fetch(`${API_BASE}/jobs`).then(r => r.json());
+                select.innerHTML = '<option value="">No job</option>' +
+                    jobs.map(j => `<option value="${j.id}">${escapeHtml(j.title)}</option>`).join('');
+            } catch (e) {
+                select.innerHTML = '<option value="">No job</option>';
+            }
+        }
+
+        function showAgentError(message) {
+            const box = document.getElementById('agent-error');
+            box.textContent = message || '';
+            box.classList.toggle('hidden', !message);
+        }
+
+        function renderAgentResult(body) {
+            document.getElementById('agent-result').classList.remove('hidden');
+            document.getElementById('agent-message').innerHTML =
+                `<span class="badge">${escapeHtml(body.status)}</span> ${escapeHtml(body.message)}`;
+            const steps = (body.steps || []).map(s => s.type === 'tool'
+                ? `${escapeHtml(s.tool)}${s.ok ? '' : ' (error: ' + escapeHtml(s.error) + ')'}`
+                : `refused: ${escapeHtml(s.error)}`);
+            document.getElementById('agent-steps').innerHTML = steps.length ? 'Steps: ' + steps.join(' → ') : '';
+
+            const target = document.getElementById('agent-proposal');
+            const proposal = body.proposal;
+            if (!proposal) { target.innerHTML = ''; return; }
+            const rows = proposal.entries.map(e => `
+                <tr>
+                    <td><strong>${escapeHtml(e.candidate_name)}</strong><br>
+                        <span class="text-muted" style="font-size:12px;">score: ${escapeHtml(e.score_source)}</span></td>
+                    <td>${scorePill(e.composite_score)}</td>
+                    <td>${(e.citations || []).map(c => `<div style="font-size:12px; margin-bottom:6px;">
+                        <span class="text-muted">${escapeHtml(c.section)} [${c.char_start}-${c.char_end}]</span><br>
+                        ${escapeHtml(c.text)}</div>`).join('') || '<span class="text-muted">—</span>'}</td>
+                </tr>`).join('');
+            const decided = body.shortlist
+                ? `<div class="alert">Approved by ${escapeHtml(body.shortlist.approved_by)} at ${escapeHtml(body.shortlist.approved_at)} UTC</div>`
+                : '';
+            const pending = body.status === 'pending_approval';
+            target.innerHTML = `
+                ${proposal.note ? `<p class="text-muted">Agent note: ${escapeHtml(proposal.note)}</p>` : ''}
+                <table><thead><tr><th>Candidate</th><th>Score</th><th>Cited passages</th></tr></thead>
+                <tbody>${rows}</tbody></table>
+                ${decided}
+                ${pending ? `
+                <div class="form-group" style="margin-top: 12px;">
+                    <label>Reviewer</label><input type="text" id="agent-reviewer" maxlength="255" placeholder="Your name">
+                </div>
+                <div class="form-group"><label>Note (optional)</label><input type="text" id="agent-note" maxlength="2000"></div>
+                <button class="btn btn-primary" onclick="decideShortlist('approve')">Approve</button>
+                <button class="btn btn-secondary" onclick="decideShortlist('reject')">Reject</button>` : ''}`;
+        }
+
+        async function runAgent() {
+            showAgentError('');
+            const button = document.getElementById('agent-run-btn');
+            const jobId = document.getElementById('agent-job-select').value;
+            const payload = { request: document.getElementById('agent-request').value };
+            if (jobId) payload.job_id = parseInt(jobId, 10);
+            button.disabled = true;
+            try {
+                const res = await fetch(`${API_BASE}/agent/run`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                });
+                const body = await res.json();
+                if (!res.ok) { showAgentError(body.error || 'The agent could not run.'); return; }
+                agentThreadId = body.thread_id;
+                renderAgentResult(body);
+            } catch (e) {
+                showAgentError(`Could not reach the backend at ${API_BASE}.`);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function decideShortlist(decision) {
+            showAgentError('');
+            const reviewer = document.getElementById('agent-reviewer').value.trim();
+            if (!reviewer) { showAgentError('Enter your name as the reviewer.'); return; }
+            const note = document.getElementById('agent-note').value.trim() || null;
+            try {
+                const res = await fetch(`${API_BASE}/agent/approve/${encodeURIComponent(agentThreadId)}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ decision, reviewer, note })
+                });
+                const body = await res.json();
+                if (!res.ok) { showAgentError(body.error || 'The decision was not recorded.'); return; }
+                renderAgentResult(body);
+            } catch (e) {
+                showAgentError(`Could not reach the backend at ${API_BASE}.`);
+            }
         }
 
         function scorePill(score) {
