@@ -281,18 +281,19 @@ def check_loop(result, fake, expected_calls):
     assert result["status"] == "stopped"
     assert len(fake.prompts) == expected_calls
     assert len(result["steps"]) <= agent.MAX_TURNS
+    assert result["steps"][-1]["type"] == "refused"
 
 
-@pytest.mark.parametrize("reply,limit", [(search("Python"), "MAX_TOOL_CALLS"), ("not json", "MAX_TURNS")])
-def test_llm_cannot_loop_past_the_caps(pool_with, reply, limit):
+# One more prompt than tool calls: after the last call the planner may still propose or finish.
+@pytest.mark.parametrize("reply,calls", [(search("Python"), agent.MAX_TOOL_CALLS + 1), ("not json", agent.MAX_TURNS)])
+def test_llm_cannot_loop_past_the_caps(pool_with, reply, calls):
     result, fake = scenario_loop(pool_with, reply)
-    check_loop(result, fake, getattr(agent, limit))
-    assert result["steps"][-1]["type"] == ("tool" if limit == "MAX_TOOL_CALLS" else "refused")
+    check_loop(result, fake, calls)
 
 
 @pytest.mark.parametrize("reply", [search("Python"), "not json"])
 def test_llm_cannot_loop_past_the_caps_unguarded(pool_with, monkeypatch, reply):
-    expected = agent.MAX_TOOL_CALLS
+    expected = agent.MAX_TOOL_CALLS + 1
     monkeypatch.setattr(agent, "MAX_TOOL_CALLS", 10**9)
     monkeypatch.setattr(agent, "MAX_TURNS", 10**9)
     with pytest.raises((AssertionError, GraphRecursionError)):

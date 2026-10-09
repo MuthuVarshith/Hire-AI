@@ -332,7 +332,7 @@ def test_tool_cap_through_the_api(pool, monkeypatch):
                                              "args": {"query": "Python", "job_id": job_id}}))
     body = run(api, "Shortlist the best", job_id=job_id).get_json()
     assert body["status"] == "stopped" and body["proposal"] is None
-    assert len(fake.prompts) == len(body["steps"]) == agent.MAX_TOOL_CALLS
+    assert len(fake.prompts) == len(body["steps"]) == agent.MAX_TOOL_CALLS + 1  # the last reply is refused
 
 
 def test_unexpected_errors_are_generic(pool, monkeypatch):

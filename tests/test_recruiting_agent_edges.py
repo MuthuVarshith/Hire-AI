@@ -51,8 +51,11 @@ def test_failed_tool_calls_count_toward_the_cap(env, reply):
     ctx, ids, saver = env
     result, fake = llm_run(ctx, saver, reply, job_id=ids["backend"])
     assert result["status"] == "stopped" and result["proposal"] is None
-    assert len(fake.prompts) == len(result["steps"]) == agent.MAX_TOOL_CALLS
-    assert all(s["type"] == "tool" and not s["ok"] and s["error"] for s in result["steps"])
+    # After the last call the planner is asked once more; another tool call then ends the run.
+    assert len(fake.prompts) == len(result["steps"]) == agent.MAX_TOOL_CALLS + 1
+    calls, last = result["steps"][:-1], result["steps"][-1]
+    assert all(s["type"] == "tool" and not s["ok"] and s["error"] for s in calls)
+    assert last == {"type": "refused", "error": "tool-call limit reached"}
 
 
 def test_a_run_one_call_under_the_cap_can_still_propose(env):
@@ -63,8 +66,6 @@ def test_a_run_one_call_under_the_cap_can_still_propose(env):
     assert result["status"] == "pending_approval" and len(result["steps"]) == agent.MAX_TOOL_CALLS - 1
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: plan() checks the cap before asking the planner (agent.py:327), so "
-                                       "after the MAX_TOOL_CALLS-th call a run can never propose or answer")
 def test_a_run_that_uses_every_tool_call_can_still_propose(env):
     ctx, ids, saver = env
     replies = [call("search_candidates", query="Python")]
