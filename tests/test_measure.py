@@ -34,3 +34,12 @@ def _cmp(diff, low):
 def test_decision_rule(fusion, rerank, chosen):
     decision = decide({}, {"hybrid vs vector": fusion, "hybrid+rerank vs hybrid": rerank}, "vector")
     assert decision["chosen"] == chosen
+
+
+def test_output_paths_default_to_committed_results_and_accept_a_prefix(tmp_path):
+    from eval import measure
+
+    assert measure.output_paths(None) == (measure.RESULTS_JSON, measure.RESULTS_MD)
+    json_path, md_path = measure.output_paths(str(tmp_path / "retrieval_rerun"))
+    assert json_path == tmp_path / "retrieval_rerun.json"
+    assert md_path == tmp_path / "retrieval_rerun.md"

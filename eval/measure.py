@@ -10,6 +10,7 @@ import json
 import platform
 import subprocess
 import uuid
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -180,13 +181,24 @@ def markdown(r: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def output_paths(prefix: str | None) -> tuple[Path, Path]:
+    """The JSON and Markdown output paths: the committed results by default, or <prefix>.json/.md."""
+    if prefix is None:
+        return RESULTS_JSON, RESULTS_MD
+    base = Path(prefix)
+    return base.with_name(base.name + ".json"), base.with_name(base.name + ".md")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--postgres-url", required=True, help="admin URL used to create a throwaway database")
+    parser.add_argument("--out-prefix", default=None,
+                        help="write <prefix>.json and <prefix>.md instead of eval/retrieval_results.*")
     args = parser.parse_args(argv)
+    json_path, md_path = output_paths(args.out_prefix)
     result = run(args.postgres_url)
-    RESULTS_JSON.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    RESULTS_MD.write_text(markdown(result), encoding="utf-8")
+    json_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    md_path.write_text(markdown(result), encoding="utf-8")
     print(markdown(result))
     return 0
 
