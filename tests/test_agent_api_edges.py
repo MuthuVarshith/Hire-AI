@@ -37,6 +37,7 @@ ON_SQLITE = make_url(os.environ["DATABASE_URL"]).get_backend_name() == "sqlite"
 APPROVE = {"decision": "approve", "reviewer": "Rita"}
 NOT_WAITING = {"error": "No run is waiting for approval with this thread_id"}
 GENERIC_500 = {"error": "Internal server error"}
+ALREADY_DECIDED = {"error": "This run was already decided"}
 SECRET = "secret-detail postgresql://hireai:pw@db.internal/hireai C:\\srv\\app.py"
 
 
@@ -108,13 +109,8 @@ def test_oversized_bodies_are_413_before_anything_runs(pool, monkeypatch):
     assert agent.is_pending(app.agent_checkpointer(), thread) and shortlists(app) == []
 
 
-BUG_BIG_IDS = ("BUG: ids have no upper bound (agent_tools.py:48, agent.py:468), so an id past the database's "
-               "integer range raises a driver error the tools node (agent.py:361) doesn't catch: HTTP 500")
 # SQLite holds 64-bit integers; PostgreSQL's INTEGER columns stop at 2**31 - 1.
-BIG_IDS = [
-    pytest.param(2**31, marks=pytest.mark.xfail(not ON_SQLITE, strict=True, reason=BUG_BIG_IDS), id="2**31"),
-    pytest.param(2**63, marks=pytest.mark.xfail(strict=True, reason=BUG_BIG_IDS), id="2**63"),
-]
+BIG_IDS = [pytest.param(2**31, id="2**31"), pytest.param(2**63, id="2**63")]
 
 
 @pytest.mark.parametrize("big", BIG_IDS)
@@ -211,17 +207,18 @@ def test_approve_twice_keeps_the_first_reviewer(pool):
     assert decide(api, thread, reviewer="Rita").status_code == 200
     for again in ({"reviewer": "Mallory"}, {"decision": "reject", "reviewer": "Mallory"}):
         response = decide(api, thread, **again)
-        assert (response.status_code, response.get_json()) == (409, {"error": "This shortlist was already approved"})
+        assert (response.status_code, response.get_json()) == (409, ALREADY_DECIDED)
     assert shortlists(app) == [(thread, job_id, "Rita")]
 
 
-def test_reject_then_reject_or_approve_is_404(pool):
+def test_reject_then_reject_or_approve_is_409(pool):
     api, job_id, app = pool
     thread = pending(api, job_id)["thread_id"]
     first = decide(api, thread, decision="reject")
     assert (first.status_code, first.get_json()["status"], first.get_json()["shortlist"]) == (200, "rejected", None)
     for again in ("reject", "approve"):
-        assert decide(api, thread, decision=again).get_json() == NOT_WAITING
+        response = decide(api, thread, decision=again)
+        assert (response.status_code, response.get_json()) == (409, ALREADY_DECIDED)
     assert shortlists(app) == []
 
 
@@ -255,8 +252,6 @@ def _race(app, thread, decisions, monkeypatch):
     return responses
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: is_pending() and Command(resume) are not atomic (agent.py:496-499), "
-                                       "so concurrent decisions on one thread both resume it")
 @pytest.mark.parametrize("decisions", [("approve", "approve"), ("approve", "reject")])
 def test_concurrent_decisions_on_one_thread_exactly_one_wins(pool, monkeypatch, decisions):
     api, job_id, app = pool
@@ -268,9 +263,6 @@ def test_concurrent_decisions_on_one_thread_exactly_one_wins(pool, monkeypatch, 
 
 
 # --- data changing between proposal and approval -------------------------------------------------
-@pytest.mark.xfail(strict=True, reason="BUG: record() saves without checking the job still exists "
-                                       "(agent.py:404-412): SQLite stores an orphan row; PostgreSQL raises a 500 "
-                                       "and leaves the run unapprovable")
 def test_job_deleted_before_approval_is_refused_cleanly(pool):
     api, job_id, app = pool
     thread = pending(api, job_id)["thread_id"]
@@ -281,8 +273,6 @@ def test_job_deleted_before_approval_is_refused_cleanly(pool):
     assert shortlists(app) == []
 
 
-@pytest.mark.xfail(strict=True, reason="BUG: record() saves the proposal's entries as they were, so an approved "
-                                       "shortlist can name a candidate deleted before approval (agent.py:404-412)")
 def test_candidate_deleted_before_approval_is_not_in_the_saved_shortlist(pool):
     api, job_id, app = pool
     body = pending(api, job_id)

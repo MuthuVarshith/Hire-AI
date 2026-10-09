@@ -33,12 +33,13 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command, interrupt
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 import agent_tools
 import llm
 from agent_llm import ChatProvider
-from agent_tools import TOOLS, ScoreInput, ToolContext, ToolError, ToolSpec, validation_message
-from models import AgentShortlist, Candidate, Job
+from agent_tools import MAX_ID, TOOLS, ScoreInput, ToolContext, ToolError, ToolSpec, validation_message
+from models import AgentDecision, AgentShortlist, Candidate, Job
 
 logger = logging.getLogger(__name__)
 
@@ -64,8 +65,8 @@ class CallTool(_Action):
 
 class ProposeShortlist(_Action):
     action: Literal["propose_shortlist"]
-    candidate_ids: list[int] = Field(min_length=1, max_length=MAX_SHORTLIST)
-    job_id: int | None = Field(default=None, gt=0)    # used only when the request names no job
+    candidate_ids: list[int] = Field(min_length=1, max_length=MAX_SHORTLIST)  # out-of-range ids are dropped
+    job_id: int | None = Field(default=None, gt=0, le=MAX_ID)    # used only when the request names no job
     note: str = Field(default="", max_length=1000)
 
 
@@ -365,16 +366,30 @@ def build_graph(ctx: ToolContext, planner: Planner,
                 step["error"] = f"invalid arguments: {validation_message(exc)}"
             except ToolError as exc:
                 step["error"] = str(exc)
+            except SQLAlchemyError:
+                ctx.session.rollback()
+                logger.exception("Database error in agent tool %s", name)
+                step["error"] = "the tool failed with a database error"
         return {"steps": [*state.get("steps", []), step], "tool_calls": state.get("tool_calls", 0) + 1,
                 "seen": seen, "pending": None}
 
     def propose(state: AgentState) -> dict[str, Any]:
+        try:
+            return _propose(state)
+        except SQLAlchemyError:
+            ctx.session.rollback()
+            logger.exception("Database error while building a shortlist")
+            return {"pending": None, "proposal": None, "status": "error",
+                    "message": "The shortlist could not be built because of a database error."}
+
+    def _propose(state: AgentState) -> dict[str, Any]:
         action = ProposeShortlist.model_validate(state["pending"])
         job_id = state.get("job_id") or action.job_id
         if job_id is None or ctx.session.get(Job, job_id) is None:
             return {"pending": None, "proposal": None, "status": "answered",
                     "message": "A shortlist needs an existing job; run again with a job_id."}
-        existing = {cid for (cid,) in ctx.session.query(Candidate.id).filter(Candidate.id.in_(action.candidate_ids))}
+        in_range = [cid for cid in action.candidate_ids if 1 <= cid <= MAX_ID]
+        existing = {cid for (cid,) in ctx.session.query(Candidate.id).filter(Candidate.id.in_(in_range))}
         kept = _vet_proposal(action.candidate_ids, set(state.get("seen", [])), existing)
         entries = []
         for cid in kept:
@@ -402,15 +417,29 @@ def build_graph(ctx: ToolContext, planner: Planner,
                 "status": "approved" if decision.decision == "approve" else "rejected"}
 
     def record(state: AgentState, config: RunnableConfig) -> dict[str, Any]:
+        """Save an approved shortlist, checking that its job and candidates still exist."""
         decision, proposal = state["decision"] or {}, state["proposal"] or {}
         if state.get("status") != "approved":
             return {"message": f"Shortlist rejected by {decision['reviewer']}; nothing was saved."}
-        row = AgentShortlist(thread_id=config["configurable"]["thread_id"], job_id=proposal["job_id"],
-                             request=state["request"], entries=proposal["entries"],
+        job = ctx.session.get(Job, proposal["job_id"])
+        if job is None:
+            return {"status": "job_deleted",
+                    "message": "The job was deleted before approval, so the shortlist was not saved."}
+        entries = proposal["entries"]
+        ids = [e["candidate_id"] for e in entries]
+        existing = {cid for (cid,) in ctx.session.query(Candidate.id).filter(Candidate.id.in_(ids))}
+        kept = [e for e in entries if e["candidate_id"] in existing]
+        dropped = [cid for cid in ids if cid not in existing]
+        if not kept:
+            return {"status": "candidates_deleted",
+                    "message": "Every candidate on the shortlist was deleted before approval, so it was not saved."}
+        row = AgentShortlist(thread_id=config["configurable"]["thread_id"], job_id=job.id, job_title=job.title,
+                             request=state["request"], entries=kept, dropped_ids=dropped or None,
                              approved_by=decision["reviewer"], note=decision.get("note"))
         ctx.session.add(row)
         ctx.session.commit()
-        return {"shortlist_id": row.id, "message": f"Shortlist approved by {decision['reviewer']}."}
+        left_out = f" {len(dropped)} candidate(s) deleted since the proposal were left out." if dropped else ""
+        return {"shortlist_id": row.id, "message": f"Shortlist approved by {decision['reviewer']}.{left_out}"}
 
     def finish(state: AgentState) -> dict[str, Any]:
         action = Finish.model_validate(state["pending"])
@@ -470,16 +499,33 @@ def validate_request(request: Any, job_id: Any) -> str:
     return text
 
 
+class RunNotPending(LookupError):
+    """No run is paused for approval under this thread_id (unknown, never paused, or finished)."""
+
+
+class AlreadyDecided(RunNotPending):
+    """A decision on this run was already recorded (agent_decisions has its thread_id)."""
+
+
+def _forget(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> None:
+    """Delete a finished run's checkpoints: they hold tool results, i.e. resume passages."""
+    checkpointer.delete_thread(thread_id)
+
+
 def start_run(ctx: ToolContext, request: str, planner: Planner, checkpointer: BaseCheckpointSaver[Any],
               job_id: int | None = None, thread_id: str | None = None) -> dict[str, Any]:
-    """Run until the agent answers, stops, or pauses for approval (status "pending_approval")."""
+    """Run until the agent answers, stops, or pauses for approval (status "pending_approval").
+    Only a paused run keeps its checkpoints."""
     request = validate_request(request, job_id)
     thread_id = thread_id or uuid.uuid4().hex
     graph = build_graph(ctx, planner, checkpointer)
     graph.invoke({"request": request, "job_id": job_id, "steps": [], "tool_calls": 0, "turns": 0, "seen": [],
                   "proposal": None, "decision": None, "shortlist_id": None, "status": "running", "message": ""},
                  _config(thread_id))
-    return _result(ctx, graph, thread_id)
+    result = _result(ctx, graph, thread_id)
+    if result["status"] != "pending_approval":
+        _forget(checkpointer, thread_id)
+    return result
 
 
 def is_pending(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> bool:
@@ -491,10 +537,40 @@ def is_pending(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> bool:
 
 def resume_run(ctx: ToolContext, thread_id: str, decision: dict[str, Any], planner: Planner,
                checkpointer: BaseCheckpointSaver[Any]) -> dict[str, Any]:
-    """Continue a paused run with the human's decision. Raises LookupError if it isn't pending."""
-    Decision.model_validate(decision)  # fail before resuming, so a bad body leaves the run paused
+    """Continue a paused run with the human's decision.
+
+    The decision is first inserted into agent_decisions, whose thread_id is UNIQUE: that insert is
+    the claim on the run, so of two decisions sent together exactly one resumes it. Raises
+    ValidationError for a bad decision, AlreadyDecided, or RunNotPending.
+    """
+    choice = Decision.model_validate(decision)  # fail before claiming, so a bad body leaves the run paused
+    if ctx.session.query(AgentDecision.id).filter(AgentDecision.thread_id == thread_id).first() is not None:
+        raise AlreadyDecided(thread_id)
     if not is_pending(checkpointer, thread_id):
-        raise LookupError("no run is waiting for approval with this thread_id")
+        raise RunNotPending(thread_id)
     graph = build_graph(ctx, planner, checkpointer)
-    graph.invoke(Command(resume=decision), _config(thread_id))
-    return _result(ctx, graph, thread_id)
+    paused: AgentState = graph.get_state(_config(thread_id)).values  # type: ignore[assignment]
+    proposal = paused.get("proposal") or {}
+    job = ctx.session.get(Job, proposal.get("job_id") or 0)
+    claim = AgentDecision(thread_id=thread_id, decision=choice.decision, reviewer=choice.reviewer, note=choice.note,
+                          job_id=job.id if job else None, job_title=job.title if job else None,
+                          request=paused.get("request"), entries=proposal.get("entries"))
+    ctx.session.add(claim)
+    try:
+        ctx.session.commit()
+    except IntegrityError:
+        ctx.session.rollback()
+        raise AlreadyDecided(thread_id) from None
+    try:
+        graph.invoke(Command(resume=choice.model_dump()), _config(thread_id))
+    except Exception:
+        # Release the claim so the run, still paused, can be decided again.
+        ctx.session.rollback()
+        ctx.session.query(AgentDecision).filter(AgentDecision.id == claim.id).delete()
+        ctx.session.commit()
+        raise
+    result = _result(ctx, graph, thread_id)
+    claim.outcome = result["status"]
+    ctx.session.commit()
+    _forget(checkpointer, thread_id)
+    return result

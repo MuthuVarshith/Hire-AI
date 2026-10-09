@@ -826,6 +826,9 @@
             const reviewer = document.getElementById('agent-reviewer').value.trim();
             if (!reviewer) { showAgentError('Enter your name as the reviewer.'); return; }
             const note = document.getElementById('agent-note').value.trim() || null;
+            // One decision per run: both buttons stay disabled while it is in flight.
+            const buttons = document.querySelectorAll('#agent-proposal button');
+            buttons.forEach(b => { b.disabled = true; });
             try {
                 const res = await fetch(`${API_BASE}/agent/approve/${encodeURIComponent(agentThreadId)}`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -836,6 +839,8 @@
                 renderAgentResult(body);
             } catch (e) {
                 showAgentError(`Could not reach the backend at ${API_BASE}.`);
+            } finally {
+                buttons.forEach(b => { b.disabled = false; });  // no-op once the result replaced them
             }
         }
 

@@ -7,7 +7,7 @@ POST /api/screen does (screening.py) without saving it.
 """
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy.orm import Session
@@ -21,6 +21,7 @@ from retrieval import Retriever
 
 MAX_QUERY_CHARS = ask.MAX_QUESTION_CHARS
 MAX_COMPARE = 10
+MAX_ID = 2**31 - 1  # PostgreSQL INTEGER; larger ids can't exist and would overflow the driver
 
 
 class ToolError(LookupError):
@@ -45,13 +46,14 @@ class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
 
-Id = Field(gt=0)
+Id = Field(gt=0, le=MAX_ID)
+IdItem = Annotated[int, Field(gt=0, le=MAX_ID)]
 
 
 # --- inputs --------------------------------------------------------------------------
 class SearchInput(_Strict):
     query: str = Field(min_length=1, max_length=MAX_QUERY_CHARS)
-    job_id: int | None = Field(default=None, gt=0)
+    job_id: int | None = Field(default=None, gt=0, le=MAX_ID)
 
 
 class CandidateInput(_Strict):
@@ -64,7 +66,7 @@ class ScoreInput(_Strict):
 
 
 class CompareInput(_Strict):
-    candidate_ids: list[int] = Field(min_length=2, max_length=MAX_COMPARE)
+    candidate_ids: list[IdItem] = Field(min_length=2, max_length=MAX_COMPARE)
     job_id: int = Id
 
 

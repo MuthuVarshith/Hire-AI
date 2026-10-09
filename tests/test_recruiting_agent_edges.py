@@ -177,11 +177,6 @@ def test_duplicate_ids_are_shortlisted_once(env):
     assert result["proposal"]["dropped_ids"] == []
 
 
-BUG_BIG = ("BUG: ids have no upper bound (agent_tools.py:48, agent.py:67), so an id past SQLite's 64-bit range "
-           "raises OverflowError, which the tools and propose nodes don't catch (agent.py:361, 377): the run crashes")
-
-
-@pytest.mark.xfail(strict=True, reason=BUG_BIG)
 def test_out_of_range_tool_argument_is_a_failed_step(env):
     ctx, ids, saver = env
     result, _ = llm_run(ctx, saver, call("get_candidate_profile", candidate_id=2**63),
@@ -189,7 +184,6 @@ def test_out_of_range_tool_argument_is_a_failed_step(env):
     assert result["status"] == "answered" and result["steps"][0]["ok"] is False
 
 
-@pytest.mark.xfail(strict=True, reason=BUG_BIG)
 def test_out_of_range_proposed_id_is_dropped(env):
     ctx, ids, saver = env
     result, _ = llm_run(ctx, saver, call("get_candidate_profile", candidate_id=ids["Ada"]),
