@@ -30,7 +30,7 @@ from retrieval import Hit, RetrievalConfig, Retriever
 logger = logging.getLogger(__name__)
 
 NOT_FOUND = "Not found in resumes."
-PASSAGES_ONLY = "Relevant resume passages (no generated summary)."
+PASSAGES_ONLY = "Summary unavailable. Showing the relevant resume passages instead."
 # A floor, not a separator (eval/ask_calibration.md): top-1 similarity overlaps between answerable
 # and unanswerable questions, so this only drops clearly off-topic ones; the grounding check does the rest.
 NOT_FOUND_THRESHOLD = 0.25
@@ -75,6 +75,10 @@ class Answer:
     citations: list[Citation] = field(default_factory=list)
     generated: bool = False          # True when the LLM wrote the answer text
     top_similarity: float | None = None
+    # True when relevant passages were found but no summary could be written:
+    # "llm_disabled" (ASK_LLM_ENABLED is off or there is no API key) or "llm_error" (Gemini failed).
+    summary_unavailable: bool = False
+    summary_unavailable_reason: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -121,14 +125,16 @@ def answer_question(session: Session, question: str, provider: EmbeddingProvider
                  for i, h in enumerate(hits, start=1)]
 
     if not (api_key and llm_enabled()):
-        return Answer(question, True, PASSAGES_ONLY, citations, generated=False, top_similarity=top)
+        return Answer(question, True, PASSAGES_ONLY, citations, generated=False, top_similarity=top,
+                      summary_unavailable=True, summary_unavailable_reason="llm_disabled")
 
     try:
         raw = (generate or llm.generate_text)(PROMPT.format(question=question, excerpts=_excerpts(citations)), api_key)
     except Exception:
         # Gemini down or rate-limited after retries: the passages are still useful on their own.
         logger.warning("LLM unavailable for /api/ask; returning passages only", exc_info=True)
-        return Answer(question, True, PASSAGES_ONLY, citations, generated=False, top_similarity=top)
+        return Answer(question, True, PASSAGES_ONLY, citations, generated=False, top_similarity=top,
+                      summary_unavailable=True, summary_unavailable_reason="llm_error")
     found, text, numbers = _parse(raw, {c.number for c in citations})
     if not (found and text and numbers):
         return Answer(question, False, NOT_FOUND, generated=True, top_similarity=top)

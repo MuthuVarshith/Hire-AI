@@ -58,6 +58,7 @@ def test_grounded_answer_keeps_only_cited_chunks_that_exist(pool, llm_on):
     result = ask.answer_question(session, "Who has used Kubernetes and Terraform?", provider,
                                  api_key="k", generate=generate)
     assert result.found and result.generated
+    assert not result.summary_unavailable and result.summary_unavailable_reason is None
     assert [c.number for c in result.citations] == [1]
     cited = result.citations[0]
     resume = RESUMES[cited.candidate_name]
@@ -84,6 +85,8 @@ def test_without_llm_returns_passages_only(pool, monkeypatch):
     result = ask.answer_question(session, "Who knows React?", provider, api_key="k", generate=generate)
     assert result.found and not result.generated and result.citations
     assert result.citations[0].candidate_name == "Bo"
+    assert result.summary_unavailable and result.summary_unavailable_reason == "llm_disabled"
+    assert result.answer == ask.PASSAGES_ONLY
     assert generate.calls == []  # resume text never leaves the machine unless explicitly enabled
 
 
@@ -104,7 +107,8 @@ def test_endpoint_validates_input_and_answers(monkeypatch):
     assert client.post("/api/ask", json={"question": "React?", "job_id": 999999}).status_code == 404
     response = client.post("/api/ask", json={"question": "Who knows COBOL?"})
     assert response.status_code == 200
-    assert set(response.get_json()) >= {"question", "found", "answer", "citations", "generated"}
+    assert set(response.get_json()) >= {"question", "found", "answer", "citations", "generated", "summary_unavailable",
+                                         "summary_unavailable_reason"}
 
 
 def test_llm_outage_falls_back_to_passages(pool, llm_on):
@@ -114,3 +118,31 @@ def test_llm_outage_falls_back_to_passages(pool, llm_on):
         raise RuntimeError("503 UNAVAILABLE")
     result = ask.answer_question(session, "Who knows React?", provider, api_key="k", generate=down)
     assert result.found and not result.generated and result.answer == ask.PASSAGES_ONLY and result.citations
+    assert result.summary_unavailable and result.summary_unavailable_reason == "llm_error"
+
+
+def test_enabled_without_api_key_is_llm_disabled(pool, llm_on):
+    session, provider = pool
+    result = ask.answer_question(session, "Who knows React?", provider, api_key=None)
+    assert result.found and result.summary_unavailable and result.summary_unavailable_reason == "llm_disabled"
+
+
+def test_not_found_is_not_flagged_as_summary_unavailable(pool, llm_on):
+    session, provider = pool
+    result = ask.answer_question(session, "Who knows React?", provider, api_key="k", threshold=1.01)
+    assert not result.found and not result.summary_unavailable and result.summary_unavailable_reason is None
+
+
+def test_endpoint_reports_summary_unavailable(pool, monkeypatch):
+    import app as app_module
+
+    session, provider = pool
+    real = ask.answer_question
+    monkeypatch.setattr(app_module.embeddings, "get_provider", lambda: provider)
+    monkeypatch.setattr(app_module.ask, "answer_question",
+                        lambda db, question, prov, **kw: real(session, question, prov, **kw))
+    monkeypatch.delenv("ASK_LLM_ENABLED", raising=False)
+    body = app_module.app.test_client().post("/api/ask", json={"question": "Who knows React?"}).get_json()
+    assert body["found"] is True and body["citations"]
+    assert body["summary_unavailable"] is True and body["summary_unavailable_reason"] == "llm_disabled"
+    assert body["answer"] == ask.PASSAGES_ONLY
