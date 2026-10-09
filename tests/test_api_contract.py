@@ -697,7 +697,7 @@ def _db_routes(app_module):
     for rule in app_module.app.url_map.iter_rules():
         if rule.endpoint in skip:
             continue
-        url = re.sub(r"<int:\w+>", "1", rule.rule)
+        url = re.sub(r"<(?:int:)?\w+>", "1", rule.rule)
         for method in sorted(rule.methods - {"HEAD", "OPTIONS"}):
             yield method, url
 
@@ -707,11 +707,12 @@ def test_server_errors_never_reach_the_client(client, app_module, monkeypatch, c
     from tests.test_retrieval import KeywordProvider  # /api/ask embeds the question before querying
     monkeypatch.setattr(app_module.embeddings, "get_provider", lambda: KeywordProvider())
     routes = list(_db_routes(app_module))
-    assert len(routes) == 23  # 26 routes minus the dashboard page, health and info
+    assert len(routes) == 25  # 28 routes minus the dashboard page, health and info
 
     for method, url in routes:
         caplog.clear()
-        kwargs = {"json": {"title": "t", "description_text": "d", "name": "n", "status": "Hired", "question": "q"}}
+        kwargs = {"json": {"title": "t", "description_text": "d", "name": "n", "status": "Hired", "question": "q",
+                           "request": "q", "decision": "approve", "reviewer": "r"}}
         if (method, url) == ("POST", "/api/candidates"):
             kwargs = {"query_string": {"job_id": 1}, "content_type": "multipart/form-data",
                       "data": {"resume": (io.BytesIO(b"Jo Bloggs\njo@x.com"), "jo.txt")}}

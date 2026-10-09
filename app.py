@@ -4,6 +4,7 @@ import re
 import sys
 import uuid
 import logging
+import threading
 from pathlib import Path
 from dotenv import load_dotenv
 from functools import wraps
@@ -19,6 +20,8 @@ from werkzeug.utils import secure_filename
 load_dotenv()
 
 # Import our modules
+import agent
+import agent_llm
 import ask
 import embeddings
 import indexing
@@ -31,8 +34,9 @@ import resume_parser
 import interview_generator
 import duplicate_detection
 from models import (
-    create_default_templates, Job, Candidate, ScreeningResult, ScoringTemplate, PipelineStatus
+    create_default_templates, AgentShortlist, Job, Candidate, ScreeningResult, ScoringTemplate, PipelineStatus
 )
+from agent_tools import ToolContext
 from analytics_service import AnalyticsService
 from database import create_database_engine
 
@@ -933,6 +937,100 @@ def ask_candidate_pool():
 
 
 # ============================================================================
+# RECRUITING AGENT
+# ============================================================================
+
+AGENT_MAX_BODY_BYTES = 16 * 1024
+_THREAD_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+_agent_checkpointer = None
+_agent_checkpointer_lock = threading.Lock()
+
+
+# Default: agent_checkpoints.db next to app.py, which .gitignore's *.db rule keeps out of git.
+DEFAULT_AGENT_CHECKPOINT_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'agent_checkpoints.db')
+
+
+def agent_checkpointer():
+    """The agent's checkpointer: a SQLite file (AGENT_CHECKPOINT_DB), so paused runs survive a restart.
+    Checkpoints hold tool results, i.e. resume passages, so the file is as sensitive as the database."""
+    global _agent_checkpointer
+    with _agent_checkpointer_lock:
+        if _agent_checkpointer is None:
+            path = os.getenv('AGENT_CHECKPOINT_DB') or DEFAULT_AGENT_CHECKPOINT_DB
+            _agent_checkpointer = agent.sqlite_checkpointer(path)
+        return _agent_checkpointer
+
+
+def _agent_body():
+    """The JSON object body, {} for anything else, or None when it is too large."""
+    if request.content_length is not None and request.content_length > AGENT_MAX_BODY_BYTES:
+        return None
+    body = request.get_json(silent=True)
+    return body if isinstance(body, dict) else {}
+
+
+@app.route('/api/agent/run', methods=['POST'])
+def agent_run():
+    """Run the agent on a recruiter's request. Returns its answer, or a proposed shortlist with
+    status "pending_approval" and a thread_id to approve or reject."""
+    body = _agent_body()
+    if body is None:
+        return jsonify({"error": "request body is too large"}), 413
+    job_id = body.get('job_id')
+    try:
+        text = agent.validate_request(body.get('request'), job_id)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    try:
+        planner = agent.make_planner(agent_llm.get_provider())
+    except agent_llm.ProviderError:
+        logger.exception("Agent LLM provider is misconfigured")
+        return jsonify({"error": "The agent's LLM provider is not available"}), 503
+    db = get_db()
+    try:
+        if job_id is not None and db.get(Job, job_id) is None:
+            return jsonify({"error": "Job not found"}), 404
+        ctx = ToolContext(session=db, provider=embeddings.get_provider())
+        return jsonify(agent.start_run(ctx, text, planner, agent_checkpointer(), job_id=job_id)), 200
+    except Exception:
+        db.rollback()
+        return error_response("running the agent")
+    finally:
+        db.close()
+
+
+@app.route('/api/agent/approve/<thread_id>', methods=['POST'])
+def agent_approve(thread_id):
+    """A recruiter approves or rejects a proposed shortlist: {decision: approve|reject, reviewer, note}.
+    This is the only way a shortlist is saved; the agent itself cannot approve."""
+    body = _agent_body()
+    if body is None:
+        return jsonify({"error": "request body is too large"}), 413
+    decision = {"decision": body.get('decision'), "reviewer": body.get('reviewer'), "note": body.get('note')}
+    try:
+        agent.Decision.model_validate(decision)
+    except ValueError:
+        return jsonify({"error": "decision must be 'approve' or 'reject', reviewer is required, "
+                                 "and note must be text"}), 400
+    if not _THREAD_ID.match(thread_id):
+        return jsonify({"error": "No run is waiting for approval with this thread_id"}), 404
+    db = get_db()
+    try:
+        if db.query(AgentShortlist).filter(AgentShortlist.thread_id == thread_id).first():
+            return jsonify({"error": "This shortlist was already approved"}), 409
+        ctx = ToolContext(session=db, provider=None)
+        result = agent.resume_run(ctx, thread_id, decision, agent.rule_based_planner, agent_checkpointer())
+        return jsonify(result), 200
+    except LookupError:
+        return jsonify({"error": "No run is waiting for approval with this thread_id"}), 404
+    except Exception:
+        db.rollback()
+        return error_response("recording a shortlist decision")
+    finally:
+        db.close()
+
+
+# ============================================================================
 # HEALTH & INFO ENDPOINTS
 # ============================================================================
 
@@ -970,6 +1068,8 @@ def info():
             "POST /api/scoring-templates",
             "GET /api/analytics/dashboard",
             "POST /api/ask",
+            "POST /api/agent/run",
+            "POST /api/agent/approve/<thread_id>",
         ]
     }), 200
 
