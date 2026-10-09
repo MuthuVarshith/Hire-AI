@@ -86,8 +86,6 @@ ABSURD_PROFILE = {
 }
 
 
-@pytest.mark.xfail(strict=True, reason="Gap: with an API key the resume is parsed by the LLM and its output "
-                   "feeds the score unvalidated (resume_parser.py:59-71), so a compliant parser changes the score")
 @pytest.mark.parametrize("name", ["ignore_instructions", "score_claim", "skills_hidden"])
 def test_compliant_llm_parser_cannot_change_the_score(name, monkeypatch):
     path = FIXTURES / f"injected_{name}.txt"

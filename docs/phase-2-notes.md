@@ -20,6 +20,7 @@ Phase 2 built retrieval over resume chunks, measured it under a protocol frozen 
 | **Ask the candidate pool** | `ask.py` and `POST /api/ask`: vector retrieval, a 0.25 similarity floor, citation-checked LLM answers, opt-in Gemini (`ASK_LLM_ENABLED`), and a passages-only fallback flagged `summary_unavailable` with a reason |
 | **Hardening (B)** | Strict parsing of the LLM's JSON reply (`found` must be exactly true; citations must be integers, not bools); bool `job_id` and non-object bodies return 400; bodies over 16 KiB return 413 when Content-Length is sent. 41 tests |
 | **Injection suite (D)** | 7 injected twin resumes plus a clean twin in `tests/injection/fixtures/`; tests for scoring, ask, prompt construction and the other LLM paths; `docs/security-injection.md` |
+| **Parser validation (your decision 1)** | `resume_parser._reconcile` runs after every LLM parse. Skills count only if they appear in the resume text. Experience comes from the text (stated years, or merged date ranges) and is clamped to 0–50 and to the time since the earliest year in the resume. The text-based degree wins. Name and email must appear in the text. Disagreements are logged. The parser prompt now delimits the resume as data. 24 tests fail on the old parser |
 | **Lead fixes after merge** | Delimiter tags are stripped from untrusted text in the ask prompt (D's gap 3). A 429 asking for a longer wait than our backoff (an exhausted daily quota) is no longer retried (C's bug) |
 | **Live runner (C)** | `eval/ask_live.py` runs all 33 questions through `/api/ask` with pacing |
 
@@ -50,7 +51,7 @@ Phase 2 built retrieval over resume chunks, measured it under a protocol frozen 
 
 ## Open issues
 
-- The injection gaps that remain open are in `docs/security-injection.md`. Gaps 1, 2, 6 and 7 (the LLM parser and explanation paths) touch scoring inputs, so they need your decision.
+- Injection gaps still open (`docs/security-injection.md`): 4 (a false claim citing a real passage), 6 (LLM explanations and interview questions stored as written) and 7 (the name line reaches prompts). Keyword stuffing stays a documented limitation, as you decided; the scoring formula is unchanged.
 - The live check must be re-run when the quota resets. 33 questions is more than the 20-a-day free quota, so it needs two days or a paid tier.
 - The 0.25 floor gets recalibrated in Phase 4 on a held-out set.
 

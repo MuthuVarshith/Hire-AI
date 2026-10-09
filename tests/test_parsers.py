@@ -138,16 +138,30 @@ def _enable_llm(monkeypatch, response):
 
 @pytest.mark.parametrize("wrapper", ["{}", "```json\n{}\n```", "```\n{}\n```"])
 def test_resume_llm_extraction(monkeypatch, wrapper):
+    """The raw LLM step parses and normalizes the reply (before it is checked against the text)."""
     calls = _enable_llm(monkeypatch, wrapper.format(json.dumps(RESUME_JSON)))
-    path = REPO / "sample_resumes" / "resume_01_ananya_patel.txt"
-    profile = resume_parser.parse_resume(str(path))
+    profile = resume_parser._extract_with_llm("resume text", "test-key")
 
     assert len(calls) == 1 and calls[0][1] == "test-key"
     assert profile.name == "Ada Lovelace"
     assert profile.skills == ["python", "fastapi"]  # stripped, lowercased, non-strings dropped
     assert profile.experience_years == 6.0
-    assert profile.raw_text == path.read_text(encoding="utf-8")
-    assert profile.file_path == str(path)
+
+
+def test_parse_resume_keeps_only_llm_values_the_text_supports(monkeypatch):
+    """RESUME_JSON describes someone else, so every LLM value the resume doesn't support is replaced."""
+    _enable_llm(monkeypatch, json.dumps(RESUME_JSON))
+    path = REPO / "sample_resumes" / "resume_01_ananya_patel.txt"
+    text = path.read_text(encoding="utf-8")
+    profile = resume_parser.parse_resume(str(path))
+    regex = resume_parser._extract_with_regex(text)
+
+    assert profile.name == regex.name                      # "Ada Lovelace" isn't in the resume
+    assert profile.email == regex.email
+    assert set(regex.skills) <= set(profile.skills)
+    assert all(resume_parser._mentions(text, s) for s in profile.skills)
+    assert profile.education == regex.education
+    assert profile.raw_text == text and profile.file_path == str(path)
 
 
 def test_resume_llm_failure_falls_back_to_regex(monkeypatch):
