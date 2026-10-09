@@ -934,15 +934,23 @@ def get_top_candidates():
 # ASK THE CANDIDATE POOL
 # ============================================================================
 
+ASK_MAX_BODY_BYTES = 16 * 1024  # a 500-character question plus job_id fits easily
+
+
 @app.route('/api/ask', methods=['POST'])
 def ask_candidate_pool():
     """Answer a question from resume chunks only, citing the passages used."""
-    body = request.get_json(silent=True) or {}
+    if request.content_length is not None and request.content_length > ASK_MAX_BODY_BYTES:
+        return jsonify({"error": "request body is too large"}), 413
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        body = {}
     question = body.get('question')
     job_id = body.get('job_id')
     if not isinstance(question, str) or not question.strip():
         return jsonify({"error": "question is required"}), 400
-    if job_id is not None and not isinstance(job_id, int):
+    # bool is a subclass of int, so {"job_id": true} would otherwise be read as job 1.
+    if job_id is not None and (isinstance(job_id, bool) or not isinstance(job_id, int)):
         return jsonify({"error": "job_id must be an integer"}), 400
     db = get_db()
     try:

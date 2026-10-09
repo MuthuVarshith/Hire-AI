@@ -30,7 +30,9 @@ from retrieval import Hit, RetrievalConfig, Retriever
 logger = logging.getLogger(__name__)
 
 NOT_FOUND = "Not found in resumes."
-PASSAGES_ONLY = "Summary unavailable. Showing the relevant resume passages instead."
+# Plain wording on purpose: clients that ignore summary_unavailable still must not read this as an answer.
+PASSAGES_ONLY = ("No summary was generated. The cited resume passages below are search results, "
+                 "not an answer to the question.")
 # A floor, not a separator (eval/ask_calibration.md): top-1 similarity overlaps between answerable
 # and unanswerable questions, so this only drops clearly off-topic ones; the grounding check does the rest.
 NOT_FOUND_THRESHOLD = 0.25
@@ -96,17 +98,24 @@ def _parse(raw: str, allowed: set[int]) -> tuple[bool, str, list[int]]:
     """Read the model's JSON; a malformed reply counts as not found rather than an error."""
     try:
         data = llm.parse_json_response(raw)
-        found, text, cited = bool(data["found"]), str(data["answer"]).strip(), data.get("citations", [])
-    except (ValueError, KeyError, TypeError, json.JSONDecodeError):
+        found, text, cited = data["found"], data["answer"], data.get("citations", [])
+    except (ValueError, KeyError, TypeError, AttributeError, json.JSONDecodeError):
         return False, "", []
-    numbers = sorted({int(n) for n in cited if isinstance(n, int | float) and int(n) in allowed})
-    return found, text, numbers
+    # Strict types: the string "false" must not count as found, and JSON true must not count as citation 1.
+    if found is not True or not isinstance(text, str) or not isinstance(cited, list):
+        return False, "", []
+    numbers = sorted({n for n in cited if type(n) is int and n in allowed})
+    return True, text.strip(), numbers
 
 
 def answer_question(session: Session, question: str, provider: EmbeddingProvider,
                     job_id: int | None = None, api_key: str | None = None,
                     generate: Callable[[str, str], str] | None = None,
                     threshold: float = NOT_FOUND_THRESHOLD) -> Answer:
+    if not isinstance(question, str):
+        raise ValueError("question must be a string")
+    if job_id is not None and (isinstance(job_id, bool) or not isinstance(job_id, int)):
+        raise ValueError("job_id must be an integer")
     question = " ".join(question.split())
     if not question:
         raise ValueError("question is empty")

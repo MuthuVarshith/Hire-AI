@@ -146,3 +146,139 @@ def test_endpoint_reports_summary_unavailable(pool, monkeypatch):
     assert body["found"] is True and body["citations"]
     assert body["summary_unavailable"] is True and body["summary_unavailable_reason"] == "llm_disabled"
     assert body["answer"] == ask.PASSAGES_ONLY
+
+
+# --- Hardening: no client may mistake raw passages for a generated answer --------------------------
+
+def _down(prompt, api_key):
+    raise RuntimeError("503 UNAVAILABLE")
+
+
+PASSAGES_ONLY_PATHS = {
+    # name: (ASK_LLM_ENABLED, api_key, generate, expected reason)
+    "llm_off": ("false", "k", fake_llm({"found": True, "answer": "x", "citations": [1]}), "llm_disabled"),
+    "no_key": ("true", None, fake_llm({"found": True, "answer": "x", "citations": [1]}), "llm_disabled"),
+    "llm_error": ("true", "k", _down, "llm_error"),
+}
+
+
+def _assert_passages_only(body, reason):
+    assert body["summary_unavailable"] is True and body["summary_unavailable_reason"] == reason
+    assert body["generated"] is False and body["citations"]
+    assert body["answer"] == ask.PASSAGES_ONLY
+    assert "no summary was generated" in body["answer"].lower()
+
+
+def _assert_real_outcome(body):
+    assert body["summary_unavailable"] is False and body["summary_unavailable_reason"] is None
+
+
+@pytest.mark.parametrize("path", sorted(PASSAGES_ONLY_PATHS))
+def test_every_passages_only_path_is_flagged(pool, monkeypatch, path):
+    flag, key, generate, reason = PASSAGES_ONLY_PATHS[path]
+    monkeypatch.setenv("ASK_LLM_ENABLED", flag)
+    session, provider = pool
+    result = ask.answer_question(session, "Who knows React?", provider, api_key=key, generate=generate)
+    _assert_passages_only(result.to_dict(), reason)
+
+
+def _client_on_pool(monkeypatch, pool, generate):
+    import app as app_module
+
+    session, provider = pool
+    real = ask.answer_question
+    monkeypatch.setattr(app_module.embeddings, "get_provider", lambda: provider)
+    monkeypatch.setattr(app_module.ask, "answer_question",
+                        lambda db, question, prov, **kw: real(session, question, prov, generate=generate, **kw))
+    return app_module.app.test_client()
+
+
+@pytest.mark.parametrize("path", sorted(PASSAGES_ONLY_PATHS))
+def test_endpoint_flags_every_passages_only_path(pool, monkeypatch, path):
+    import app as app_module
+
+    flag, key, generate, reason = PASSAGES_ONLY_PATHS[path]
+    monkeypatch.setenv("ASK_LLM_ENABLED", flag)
+    monkeypatch.setattr(app_module.cfg, "get_api_key", lambda: key)
+    response = _client_on_pool(monkeypatch, pool, generate).post("/api/ask", json={"question": "Who knows React?"})
+    assert response.status_code == 200
+    _assert_passages_only(response.get_json(), reason)
+
+
+@pytest.mark.parametrize("reply, found", [
+    ({"found": True, "answer": "Bo builds React apps [1].", "citations": [1]}, True),   # normal answer
+    ({"found": False, "answer": "", "citations": []}, False),                          # LLM says not found
+])
+def test_endpoint_real_outcomes_are_not_flagged(pool, monkeypatch, reply, found):
+    import app as app_module
+
+    monkeypatch.setenv("ASK_LLM_ENABLED", "true")
+    monkeypatch.setattr(app_module.cfg, "get_api_key", lambda: "k")
+    body = _client_on_pool(monkeypatch, pool, fake_llm(reply)).post(
+        "/api/ask", json={"question": "Who knows React?"}).get_json()
+    assert body["found"] is found and body["generated"] is True
+    _assert_real_outcome(body)
+    if not found:
+        assert body["answer"] == ask.NOT_FOUND and body["citations"] == []
+
+
+def test_no_retrieval_hits_is_not_found_without_llm(tmp_path, llm_on):
+    engine = create_database_engine(f"sqlite:///{(tmp_path / 'empty.db').as_posix()}")
+    generate = fake_llm({"found": True, "answer": "x", "citations": [1]})
+    with Session(engine) as session:
+        result = ask.answer_question(session, "Who knows React?", KeywordProvider(), api_key="k", generate=generate)
+    engine.dispose()
+    assert not result.found and result.answer == ask.NOT_FOUND and result.top_similarity is None
+    assert not result.generated and result.citations == [] and generate.calls == []
+    _assert_real_outcome(result.to_dict())
+
+
+@pytest.mark.parametrize("reply", [
+    {"found": "false", "answer": "Bo does [1].", "citations": [1]},   # string "false" is truthy
+    {"found": True, "answer": "Bo does.", "citations": [True]},       # JSON true is not citation 1
+    {"found": True, "answer": "Bo does.", "citations": [1.0]},        # numbers must be integers
+    {"found": True, "answer": "Bo does.", "citations": "1"},          # citations must be a list
+    {"found": True, "answer": ["Bo"], "citations": [1]},              # answer must be text
+    [1, 2, 3],                                                        # not an object
+])
+def test_malformed_llm_types_become_not_found(pool, llm_on, reply):
+    session, provider = pool
+    result = ask.answer_question(session, "Who knows React?", provider, api_key="k",
+                                 generate=fake_llm(json.dumps(reply)))
+    assert not result.found and result.answer == ask.NOT_FOUND and result.citations == []
+    _assert_real_outcome(result.to_dict())
+
+
+@pytest.mark.parametrize("kwargs", [{"question": 42}, {"question": "React?", "job_id": True},
+                                    {"question": "React?", "job_id": "1"}])
+def test_answer_question_rejects_bad_types(pool, kwargs):
+    session, provider = pool
+    kwargs = dict(kwargs)
+    with pytest.raises(ValueError):
+        ask.answer_question(session, kwargs.pop("question"), provider, **kwargs)
+
+
+@pytest.mark.parametrize("payload", [
+    {"question": 42}, {"question": ["React?"]}, {"question": None},
+    {"question": "React?", "job_id": True}, {"question": "React?", "job_id": False},
+    {"question": "React?", "job_id": 1.5},
+    ["React?"], "React?",                                             # JSON that is not an object
+])
+def test_endpoint_rejects_bad_input(monkeypatch, payload):
+    import app as app_module
+
+    called = []
+    monkeypatch.setattr(app_module.ask, "answer_question", lambda *a, **k: called.append(1))
+    response = app_module.app.test_client().post("/api/ask", json=payload)
+    assert response.status_code == 400 and "error" in response.get_json()
+    assert called == []
+
+
+def test_endpoint_rejects_oversize_body(monkeypatch):
+    import app as app_module
+
+    called = []
+    monkeypatch.setattr(app_module.ask, "answer_question", lambda *a, **k: called.append(1))
+    big = {"question": "x" * (app_module.ASK_MAX_BODY_BYTES + 1)}
+    response = app_module.app.test_client().post("/api/ask", json=big)
+    assert response.status_code == 413 and called == []
