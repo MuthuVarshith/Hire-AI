@@ -158,3 +158,36 @@ def test_gives_up_after_the_last_retry(monkeypatch):
     with pytest.raises(RuntimeError, match="503"):
         llm.generate_text("p", "k")
     assert models.calls == 4  # first try + 3 retries
+
+
+def _quota_error(retry_delay):
+    from google.genai import errors
+
+    details = [{"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": retry_delay}] if retry_delay else []
+    return errors.ClientError(429, {"error": {"code": 429, "status": "RESOURCE_EXHAUSTED", "details": details}})
+
+
+@pytest.mark.parametrize("retry_delay, transient", [
+    (None, True),          # plain rate limit: back off and retry
+    ("8s", True),          # per-minute limit within our backoff
+    ("52936s", False),     # daily quota exhausted: retrying can't succeed today
+])
+def test_rate_limits_are_retried_only_when_the_wait_fits_the_backoff(retry_delay, transient):
+    assert llm._is_transient(_quota_error(retry_delay)) is transient
+
+
+def test_exhausted_daily_quota_fails_fast(monkeypatch):
+    calls = []
+
+    def generate_content(*, model, contents):
+        calls.append(model)
+        raise _quota_error("52936s")
+    monkeypatch.setattr(llm, "_client", lambda api_key: SimpleNamespace(models=SimpleNamespace(
+        generate_content=generate_content)))
+    monkeypatch.setattr(llm, "generate_text", REAL_GENERATE_TEXT)
+    monkeypatch.setattr(llm.time, "sleep", lambda s: pytest.fail("slept before a call that cannot succeed"))
+    from google.genai import errors
+
+    with pytest.raises(errors.ClientError):
+        llm.generate_text("p", "key")
+    assert len(calls) == 1

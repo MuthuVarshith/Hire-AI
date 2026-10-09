@@ -21,10 +21,30 @@ def _client(api_key: str) -> genai.Client:
 RETRY_DELAYS = (2.0, 5.0, 10.0)  # seconds; Gemini's free tier returns 503 "high demand" at busy times
 
 
+def _server_retry_delay(exc: Exception) -> float | None:
+    """The delay Gemini asks for in a google.rpc.RetryInfo detail (e.g. "52936s"), if any."""
+    details = getattr(exc, "details", None)
+    items = details.get("error", {}).get("details", []) if isinstance(details, dict) else []
+    for item in items if isinstance(items, list) else []:
+        delay = item.get("retryDelay") if isinstance(item, dict) else None
+        if isinstance(delay, str) and delay.endswith("s"):
+            try:
+                return float(delay[:-1])
+            except ValueError:
+                return None
+    return None
+
+
 def _is_transient(exc: Exception) -> bool:
-    """Overload (5xx) and rate limits (429) clear up; bad keys, bad requests and safety blocks don't."""
+    """Overload (5xx) and per-minute rate limits (429) clear up; bad keys, bad requests, safety
+    blocks and an exhausted daily quota (a 429 asking us to wait longer than our backoff) don't."""
     code = getattr(exc, "code", None)
-    return isinstance(code, int) and (code == 429 or code >= 500)
+    if not isinstance(code, int):
+        return False
+    if code == 429:
+        wait = _server_retry_delay(exc)
+        return wait is None or wait <= max(RETRY_DELAYS)
+    return code >= 500
 
 
 def generate_text(prompt: str, api_key: str) -> str:
