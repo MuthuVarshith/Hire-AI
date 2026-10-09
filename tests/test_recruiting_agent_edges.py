@@ -160,19 +160,21 @@ def test_proposal_needs_an_existing_job(env):
 
 def test_the_requests_job_wins_over_the_llms(env):
     ctx, ids, saver = env
-    result, _ = llm_run(ctx, saver, call("get_candidate_profile", candidate_id=ids["Ada"]),
-                        propose(ids["Ada"], job_id=ids["other"]), job_id=ids["backend"])
+    named = f"Shortlist candidate {ids['Ada']}"  # an id the request names is eligible
+    result, _ = llm_run(ctx, saver, propose(ids["Ada"], job_id=ids["other"]), request=named, job_id=ids["backend"])
     assert result["proposal"]["job_id"] == ids["backend"]
-    llm_chosen, _ = llm_run(ctx, saver, call("get_candidate_profile", candidate_id=ids["Ada"]),
-                            propose(ids["Ada"], job_id=ids["other"]))
-    assert llm_chosen["proposal"]["job_id"] == ids["other"]  # only when the request names no job
+    llm_chosen, _ = llm_run(ctx, saver, propose(ids["Ada"], job_id=ids["backend"]), request=named)
+    assert llm_chosen["proposal"]["job_id"] == ids["backend"]  # only when the request names no job
+    other_job, _ = llm_run(ctx, saver, propose(ids["Ada"], job_id=ids["other"]), request=named)
+    assert other_job["proposal"] is None  # Ada applied to the backend job, not this one
 
 
 def test_duplicate_ids_are_shortlisted_once(env):
     ctx, ids, saver = env
     result, _ = llm_run(ctx, saver, call("compare_candidates", candidate_ids=[ids["Ada"], ids["Cy"]],
                                          job_id=ids["backend"]),
-                        propose(ids["Cy"], ids["Ada"], ids["Cy"], ids["Ada"]), job_id=ids["backend"])
+                        propose(ids["Cy"], ids["Ada"], ids["Cy"], ids["Ada"]), job_id=ids["backend"],
+                        request=f"Shortlist candidates {ids['Ada']} and {ids['Cy']}")
     assert sorted(e["candidate_id"] for e in result["proposal"]["entries"]) == sorted([ids["Ada"], ids["Cy"]])
     assert result["proposal"]["dropped_ids"] == []
 
@@ -187,7 +189,7 @@ def test_out_of_range_tool_argument_is_a_failed_step(env):
 def test_out_of_range_proposed_id_is_dropped(env):
     ctx, ids, saver = env
     result, _ = llm_run(ctx, saver, call("get_candidate_profile", candidate_id=ids["Ada"]),
-                        propose(ids["Ada"], 2**63), job_id=ids["backend"])
+                        propose(ids["Ada"], 2**63), job_id=ids["backend"], request=f"Shortlist candidate {ids['Ada']}")
     assert result["proposal"]["dropped_ids"] == [2**63]
 
 

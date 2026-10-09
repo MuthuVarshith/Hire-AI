@@ -192,6 +192,34 @@ def test_llm_planner_runs_tools_and_proposes(env):
     assert '"candidate_name": "Bo"' in fake.prompts[1]
 
 
+def test_shortlist_names_only_search_hits_or_ids_the_request_names_on_the_runs_job(env):
+    ctx, ids, saver = env
+    bo = ids["Bo"]
+    looked_up = ScriptedLLM({"action": "call_tool", "tool": "get_candidate_profile", "args": {"candidate_id": bo}},
+                            {"action": "propose_shortlist", "candidate_ids": [bo]})
+    assert run(ctx, saver, "Shortlist someone", planner=agent.LLMPlanner(looked_up),
+               job_id=ids["backend"])["proposal"] is None
+    named = ScriptedLLM({"action": "propose_shortlist", "candidate_ids": [bo]})
+    result = run(ctx, saver, f"Shortlist candidate {bo}", planner=agent.LLMPlanner(named), job_id=ids["backend"])
+    assert [e["candidate_id"] for e in result["proposal"]["entries"]] == [bo]
+    other_job = ScriptedLLM({"action": "call_tool", "tool": "search_candidates", "args": {"query": "React"}},
+                            {"action": "propose_shortlist", "candidate_ids": [bo]})
+    result = run(ctx, saver, "Shortlist a React person", planner=agent.LLMPlanner(other_job), job_id=ids["other"])
+    assert bo in [h["candidate_id"] for h in result["steps"][0]["result"]["hits"]]
+    assert result["proposal"] is None  # a search hit, but Bo applied to the backend job
+
+
+@pytest.mark.parametrize("request_text,expected", [
+    ("Compare candidates 3, 5 and 7 for job 2", [3, 5, 7]),
+    ("candidate #9 vs #10", [9, 10]),
+    ("Score id 4 for job #2", [4]),
+    ("Shortlist the top 3 with 5 years of Python", []),
+    ("Someone with 3.5 years", []),
+])
+def test_router_reads_only_marked_ids(request_text, expected):
+    assert agent.named_ids(request_text) == expected
+
+
 def test_llm_failure_ends_the_run_with_a_generic_message(env):
     ctx, _, saver = env
 
@@ -251,3 +279,27 @@ def test_optional_provider_without_a_key_falls_back_to_rules(monkeypatch):
     monkeypatch.setattr(agent_llm.importlib, "import_module", lambda name: object())
     assert agent_llm.get_provider() is None
     assert agent.make_planner(None) is agent.rule_based_planner
+
+
+# --- decisions and checkpoints --------------------------------------------------------------
+def test_every_decision_is_recorded_and_the_runs_checkpoints_are_deleted(env):
+    from models import AgentDecision
+
+    ctx, ids, saver = env
+    rejected = run(ctx, saver, "shortlist python engineers", job_id=ids["backend"])
+    approved = run(ctx, saver, "shortlist kubernetes engineers", job_id=ids["backend"])
+    approve(ctx, saver, rejected, decision="reject", reviewer="Rita", note="not yet")
+    approve(ctx, saver, approved, reviewer="Sam")
+    rows = {r.thread_id: r for r in ctx.session.query(AgentDecision)}
+    assert (rows[rejected["thread_id"]].decision, rows[rejected["thread_id"]].outcome,
+            rows[rejected["thread_id"]].note) == ("reject", "rejected", "not yet")
+    assert (rows[approved["thread_id"]].reviewer, rows[approved["thread_id"]].outcome) == ("Sam", "approved")
+    assert rows[approved["thread_id"]].job_title == "Backend"
+    for result in (rejected, approved):
+        assert saver.get_tuple({"configurable": {"thread_id": result["thread_id"]}}) is None
+
+
+def test_runs_that_never_pause_keep_no_checkpoints(env):
+    ctx, _, saver = env
+    result = run(ctx, saver, "Who has run Kubernetes clusters?")
+    assert saver.get_tuple({"configurable": {"thread_id": result["thread_id"]}}) is None

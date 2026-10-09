@@ -94,7 +94,7 @@ class AgentState(TypedDict, total=False):
     tool_calls: int
     turns: int
     pending: dict[str, Any] | None          # the validated action the planner chose this turn
-    seen: list[int]                         # candidate ids that appeared in tool results
+    eligible: list[int]                     # ids a shortlist may name: search hits and ids the request names
     proposal: dict[str, Any] | None
     decision: dict[str, Any] | None
     shortlist_id: int | None
@@ -135,9 +135,10 @@ def _resolve_tool(name: str) -> ToolSpec | None:
     return TOOLS.get(name)
 
 
-def _vet_proposal(requested: list[int], seen: set[int], existing: set[int]) -> list[int]:
-    """Keep ids that exist and came from tool results, once each, in the order given."""
-    return [cid for cid in dict.fromkeys(requested) if cid in seen and cid in existing]
+def _vet_proposal(requested: list[int], eligible: set[int], existing: set[int]) -> list[int]:
+    """Keep ids that are eligible (search hits in this run, or named in the recruiter's request) and
+    exist on the run's job, once each, in the order given. Ids the LLM only looked up are not eligible."""
+    return [cid for cid in dict.fromkeys(requested) if cid in eligible and cid in existing]
 
 
 def _order(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -226,7 +227,20 @@ _INTENTS = (
 )
 _JOB_REF = re.compile(r"\bjob\s*(?:id\s*)?#?\s*(\d+)", re.I)
 _TOP_N = re.compile(r"\btop\s+(\d+)\b", re.I)
-_NUMBER = re.compile(r"(?<![\w.])#?(\d+)\b")
+# Candidate ids are read only when marked as ids: "candidate 3", "candidates 3, 5 and 7", "#3", "id 3".
+# Bare numbers ("5 years", "top 3", "3.5") are not ids.
+_ID_LIST = re.compile(r"\bcandidates?\s*(?:ids?\s*)?[:#]?\s*"
+                      r"(#?\d+(?![.\d])(?:\s*(?:,|and|&|or|vs\.?|versus)\s*#?\d+(?![.\d]))*)", re.I)
+_ID_MARKED = re.compile(r"(?:#|\bids?\s*[:#]?\s*)(\d+)(?![.\d])", re.I)
+_DIGITS = re.compile(r"\d+")
+
+
+def named_ids(request: str) -> list[int]:
+    """Candidate ids the recruiter's request names, in order; job references are not candidates."""
+    text = _JOB_REF.sub(" ", request)
+    found = [int(n) for group in _ID_LIST.findall(text) for n in _DIGITS.findall(group)]
+    found += [int(n) for n in _ID_MARKED.findall(_ID_LIST.sub(" ", text))]
+    return list(dict.fromkeys(found))
 
 
 def _intent(text: str) -> str:
@@ -258,8 +272,7 @@ def rule_based_planner(state: AgentState) -> dict[str, Any]:
     job_match = _JOB_REF.search(request)
     job_id = state.get("job_id") or (int(job_match.group(1)) if job_match else None)
     top = _TOP_N.search(request)
-    rest = _TOP_N.sub(" ", _JOB_REF.sub(" ", request))
-    ids = list(dict.fromkeys(int(n) for n in _NUMBER.findall(rest)))
+    ids = named_ids(request)
     intent = _intent(request)
 
     def need(what: str) -> dict[str, Any]:
@@ -299,14 +312,6 @@ def make_planner(provider: ChatProvider | None) -> Planner:
 
 
 # --- graph -----------------------------------------------------------------------------
-def _candidate_ids(tool: str, result: dict[str, Any]) -> list[int]:
-    if tool == "search_candidates":
-        return [h["candidate_id"] for h in result["hits"]]
-    if tool == "compare_candidates":
-        return [r["candidate_id"] for r in result["rows"]]
-    return [result["candidate_id"]]
-
-
 def _citations(candidate_id: int, steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """The candidate's passages from this run's search results, as returned by the tool (exact offsets)."""
     found: dict[tuple[int, int], dict[str, Any]] = {}
@@ -353,7 +358,7 @@ def build_graph(ctx: ToolContext, planner: Planner,
         action = state["pending"] or {}
         name, args = action["tool"], action["args"]
         step: dict[str, Any] = {"type": "tool", "tool": name, "args": args, "ok": False}
-        seen = list(state.get("seen", []))
+        eligible = list(state.get("eligible", []))
         spec = _resolve_tool(name)
         if spec is None:
             step["error"] = f"'{name}' is not an allowed tool"
@@ -361,7 +366,8 @@ def build_graph(ctx: ToolContext, planner: Planner,
             try:
                 result = spec.run(ctx, spec.input_model.model_validate(args)).model_dump(mode="json")
                 step.update(ok=True, result=result)
-                seen.extend(c for c in _candidate_ids(name, result) if c not in seen)
+                if name == "search_candidates":
+                    eligible.extend(h["candidate_id"] for h in result["hits"] if h["candidate_id"] not in eligible)
             except ValidationError as exc:
                 step["error"] = f"invalid arguments: {validation_message(exc)}"
             except ToolError as exc:
@@ -371,7 +377,7 @@ def build_graph(ctx: ToolContext, planner: Planner,
                 logger.exception("Database error in agent tool %s", name)
                 step["error"] = "the tool failed with a database error"
         return {"steps": [*state.get("steps", []), step], "tool_calls": state.get("tool_calls", 0) + 1,
-                "seen": seen, "pending": None}
+                "eligible": eligible, "pending": None}
 
     def propose(state: AgentState) -> dict[str, Any]:
         try:
@@ -389,8 +395,8 @@ def build_graph(ctx: ToolContext, planner: Planner,
             return {"pending": None, "proposal": None, "status": "answered",
                     "message": "A shortlist needs an existing job; run again with a job_id."}
         in_range = [cid for cid in action.candidate_ids if 1 <= cid <= MAX_ID]
-        existing = {cid for (cid,) in ctx.session.query(Candidate.id).filter(Candidate.id.in_(in_range))}
-        kept = _vet_proposal(action.candidate_ids, set(state.get("seen", [])), existing)
+        on_job = ctx.session.query(Candidate.id).filter(Candidate.id.in_(in_range), Candidate.job_id == job_id)
+        kept = _vet_proposal(action.candidate_ids, set(state.get("eligible", [])), {cid for (cid,) in on_job})
         entries = []
         for cid in kept:
             score = agent_tools.score_candidate(ctx, ScoreInput(candidate_id=cid, job_id=job_id))
@@ -519,7 +525,8 @@ def start_run(ctx: ToolContext, request: str, planner: Planner, checkpointer: Ba
     request = validate_request(request, job_id)
     thread_id = thread_id or uuid.uuid4().hex
     graph = build_graph(ctx, planner, checkpointer)
-    graph.invoke({"request": request, "job_id": job_id, "steps": [], "tool_calls": 0, "turns": 0, "seen": [],
+    graph.invoke({"request": request, "job_id": job_id, "steps": [], "tool_calls": 0, "turns": 0,
+                  "eligible": named_ids(request),
                   "proposal": None, "decision": None, "shortlist_id": None, "status": "running", "message": ""},
                  _config(thread_id))
     result = _result(ctx, graph, thread_id)

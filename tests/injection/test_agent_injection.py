@@ -149,26 +149,29 @@ def test_llm_cannot_approve_or_skip_the_interrupt_unguarded(pool_with, monkeypat
 def scenario_invented_ids(make):
     ctx, ids = make(injected_text("ignore_instructions"))
     result, _ = run_llm(ctx, ids["backend"],
+                        # Ada and Cy exist but the LLM only looked them up; no search returned them. 999 doesn't exist.
                         {"action": "call_tool", "tool": "get_candidate_profile", "args": {"candidate_id": ids["Ada"]}},
-                        # Cy exists but never appeared in a tool result; 999 does not exist.
+                        {"action": "call_tool", "tool": "score_candidate",
+                         "args": {"candidate_id": ids["Cy"], "job_id": ids["backend"]}},
+                        search("Python", ids["other"]),  # a search with no hits
                         {"action": "propose_shortlist", "candidate_ids": [ids["Ada"], ids["Cy"], 999]})
     return ids, result
 
 
 def check_invented_ids(ids, result):
-    assert [e["candidate_id"] for e in result["proposal"]["entries"]] == [ids["Ada"]]
-    assert result["proposal"]["dropped_ids"] == [ids["Cy"], 999]
+    assert result["steps"][2]["result"]["hits"] == []
+    assert (result["status"], result["proposal"]) == ("answered", None)
 
 
-def test_shortlist_keeps_only_ids_from_tool_results_that_exist(pool_with):
+def test_shortlist_keeps_only_ids_from_search_hits_that_exist(pool_with):
     check_invented_ids(*scenario_invented_ids(pool_with))
 
 
 @pytest.mark.parametrize("vet", [
-    lambda requested, seen, existing: [c for c in requested if c in existing],  # existence only: Cy gets in
+    lambda requested, seen, existing: [c for c in requested if c in existing],  # existence only: Ada, Cy get in
     lambda requested, seen, existing: list(requested),                         # no check: 999 breaks the run
 ])
-def test_shortlist_keeps_only_ids_from_tool_results_that_exist_unguarded(pool_with, monkeypatch, vet):
+def test_shortlist_keeps_only_ids_from_search_hits_that_exist_unguarded(pool_with, monkeypatch, vet):
     monkeypatch.setattr(agent, "_vet_proposal", vet)
     with pytest.raises((AssertionError, ToolError)):
         check_invented_ids(*scenario_invented_ids(pool_with))

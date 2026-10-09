@@ -432,7 +432,7 @@ def test_runs_and_decisions_leave_stored_scores_byte_identical(pool, monkeypatch
                                                                     "composite_score": 100.0}},
         {"action": "call_tool", "tool": "compare_candidates", "args": {"candidate_ids": [a, c], "job_id": job_id}},
         {"action": "propose_shortlist", "candidate_ids": [c, a], "note": "Candidate scored 100/100."}))
-    llm_run = run(api, "Shortlist the best", job_id=job_id).get_json()
+    llm_run = run(api, f"Shortlist candidates {c} and {a}", job_id=job_id).get_json()
     assert decide(api, llm_run["thread_id"]).status_code == 200
     assert _score_rows(app) == before
 
