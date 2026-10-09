@@ -62,9 +62,9 @@ def run(env_file: str | None) -> dict[str, Any]:
     errors: list[str] = []
     real_generate = llm.generate_text
 
-    def recording_generate(prompt: str, key: str) -> str:
+    def recording_generate(prompt: str, api_key: str) -> str:
         try:
-            return real_generate(prompt, key)
+            return real_generate(prompt, api_key)
         except Exception as exc:
             errors.append(f"{type(exc).__name__}: {str(exc)[:200]}")
             raise
