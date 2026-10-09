@@ -109,7 +109,7 @@ def test_oversized_bodies_are_413_before_anything_runs(pool, monkeypatch):
 
 
 BUG_BIG_IDS = ("BUG: ids have no upper bound (agent_tools.py:48, agent.py:468), so an id past the database's "
-               "integer range raises a driver error the tools node (agent.py:365) doesn't catch: HTTP 500")
+               "integer range raises a driver error the tools node (agent.py:361) doesn't catch: HTTP 500")
 # SQLite holds 64-bit integers; PostgreSQL's INTEGER columns stop at 2**31 - 1.
 BIG_IDS = [
     pytest.param(2**31, marks=pytest.mark.xfail(not ON_SQLITE, strict=True, reason=BUG_BIG_IDS), id="2**31"),
