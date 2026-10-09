@@ -282,6 +282,37 @@ class JobChunk(Base):
     job: Mapped[Job] = relationship(back_populates="chunks")
 
 
+
+class AgentShortlist(Base):
+    """A shortlist the agent proposed and a human approved (POST /api/agent/approve/<thread_id>).
+
+    Only the approval endpoint creates rows; the agent can propose, never approve. `entries` is a
+    snapshot taken at approval: each candidate's id, name, score from the score_candidate tool and
+    the resume passages cited for them.
+    """
+    __tablename__ = "agent_shortlists"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    thread_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    job_id: Mapped[int] = mapped_column(Integer, ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True)
+    request: Mapped[str] = mapped_column(Text, nullable=False)
+    entries: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False)
+    approved_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    approved_at: Mapped[datetime] = mapped_column(nullable=False, default=_utcnow)
+    note: Mapped[Optional[str]] = mapped_column(Text)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "thread_id": self.thread_id,
+            "job_id": self.job_id,
+            "request": self.request,
+            "entries": self.entries,
+            "approved_by": self.approved_by,
+            "approved_at": self.approved_at.isoformat(),
+            "note": self.note,
+        }
+
 def init_db(database_url: str) -> Engine:
     """Initialize database and create all tables."""
     engine = create_engine(database_url, echo=False)
