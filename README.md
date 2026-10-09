@@ -197,6 +197,9 @@ Everything works without editing `.env`. The settings you're most likely to chan
 | `EMBEDDING_PROVIDER` | `sentence-transformers` | Embeddings for retrieval: `sentence-transformers` (local, offline) or `gemini`. Never affects scores |
 | `EMBEDDING_API_MODEL` / `EMBEDDING_API_DIM` | `gemini-embedding-001` / `768` | Used when `EMBEDDING_PROVIDER=gemini` |
 | `ASK_LLM_ENABLED` | `false` | Lets "Ask the candidate pool" send retrieved resume excerpts to Gemini for a written, cited answer. Synthetic data only. When `false`, `/api/ask` returns the cited passages without a summary |
+| `AGENT_LLM_ENABLED` | `false` | Lets the recruiting agent's planner use an LLM, which sees tool results including resume passages. Synthetic data only. When `false`, a rule-based router plans instead |
+| `AGENT_LLM_PROVIDER` | `gemini` | The agent's LLM: `gemini`, `openai`, `anthropic`, `ollama` or `none`. See [Recruiting agent](#recruiting-agent) |
+| `AGENT_CHECKPOINT_DB` | `agent_checkpoints.db` next to `app.py` | SQLite file holding paused agent runs (gitignored). It contains resume passages, so treat it like the database |
 | `MAX_RESUME_SIZE_MB` | `10` | Upload size limit |
 | `ALLOWED_RESUME_EXTENSIONS` | `.txt,.pdf,.docx` | Accepted resume file types |
 | `HOST` / `PORT` | `127.0.0.1` / `5000` | Server address, used by `python app.py` |
@@ -318,6 +321,34 @@ How it answers:
 - **Fallback:** if Gemini is off or unavailable, you get the cited passages with `summary_unavailable: true` and a reason (`llm_disabled` or `llm_error`), so a client never shows passages as a generated answer.
 - **Injection guards:** excerpts sit in a delimited data block (delimiter tags in resume text are stripped) under a "data, not instructions" rule, and replies are parsed strictly. These reduce prompt injection but don't stop it; see [docs/security-injection.md](docs/security-injection.md).
 - **Scores:** candidate scores are never read or changed by this endpoint.
+
+### Recruiting agent
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/agent/run` | Body `{"request": "...", "job_id": 1}` (`job_id` optional, needed for a shortlist). Returns `thread_id`, `status`, `message`, the tool `steps`, and a `proposal` when the agent proposes a shortlist |
+| `POST` | `/api/agent/approve/<thread_id>` | Body `{"decision": "approve" or "reject", "reviewer": "...", "note": "..."}`. Resumes the paused run. Approving saves the shortlist with the reviewer and time; 404 if no run is waiting, 409 if already approved |
+
+The dashboard's **Agent** view does the same: ask, review the proposed shortlist with each candidate's score and cited passages, then approve or reject.
+
+How it works (`agent.py`, a LangGraph `StateGraph`):
+- **Tools** (`agent_tools.py`): `search_candidates`, `get_candidate_profile`, `score_candidate`, `compare_candidates` and `skill_gap_report`. All are read-only, with strict Pydantic input and output models. `score_candidate` returns the stored screening score, or computes one with the same code as `/api/screen` without saving it.
+- **Planner:** an LLM when `AGENT_LLM_ENABLED=true` and the provider has a key; otherwise a rule-based router that maps keywords (search, profile, score, compare, skill gap, shortlist) to the same tools.
+- **Human approval:** a proposed shortlist pauses the graph with `interrupt()`. The state is checkpointed to `AGENT_CHECKPOINT_DB` (SQLite), so a paused run survives a restart, and only the approve endpoint resumes it. A shortlist exists only after approval (table `agent_shortlists`).
+- **Guards:** the LLM can call only the five tools, with validated arguments, and at most 6 tool calls per run. It has no action that approves or writes. Tool results reach it inside a delimited data block, with delimiter tags stripped. A shortlist keeps only candidates that exist and appeared in tool results; scores come from `score_candidate` and set the order; model text that states a score is withheld. Tests: `tests/injection/test_agent_injection.py`.
+
+**LLM providers.** Gemini (the default) goes through `llm.py` and uses `GOOGLE_API_KEY`. The others are optional and not in `requirements.txt`:
+
+| `AGENT_LLM_PROVIDER` | Needs | Model setting |
+|---|---|---|
+| `openai` | `pip install openai`, `OPENAI_API_KEY` | `AGENT_OPENAI_MODEL` |
+| `anthropic` | `pip install anthropic`, `ANTHROPIC_API_KEY` | `AGENT_ANTHROPIC_MODEL` |
+| `ollama` | a local Ollama server (`OLLAMA_HOST`, default `http://localhost:11434`); no SDK | `AGENT_OLLAMA_MODEL` |
+| `none` | nothing: always the rule-based router | |
+
+A selected SDK that isn't installed returns 503 with a generic message (details in the server log). A missing key falls back to the rule-based router.
+
+**MCP server.** `python mcp_server.py` serves the five tools over stdio to MCP clients, with the official `mcp` SDK (`MCPServer`, which mcp 2.x renamed from FastMCP). It reads `DATABASE_URL`, marks every tool read-only, and rolls back each call's session. It has no approval tool; approval stays in the web app.
 
 ### Analytics and health
 
@@ -475,12 +506,17 @@ HireAI is built to **assist** recruiters, not to make hiring decisions.
 Hire-AI/
 ├── start.py                  # Recommended entry point: loads model, starts server
 ├── app.py                    # Flask API + serves the dashboard at /
-├── frontend.html             # Recruiter dashboard (Dashboard, Jobs, Candidates, Analytics)
+├── frontend.html             # Recruiter dashboard (Dashboard, Jobs, Candidates, Analytics, Agent)
 ├── models.py                 # Typed SQLAlchemy models, incl. ResumeChunk/JobChunk with embeddings
 ├── database.py               # Engine creation; applies Alembic migrations on startup
 ├── chunking.py               # Section-aware chunking with exact source offsets
 ├── embeddings.py             # Pluggable embedding providers (Sentence-Transformers, Gemini)
 ├── indexing.py               # Chunk + embed on save; `python -m indexing --reindex`
+├── agent.py                  # Recruiting agent: LangGraph graph, approval interrupt, rule-based router
+├── agent_tools.py            # The agent's five read-only tools (Pydantic models)
+├── agent_llm.py              # Agent LLM providers: gemini, openai, anthropic, ollama, none
+├── screening.py              # Scorer inputs shared by /api/screen and score_candidate
+├── mcp_server.py             # Read-only MCP server for the five tools
 ├── analytics_service.py      # Metrics computed from database records
 ├── duplicate_detection.py    # Email / phone / fuzzy-name duplicate checks
 ├── interview_generator.py    # Candidate-specific interview questions
