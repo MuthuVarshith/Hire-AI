@@ -19,6 +19,8 @@ from werkzeug.utils import secure_filename
 load_dotenv()
 
 # Import our modules
+import ask
+import embeddings
 import indexing
 import llm
 import scorer
@@ -929,6 +931,35 @@ def get_top_candidates():
 
 
 # ============================================================================
+# ASK THE CANDIDATE POOL
+# ============================================================================
+
+@app.route('/api/ask', methods=['POST'])
+def ask_candidate_pool():
+    """Answer a question from resume chunks only, citing the passages used."""
+    body = request.get_json(silent=True) or {}
+    question = body.get('question')
+    job_id = body.get('job_id')
+    if not isinstance(question, str) or not question.strip():
+        return jsonify({"error": "question is required"}), 400
+    if job_id is not None and not isinstance(job_id, int):
+        return jsonify({"error": "job_id must be an integer"}), 400
+    db = get_db()
+    try:
+        if job_id is not None and db.get(Job, job_id) is None:
+            return jsonify({"error": "Job not found"}), 404
+        result = ask.answer_question(db, question, embeddings.get_provider(), job_id=job_id,
+                                     api_key=cfg.get_api_key())
+        return jsonify(result.to_dict()), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception:
+        return error_response("answering a question")
+    finally:
+        db.close()
+
+
+# ============================================================================
 # HEALTH & INFO ENDPOINTS
 # ============================================================================
 
@@ -965,6 +996,7 @@ def info():
             "GET /api/scoring-templates",
             "POST /api/scoring-templates",
             "GET /api/analytics/dashboard",
+            "POST /api/ask",
         ]
     }), 200
 

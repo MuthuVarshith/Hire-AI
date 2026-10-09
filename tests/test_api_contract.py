@@ -704,12 +704,14 @@ def _db_routes(app_module):
 
 def test_server_errors_never_reach_the_client(client, app_module, monkeypatch, caplog):
     monkeypatch.setattr(app_module, "get_db", lambda: _BrokenSession())
+    from tests.test_retrieval import KeywordProvider  # /api/ask embeds the question before querying
+    monkeypatch.setattr(app_module.embeddings, "get_provider", lambda: KeywordProvider())
     routes = list(_db_routes(app_module))
-    assert len(routes) == 22  # 25 routes minus the dashboard page, health and info
+    assert len(routes) == 23  # 26 routes minus the dashboard page, health and info
 
     for method, url in routes:
         caplog.clear()
-        kwargs = {"json": {"title": "t", "description_text": "d", "name": "n", "status": "Hired"}}
+        kwargs = {"json": {"title": "t", "description_text": "d", "name": "n", "status": "Hired", "question": "q"}}
         if (method, url) == ("POST", "/api/candidates"):
             kwargs = {"query_string": {"job_id": 1}, "content_type": "multipart/form-data",
                       "data": {"resume": (io.BytesIO(b"Jo Bloggs\njo@x.com"), "jo.txt")}}
