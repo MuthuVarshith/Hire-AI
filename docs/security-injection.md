@@ -57,7 +57,7 @@ match from 25 to 100: this is a **known limit of keyword scoring**, not an LLM p
 | Ask: citation checks | `ask.py:95-103`, `ask.py:138-142` | Tested: uncited claims, citations to excerpts not given (999, 0, -1), string citations, a missing `citations` key, `found: false`, prose or a leaked prompt instead of JSON all become "Not found in resumes."; invalid numbers are stripped from a partly valid list. | Checks that a citation exists, not that it supports the claim (limits below). |
 | Parser fallback | `resume_parser.py:185-192` | A non-JSON reply from a compliant parser falls back to regex parsing. | A well-formed malicious JSON reply is accepted (gap 1). |
 
-## Gaps and limits found (recommendations, not fixed here)
+## Gaps and limits found (recommendations; 3 and 5 fixed after merge)
 
 Each is pinned by an `xfail(strict=True)` test or a `test_limit_*` test, so a fix will show up
 as an unexpected pass or a failing limit test that should then be updated.
@@ -71,19 +71,21 @@ as an unexpected pass or a failing limit test that should then be updated.
 2. **The parser prompt has no data boundary.** `resume_parser.py:42-57` appends the resume after
    "Resume text:" with no delimiter and no "treat as data" rule (xfail). Recommendation: wrap the
    resume in a tagged block and add the same rule Ask uses.
-3. **Ask excerpts are not escaped.** `ask.py:91-92` inserts chunk text as is, so a resume can
-   write its own `</excerpts>` (`test_a_resume_cannot_close_the_excerpts_block`, xfail).
-   Recommendation: strip or escape `<excerpts>`/`</excerpts>` in chunk text, or use a per-request
-   random delimiter.
+3. **Ask excerpts were not escaped. FIXED after merge.** A resume could write its own
+   `</excerpts>`. `ask._defang` now replaces any `<excerpts>`/`</excerpts>` tag (any case or spacing)
+   in chunk text, candidate names and the question before they enter the prompt; citations returned
+   to the client keep the exact resume text. `test_a_resume_cannot_close_the_excerpts_block` is now a
+   normal test. Limit: other delimiter-like text (e.g. a fake `SYSTEM:` line) still reaches the model,
+   inside the block.
 4. **Citation validity is not claim validity.** `ask.py:138-142` accepts any answer with one real
    citation. Not caught (xfail): a disparaging claim citing the injected excerpt, a false claim
    citing a real unrelated excerpt, and a leaked prompt with a valid citation.
    Recommendation: require each sentence to cite, check that names in the answer match the
    cited candidates, reject answers that echo the prompt, and show the cited passages next to
    the answer (the API already returns them) so a recruiter can verify.
-5. **Loosely typed JSON is read as grounded.** `ask.py:99` uses `bool(data["found"])`, so the
-   string `"false"` is true; `ask.py:102` accepts `True` as citation 1 because `bool` is an
-   `int` (xfail). Recommendation: require `found is True` and exclude `bool` from citations.
+5. **Loosely typed JSON was read as grounded. FIXED (agent-b/ask-hardening).** `_parse` now
+   requires `found is True`, a string answer, a list of citations and integer (non-bool) citation
+   numbers. `test_loosely_typed_replies_are_not_found` is now a normal test.
 6. **Free text from the LLM is stored and shown verbatim.** The screening explanation
    (`app.py:585-611`) and interview questions (`interview_generator.py:88-110`) are not checked.
    A compliant model's "score: 100" is stored as `reasoning` while the real score stays 37.5;

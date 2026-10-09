@@ -16,6 +16,7 @@ cited passages without a generated summary. Candidate scores are never read or c
 import json
 import logging
 import os
+import re
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from typing import Any
@@ -90,8 +91,18 @@ def llm_enabled() -> bool:
     return os.getenv("ASK_LLM_ENABLED", "false").strip().lower() == "true"
 
 
+_DELIMITER = re.compile(r"<\s*/?\s*excerpts\s*>", re.IGNORECASE)
+
+
+def _defang(value: str) -> str:
+    """Remove excerpt delimiters from untrusted text, so a resume can't end the data block early.
+    This only affects the prompt; citations returned to the client keep the exact resume text."""
+    return _DELIMITER.sub("[removed tag]", value)
+
+
 def _excerpts(citations: list[Citation]) -> str:
-    return "\n\n".join(f"[{c.number}] {c.candidate_name} ({c.section}):\n{c.text}" for c in citations)
+    return "\n\n".join(f"[{c.number}] {_defang(c.candidate_name)} ({c.section}):\n{_defang(c.text)}"
+                       for c in citations)
 
 
 def _parse(raw: str, allowed: set[int]) -> tuple[bool, str, list[int]]:
@@ -138,7 +149,8 @@ def answer_question(session: Session, question: str, provider: EmbeddingProvider
                       summary_unavailable=True, summary_unavailable_reason="llm_disabled")
 
     try:
-        raw = (generate or llm.generate_text)(PROMPT.format(question=question, excerpts=_excerpts(citations)), api_key)
+        prompt = PROMPT.format(question=_defang(question), excerpts=_excerpts(citations))
+        raw = (generate or llm.generate_text)(prompt, api_key)
     except Exception:
         # Gemini down or rate-limited after retries: the passages are still useful on their own.
         logger.warning("LLM unavailable for /api/ask; returning passages only", exc_info=True)
