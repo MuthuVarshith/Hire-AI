@@ -288,16 +288,21 @@ class AgentShortlist(Base):
 
     Only the approval endpoint creates rows; the agent can propose, never approve. `entries` is a
     snapshot taken at approval: each candidate's id, name, score from the score_candidate tool and
-    the resume passages cited for them.
+    the resume passages cited for them. It is an audit record, so it outlives the job (job_id is set
+    to NULL where foreign keys are enforced; job_title keeps the name) and the candidates (their
+    names are in `entries`).
     """
     __tablename__ = "agent_shortlists"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     thread_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
-    job_id: Mapped[int] = mapped_column(Integer, ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True)
+    job_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("jobs.id", ondelete="SET NULL"), index=True)
+    job_title: Mapped[Optional[str]] = mapped_column(String(255))
     request: Mapped[str] = mapped_column(Text, nullable=False)
     entries: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False)
-    approved_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Proposed candidates deleted before approval, left out of `entries`.
+    dropped_ids: Mapped[Optional[list[int]]] = mapped_column(JSON)
+    approved_by: Mapped[str] = mapped_column(String(255), nullable=False)  # self-declared until the app has auth
     approved_at: Mapped[datetime] = mapped_column(nullable=False, default=_utcnow)
     note: Mapped[Optional[str]] = mapped_column(Text)
 
@@ -306,12 +311,36 @@ class AgentShortlist(Base):
             "id": self.id,
             "thread_id": self.thread_id,
             "job_id": self.job_id,
+            "job_title": self.job_title,
             "request": self.request,
             "entries": self.entries,
+            "dropped_ids": self.dropped_ids or [],
             "approved_by": self.approved_by,
             "approved_at": self.approved_at.isoformat(),
             "note": self.note,
         }
+
+
+class AgentDecision(Base):
+    """Every human decision on a proposed shortlist, approve or reject.
+
+    The row is inserted before the paused run resumes, and thread_id is UNIQUE, so it is the atomic
+    claim on the run: of two decisions sent together, one inserts and the other is refused.
+    `outcome` is set after the run resumes: approved, rejected, job_deleted or candidates_deleted.
+    """
+    __tablename__ = "agent_decisions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    thread_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    decision: Mapped[str] = mapped_column(String(16), nullable=False)
+    reviewer: Mapped[str] = mapped_column(String(255), nullable=False)  # self-declared until the app has auth
+    note: Mapped[Optional[str]] = mapped_column(Text)
+    decided_at: Mapped[datetime] = mapped_column(nullable=False, default=_utcnow)
+    job_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("jobs.id", ondelete="SET NULL"), index=True)
+    job_title: Mapped[Optional[str]] = mapped_column(String(255))
+    request: Mapped[Optional[str]] = mapped_column(Text)
+    entries: Mapped[Optional[list[dict[str, Any]]]] = mapped_column(JSON)  # the proposal as the reviewer saw it
+    outcome: Mapped[Optional[str]] = mapped_column(String(32))
 
 def init_db(database_url: str) -> Engine:
     """Initialize database and create all tables."""

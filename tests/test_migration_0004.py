@@ -1,5 +1,6 @@
 """Migration 0004 (agent_shortlists): upgrade from 0003, the table's shape and constraints, and
-downgrade back to 0003 without touching the other tables. SQLite always runs; PostgreSQL runs when
+downgrade back to 0003 without touching the other tables. 0005 changes the table again
+(test_migration_0005.py), so these tests stop at revision 0004. SQLite always runs; PostgreSQL runs when
 TEST_POSTGRES_URL is set (the `engine` fixture of test_migrations.py).
 """
 import pytest
@@ -40,8 +41,11 @@ def add_shortlist(eng: Engine, job_id: int, thread_id: str) -> None:
                      {"t": thread_id, "j": job_id})
 
 
-def test_0004_is_the_head_and_follows_0003():
-    assert database.head_revision() == "0004"
+def test_0004_follows_0003():
+    from alembic.script import ScriptDirectory
+
+    script = ScriptDirectory.from_config(database.alembic_config()).get_revision("0004")
+    assert script is not None and script.down_revision == "0003"
 
 
 def test_upgrade_from_0003_creates_the_table(engine):
@@ -59,11 +63,10 @@ def test_upgrade_from_0003_creates_the_table(engine):
     (fk,) = inspector.get_foreign_keys("agent_shortlists")
     assert (fk["constrained_columns"], fk["referred_table"], fk["referred_columns"]) == (["job_id"], "jobs", ["id"])
     assert fk["options"].get("ondelete") == "CASCADE"
-    assert test_migrations._schema_drift(engine) == []
 
 
 def test_thread_id_is_unique(engine):
-    database.upgrade_database(engine)
+    database.upgrade_database(engine)  # still unique at head
     job_id = add_job(engine)
     add_shortlist(engine, job_id, "t-1")
     with pytest.raises(IntegrityError):
@@ -71,7 +74,7 @@ def test_thread_id_is_unique(engine):
 
 
 def test_downgrade_to_0003_drops_only_the_shortlists(engine):
-    database.upgrade_database(engine)
+    migrate(engine, "upgrade", "0004")
     job_id = add_job(engine)
     add_shortlist(engine, job_id, "t-1")
 
@@ -84,14 +87,14 @@ def test_downgrade_to_0003_drops_only_the_shortlists(engine):
         assert conn.execute(text("SELECT title FROM jobs")).scalars().all() == ["Backend"]
 
     migrate(engine, "upgrade", "head")  # and the upgrade can run again
-    assert revision(engine) == "0004" and test_migrations._schema_drift(engine) == []
+    assert revision(engine) == database.head_revision() and test_migrations._schema_drift(engine) == []
     add_shortlist(engine, job_id, "t-1")  # the old row went with the table
 
 
-def test_deleting_a_job_cascades_to_its_shortlists_where_foreign_keys_are_enforced(engine):
+def test_at_0004_deleting_a_job_cascades_to_its_shortlists_where_foreign_keys_are_enforced(engine):
     if engine.dialect.name != "postgresql":
         pytest.skip("SQLite does not enforce foreign keys here (no PRAGMA foreign_keys)")
-    database.upgrade_database(engine)
+    migrate(engine, "upgrade", "0004")  # 0005 changes this to SET NULL
     job_id = add_job(engine)
     add_shortlist(engine, job_id, "t-1")
     with engine.begin() as conn:
