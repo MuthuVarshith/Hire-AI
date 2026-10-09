@@ -24,6 +24,7 @@ import embeddings
 import indexing
 import llm
 import scorer
+import screening as scoring_inputs
 import config as cfg
 import jd_parser
 import resume_parser
@@ -519,46 +520,10 @@ def screen_candidate(candidate_id, job_id):
         if not job:
             return jsonify({"error": "Job not found"}), 404
 
-        # Load embedding model
-        embedding_model = scorer.load_embedding_model()
-
-        # Build JobRequirements object from DB
-        job_req = cfg.JobRequirements(
-            title=job.title,
-            required_skills=job.required_skills or [],
-            preferred_skills=job.preferred_skills or [],
-            min_experience_years=job.min_experience_years,
-            required_education=job.required_education,
-            responsibilities=job.responsibilities or [],
-            raw_text=job.description_text
-        )
-
-        # Build ResumeProfile from candidate
-        resume_prof = cfg.ResumeProfile(
-            name=candidate.name,
-            email=candidate.email,
-            phone=candidate.phone,
-            skills=candidate.skills or [],
-            experience_years=candidate.experience_years,
-            education=candidate.education or [],
-            work_history=candidate.work_history or [],
-            raw_text=candidate.resume_text,
-            file_path=candidate.resume_filename or ""
-        )
-
-        # Get or use default scoring template
-        if job.scoring_template_id:
-            template = db.query(ScoringTemplate).filter(
-                ScoringTemplate.id == job.scoring_template_id
-            ).first()
-            if template:
-                weights = template.to_weights_dict()
-            else:
-                weights = cfg.WEIGHTS
-        else:
-            weights = cfg.WEIGHTS
-
-        score_result = scorer.score_candidate(resume_prof, job_req, embedding_model, weights=weights)
+        # Build the scorer inputs from the stored rows and score with the job's template weights.
+        # screening.py is shared with the agent's score_candidate tool, so both compute the same numbers.
+        resume_prof, job_req, score_result = scoring_inputs.compute_score(
+            db, candidate, job, scorer.load_embedding_model())
 
         # Generate strengths and gaps
         strengths = []
