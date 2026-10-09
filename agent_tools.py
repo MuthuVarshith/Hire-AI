@@ -9,7 +9,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy.orm import Session
 
 import ask
@@ -25,6 +25,11 @@ MAX_COMPARE = 10
 
 class ToolError(LookupError):
     """A tool could not run on valid arguments, e.g. an unknown candidate. The message is safe to show."""
+
+
+def validation_message(exc: ValidationError) -> str:
+    """Field paths and messages only; the rejected input values are not echoed back."""
+    return "; ".join(f"{'.'.join(str(p) for p in e['loc']) or 'value'}: {e['msg']}" for e in exc.errors())
 
 
 @dataclass

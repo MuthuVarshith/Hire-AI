@@ -37,7 +37,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 import agent_tools
 import llm
 from agent_llm import ChatProvider
-from agent_tools import TOOLS, ScoreInput, ToolContext, ToolError, ToolSpec
+from agent_tools import TOOLS, ScoreInput, ToolContext, ToolError, ToolSpec, validation_message
 from models import AgentShortlist, Candidate, Job
 
 logger = logging.getLogger(__name__)
@@ -104,11 +104,6 @@ class AgentState(TypedDict, total=False):
 Planner = Callable[[AgentState], Any]
 
 
-def _errors(exc: ValidationError) -> str:
-    """Field paths and messages only; the rejected input values are not echoed back."""
-    return "; ".join(f"{'.'.join(str(p) for p in e['loc']) or 'value'}: {e['msg']}" for e in exc.errors())
-
-
 def parse_action(raw: Any) -> tuple[CallTool | ProposeShortlist | Finish | None, str]:
     """Validate a planner reply; returns (action, "") or (None, reason)."""
     if isinstance(raw, str):
@@ -119,7 +114,7 @@ def parse_action(raw: Any) -> tuple[CallTool | ProposeShortlist | Finish | None,
     try:
         return _ACTION.validate_python(raw), ""
     except ValidationError as exc:
-        return None, f"invalid action: {_errors(exc)}"
+        return None, f"invalid action: {validation_message(exc)}"
 
 
 # --- guards (module-level so the injection tests can show each one matters) -------------
@@ -367,7 +362,7 @@ def build_graph(ctx: ToolContext, planner: Planner,
                 step.update(ok=True, result=result)
                 seen.extend(c for c in _candidate_ids(name, result) if c not in seen)
             except ValidationError as exc:
-                step["error"] = f"invalid arguments: {_errors(exc)}"
+                step["error"] = f"invalid arguments: {validation_message(exc)}"
             except ToolError as exc:
                 step["error"] = str(exc)
         return {"steps": [*state.get("steps", []), step], "tool_calls": state.get("tool_calls", 0) + 1,

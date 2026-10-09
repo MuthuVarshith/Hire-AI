@@ -28,6 +28,7 @@ langchain-core>=0.3         # LangChain retriever adapter
 # openai or anthropic only if AGENT_LLM_PROVIDER selects them (ollama uses plain HTTP).
 langgraph>=1.2.14
 langgraph-checkpoint-sqlite>=3.1.1
+mcp>=2.3.0                  # read-only MCP server (mcp_server.py); 2.x names FastMCP MCPServer
 
 # Duplicate detection
 fuzzywuzzy>=0.18.0
