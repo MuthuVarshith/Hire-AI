@@ -36,13 +36,13 @@ The injection tests in `tests/injection/test_agent_injection.py` each have an `_
 | Check | Result |
 |---|---|
 | Full suite, SQLite (final, at `249e737`) | 647 passed, 24 skipped (need PostgreSQL), 3 xfailed (known ask-injection limits) |
-| Full suite, PostgreSQL | **Pending.** Last run by the tester before the fix round: 582 passed, 2 skipped, 18 xfailed. The final run, which includes migration 0005's upgrade and downgrade, couldn't run because Docker Desktop's engine won't start on this machine |
+| Full suite, PostgreSQL 17 + pgvector (final, at `f8ce086`) | 668 passed, 3 skipped (the SQLite variants of foreign-key and HNSW tests), 3 xfailed. Migration 0005's upgrade from 0004, unique `thread_id`, audit rows outliving a deleted job, and downgrade to 0004 all pass on PostgreSQL |
 | 120-case score-equality test | Passes |
 | ruff, strict mypy (34 files, nothing added to the overrides list) | Clean |
 | Coverage of new modules (tester, before the fix round) | agent 99%, agent_tools 100%, agent_llm 86%, mcp_server 94%, screening 100% |
 | Bugs pinned as strict xfails by the tester | 6, all fixed and flipped to normal tests |
 
-**Not run:** the PostgreSQL suite after the fixes (blocked by Docker), and a tester re-pass (skipped at your request). The OpenAI, Anthropic and Ollama providers have only mocked tests.
+**Not run:** a tester re-pass (skipped at your request). The OpenAI, Anthropic and Ollama providers have only mocked tests.
 
 ## Live checks
 
@@ -78,7 +78,7 @@ Each fix has a test that fails on the code before it.
 | Low | `agent_decisions.entries` keeps resume passages, rejected runs included, so pruning checkpoints doesn't remove them |
 | Low | `steps[].error` in the API response can repeat model text. Bare numbers like "Ada (97)" pass the score-text check; displayed scores still come from the scorer |
 | Low | Checkpoints aren't pruned when a run raises |
-| Untested | Migration 0005 and the post-fix suite on PostgreSQL; the OpenAI and Anthropic providers live |
+| Untested | The OpenAI, Anthropic and Ollama providers live; the agent with Gemini live (scheduled after the remaining ask batches) |
 | Phase 5 | Real authentication. `mcp` (now optional, `requirements-mcp.txt`) needs starlette 0.49.1 or newer, which breaks FastAPI 0.115. Pick a FastAPI version compatible with it, or keep MCP in its own environment |
 
 ## Interview questions
