@@ -23,14 +23,14 @@ select = ["E", "F", "W", "B"]
 python_version = "3.11"
 strict = true
 ignore_missing_imports = true
-files = ["*.py", "eval"]
+files = ["*.py", "eval", "app"]
 
 # Ratchet: pre-existing modules not yet typed. Remove a module from this list once it
 # passes strict mode; never add new code here. Most errors come from the untyped
 # SQLAlchemy 1.x-style models, which Phase 1 replaces with typed Mapped[] models.
 [[tool.mypy.overrides]]
 module = [
-    "analytics_service", "app", "config", "interview_generator",
+    "analytics_service", "legacy_flask_app", "config", "interview_generator",
     "jd_parser", "main", "ranker", "resume_parser", "scorer", "start", "utils",
 ]
 ignore_errors = true

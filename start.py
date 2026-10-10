@@ -13,7 +13,7 @@ print("    Press Ctrl+C to stop\n")
 
 # Import and run the app
 try:
-    from app import app
+    from legacy_flask_app import app
 
     import scorer
 

@@ -9,7 +9,7 @@ REPO = Path(__file__).resolve().parent.parent
 
 def test_app_and_agent_import_without_mcp(tmp_path):
     code = ("import sys; sys.modules['mcp'] = None  # any 'import mcp...' now raises ImportError\n"
-            "import app, agent, agent_api, agent_tools, agent_llm")
+            "import legacy_flask_app, agent, agent_api, agent_tools, agent_llm")
     env = {**os.environ, "DATABASE_URL": f"sqlite:///{(tmp_path / 'm.db').as_posix()}", "HF_HUB_OFFLINE": "1",
            "GOOGLE_API_KEY": "", "AGENT_CHECKPOINT_DB": str(tmp_path / "cp.db")}
     result = subprocess.run([sys.executable, "-c", code], cwd=REPO, env=env, capture_output=True, text=True)

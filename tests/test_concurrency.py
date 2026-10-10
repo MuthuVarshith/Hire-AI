@@ -24,7 +24,7 @@ ROUNDS = 3
 
 @pytest.fixture
 def app_module():
-    import app as app_module
+    import legacy_flask_app as app_module
 
     return app_module
 

@@ -30,7 +30,7 @@ PACING_SECONDS = 6.0
 RESULTS_JSON = ROOT / "eval" / "ask_live_results.json"
 # The code POST /api/ask runs. A run refuses to start if any of these has uncommitted changes, so
 # the commit recorded at the start is the code that answered every question.
-ASK_PATH = ["app.py", "ask.py", "llm.py", "retrieval.py", "embeddings.py", "chunking.py", "indexing.py",
+ASK_PATH = ["legacy_flask_app.py", "ask.py", "llm.py", "retrieval.py", "embeddings.py", "chunking.py", "indexing.py",
             "database.py", "models.py", "config.py", "migrations", "text_guard.py", "tracing.py",
             # The run's inputs too: questions, labels, the corpus and how it is indexed.
             "eval/ask_live.py", "eval/benchmark.py", "eval/pool.py", "eval/retrieval_benchmark.json",
@@ -62,7 +62,7 @@ def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
     os.environ["EMBEDDING_PROVIDER"] = "sentence-transformers"  # the frozen retrieval choice
     _load_key(env_file)
 
-    import app as app_module  # noqa: E402  (DATABASE_URL must be set first)
+    import legacy_flask_app as app_module  # noqa: E402  (DATABASE_URL must be set first)
     import ask
     import config
     import embeddings

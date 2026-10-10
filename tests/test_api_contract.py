@@ -37,7 +37,7 @@ TEMPLATE_KEYS = {"id", "name", "description", "semantic_weight", "skill_weight",
 
 @pytest.fixture
 def app_module():
-    import app as app_module
+    import legacy_flask_app as app_module
 
     return app_module
 

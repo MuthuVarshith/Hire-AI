@@ -98,7 +98,7 @@ def test_rejects_empty_and_overlong_questions(pool, question):
 
 
 def test_endpoint_validates_input_and_answers(monkeypatch):
-    import app as app_module
+    import legacy_flask_app as app_module
 
     monkeypatch.setattr(app_module.embeddings, "get_provider", lambda: KeywordProvider())
     client = app_module.app.test_client()
@@ -134,7 +134,7 @@ def test_not_found_is_not_flagged_as_summary_unavailable(pool, llm_on):
 
 
 def test_endpoint_reports_summary_unavailable(pool, monkeypatch):
-    import app as app_module
+    import legacy_flask_app as app_module
 
     session, provider = pool
     real = ask.answer_question
@@ -183,7 +183,7 @@ def test_every_passages_only_path_is_flagged(pool, monkeypatch, path):
 
 
 def _client_on_pool(monkeypatch, pool, generate):
-    import app as app_module
+    import legacy_flask_app as app_module
 
     session, provider = pool
     real = ask.answer_question
@@ -195,7 +195,7 @@ def _client_on_pool(monkeypatch, pool, generate):
 
 @pytest.mark.parametrize("path", sorted(PASSAGES_ONLY_PATHS))
 def test_endpoint_flags_every_passages_only_path(pool, monkeypatch, path):
-    import app as app_module
+    import legacy_flask_app as app_module
 
     flag, key, generate, reason = PASSAGES_ONLY_PATHS[path]
     monkeypatch.setenv("ASK_LLM_ENABLED", flag)
@@ -210,7 +210,7 @@ def test_endpoint_flags_every_passages_only_path(pool, monkeypatch, path):
     ({"found": False, "answer": "", "citations": []}, False),                          # LLM says not found
 ])
 def test_endpoint_real_outcomes_are_not_flagged(pool, monkeypatch, reply, found):
-    import app as app_module
+    import legacy_flask_app as app_module
 
     monkeypatch.setenv("ASK_LLM_ENABLED", "true")
     monkeypatch.setattr(app_module.cfg, "get_api_key", lambda: "k")
@@ -265,7 +265,7 @@ def test_answer_question_rejects_bad_types(pool, kwargs):
     ["React?"], "React?",                                             # JSON that is not an object
 ])
 def test_endpoint_rejects_bad_input(monkeypatch, payload):
-    import app as app_module
+    import legacy_flask_app as app_module
 
     called = []
     monkeypatch.setattr(app_module.ask, "answer_question", lambda *a, **k: called.append(1))
@@ -275,7 +275,7 @@ def test_endpoint_rejects_bad_input(monkeypatch, payload):
 
 
 def test_endpoint_rejects_oversize_body(monkeypatch):
-    import app as app_module
+    import legacy_flask_app as app_module
 
     called = []
     monkeypatch.setattr(app_module.ask, "answer_question", lambda *a, **k: called.append(1))
