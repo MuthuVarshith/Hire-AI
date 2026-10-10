@@ -1,0 +1,1171 @@
+{
+  "model": "gemini-3.8-flash",
+  "date": "2026-10-10",
+  "commit": "e80b3df",
+  "route": "POST /api/ask (Flask test client, throwaway SQLite)",
+  "candidates_indexed": 26,
+  "pacing_seconds": 6.0,
+  "threshold": 0.25,
+  "results": [
+    {
+      "id": "q01",
+      "kind": "positive",
+      "question": "Who has run FastAPI services in production?",
+      "http_status": 200,
+      "answer": "Rachel Kim led the migration of a shipment-tracking platform from a Django monolith to FastAPI microservices running in production on Kubernetes (EKS) [1].",
+      "found": true,
+      "generated": true,
+      "summary_unavailable": false,
+      "summary_unavailable_reason": null,
+      "top_similarity": 0.5135118630127302,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 205,
+          "char_end": 600,
+          "similarity": 0.5135,
+          "labelled": true,
+          "text": "Staff Software Engineer, Tidewater Logistics (2020 - Present)\n- Led the migration of the shipment-tracking platform from a Django monolith to FastAPI\n  microservices running in production on Kubernetes (EKS), serving 40M requests per day.\n- Designed the Kafka-based event backbone (30+ topics) for real-time shipment status updates.\n- Mentored 6 engineers; introduced contract testing with Pact."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v06_senior_rachel_kim.txt",
+        "varied/v07_ml_engineer_omar_haddad.txt"
+      ],
+      "llm_errors": [],
+      "error": null,
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. partially correct: Rachel Kim is correct and correctly cited; Omar Haddad (labelled) is missed."
+    },
+    {
+      "id": "q02",
+      "kind": "positive",
+      "question": "Which candidates have built retrieval-augmented generation (RAG) systems?",
+      "http_status": 200,
+      "answer": "No summary was generated. The cited resume passages below are search results, not an answer to the question.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.6418857878647795,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 158,
+          "char_end": 528,
+          "similarity": 0.6419,
+          "labelled": true,
+          "text": "Machine Learning Engineer, Northwind AI (2022 - Present)\nBuilt a retrieval-augmented generation (RAG) assistant over 2M support articles using pgvector,\na cross-encoder reranker and GPT-class models; cut average handling time by 18%.\nSet up offline evaluation with RAGAS and a 400-question golden set.\nDeployed model services with FastAPI and Docker on Google Cloud Run."
+        },
+        {
+          "number": 2,
+          "candidate": "resume_01_ananya_patel.txt",
+          "section": "experience",
+          "char_start": 323,
+          "char_end": 499,
+          "similarity": 0.4868,
+          "labelled": true,
+          "text": "6 years\nApplied AI Engineer | Nova AI Labs | 2019-Present\nBuilt retrieval-augmented generation systems, deployed LLM-powered workflows, and optimized model inference pipelines."
+        },
+        {
+          "number": 3,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "experience",
+          "char_start": 281,
+          "char_end": 439,
+          "similarity": 0.4063,
+          "labelled": false,
+          "text": "3 years\nPrompt Engineer | BrightBridge AI | 2021-Present\nBuilt LLM workflows, benchmarked prompt strategies, and connected retrieval systems to user products."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "skills",
+          "char_start": 680,
+          "char_end": 776,
+          "similarity": 0.3353,
+          "labelled": false,
+          "text": "Python, PyTorch, Hugging Face, LangChain, pgvector, FAISS, RAGAS, FastAPI, Docker, GCP, BigQuery"
+        },
+        {
+          "number": 5,
+          "candidate": "resume_09_emma_thompson.txt",
+          "section": "experience",
+          "char_start": 268,
+          "char_end": 407,
+          "similarity": 0.311,
+          "labelled": false,
+          "text": "6 years\nResearch Engineer | Insight Labs | 2018-Present\nDeveloped language models, benchmarked NLP systems, and built evaluation pipelines."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "summary",
+          "char_start": 63,
+          "char_end": 162,
+          "similarity": 0.299,
+          "labelled": false,
+          "text": "AI engineer specializing in prompt engineering, retrieval systems, and LLM application development."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "projects",
+          "char_start": 244,
+          "char_end": 595,
+          "similarity": 0.2828,
+          "labelled": true,
+          "text": "Campus Chatbot (2025)\nBuilt a retrieval-augmented chatbot over university policy PDFs using LangChain, FAISS and a\nsmall open-source LLM. Answered 300+ student questions during orientation week.\n\nExpense Splitter API (2024)\nREST API in FastAPI with PostgreSQL and SQLAlchemy; containerized with Docker for a class demo.\nNot deployed beyond the course."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "skills",
+          "char_start": 728,
+          "char_end": 797,
+          "similarity": 0.2781,
+          "labelled": false,
+          "text": "PyTorch, JAX, CUDA, quantization, knowledge distillation, Python, C++"
+        }
+      ],
+      "labelled_resumes": [
+        "resume_01_ananya_patel.txt",
+        "varied/v01_fresher_aarav_mehta.txt",
+        "varied/v07_ml_engineer_omar_haddad.txt"
+      ],
+      "llm_errors": [
+        "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+      ],
+      "error": null,
+      "judgement": "Not judged: no generated answer (503 UNAVAILABLE after retries); the route correctly returned passages with summary_unavailable=true."
+    },
+    {
+      "id": "q03",
+      "kind": "positive",
+      "question": "Who has hands-on Kafka experience?",
+      "http_status": 200,
+      "answer": "Rachel Kim and Diego Ramos have hands-on Kafka experience:\n- Rachel Kim designed a Kafka-based event backbone (30+ topics) for real-time shipment status updates at Tidewater Logistics [1] and lists Kafka in her skills [8].\n- Diego Ramos created a streaming demo with a Kafka producer and consumer in Python simulating sensor readings [2], and lists \"Kafka (demo only)\" under his skills [3].",
+      "found": true,
+      "generated": true,
+      "summary_unavailable": false,
+      "summary_unavailable_reason": null,
+      "top_similarity": 0.4323950229824743,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "char_start": 205,
+          "char_end": 600,
+          "similarity": 0.4324,
+          "labelled": true,
+          "text": "Staff Software Engineer, Tidewater Logistics (2020 - Present)\n- Led the migration of the shipment-tracking platform from a Django monolith to FastAPI\n  microservices running in production on Kubernetes (EKS), serving 40M requests per day.\n- Designed the Kafka-based event backbone (30+ topics) for real-time shipment status updates.\n- Mentored 6 engineers; introduced contract testing with Pact."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "projects",
+          "char_start": 138,
+          "char_end": 394,
+          "similarity": 0.3677,
+          "labelled": true,
+          "text": "City bike trips pipeline: Airflow DAG that ingests daily CSV dumps into a PostgreSQL warehouse,\nwith dbt models for daily station usage. Ran locally with Docker Compose.\n\nStreaming demo: Kafka producer and consumer in Python that simulated sensor readings."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "skills",
+          "char_start": 411,
+          "char_end": 483,
+          "similarity": 0.3628,
+          "labelled": false,
+          "text": "Python, SQL, Airflow, dbt, Kafka (demo only), PostgreSQL, Docker Compose"
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "char_start": 981,
+          "char_end": 1102,
+          "similarity": 0.2719,
+          "labelled": false,
+          "text": "Python, FastAPI, Django, Flask, Kafka, PostgreSQL, MySQL, Redis, Docker, Kubernetes, AWS (EKS,\nRDS, SQS), Terraform, Pact"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v05_fresher_diego_ramos.txt",
+        "varied/v06_senior_rachel_kim.txt"
+      ],
+      "llm_errors": [],
+      "error": null,
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Rachel Kim and Diego Ramos, every citation supports its claim."
+    },
+    {
+      "id": "q04",
+      "kind": "positive",
+      "question": "Find candidates with a Certified Kubernetes Administrator (CKA) certification.",
+      "http_status": 200,
+      "answer": "Tom Baker holds the Certified Kubernetes Administrator (CKA) certification [1].",
+      "found": true,
+      "generated": true,
+      "summary_unavailable": false,
+      "summary_unavailable_reason": null,
+      "top_similarity": 0.624924912384472,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v09_no_headings_tom_baker.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 583,
+          "similarity": 0.6249,
+          "labelled": true,
+          "text": "Tom Baker, tom.baker@example.com, (555) 201-0009.\n\nI am a DevOps engineer with about seven years of experience. Most recently at Granite Cloud\n(2021 to now) I run the CI/CD platform: GitHub Actions and Argo CD deploying to three Kubernetes\nclusters, all managed with Terraform. Before that I was a systems administrator at Oakridge\nBank (2017 to 2021), where I automated Linux server patching with Ansible.\n\nI hold the Certified Kubernetes Administrator (CKA) certification and an AWS Solutions\nArchitect Associate certification. I studied Network Engineering at Midvale Polytechnic."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v09_no_headings_tom_baker.txt"
+      ],
+      "llm_errors": [],
+      "error": null,
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Tom Baker, CKA cited from his header."
+    },
+    {
+      "id": "q05",
+      "kind": "positive",
+      "question": "Who has security certifications such as OSCP or CISSP?",
+      "http_status": 200,
+      "answer": "FATIMA ZAHRA holds both the OSCP and CISSP certifications [1][8].",
+      "found": true,
+      "generated": true,
+      "summary_unavailable": false,
+      "summary_unavailable_reason": null,
+      "top_similarity": 0.8369815418650243,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "certifications",
+          "char_start": 648,
+          "char_end": 659,
+          "similarity": 0.837,
+          "labelled": true,
+          "text": "OSCP, CISSP"
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v13_security_fatima_zahra.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 86,
+          "similarity": 0.3739,
+          "labelled": false,
+          "text": "FATIMA ZAHRA\nApplication Security Engineer | fatima.zahra@example.com | (555) 201-0013"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v13_security_fatima_zahra.txt"
+      ],
+      "llm_errors": [],
+      "error": null,
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Fatima Zahra, certifications chunk cited."
+    },
+    {
+      "id": "q06",
+      "kind": "positive",
+      "question": "Which candidates have managed or mentored engineers?",
+      "http_status": 200,
+      "answer": "Elena Petrova has managed two teams of 11 engineers at Lindenpay [3] and includes mentoring among her leadership skills [5].",
+      "found": true,
+      "generated": true,
+      "summary_unavailable": false,
+      "summary_unavailable_reason": null,
+      "top_similarity": 0.5089216389217179,
+      "citations": [
+        {
+          "number": 3,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 301,
+          "char_end": 695,
+          "similarity": 0.3976,
+          "labelled": true,
+          "text": "Engineering Manager, Lindenpay (2021 - Present)\n- Manage two teams (11 engineers) owning checkout and fraud detection.\n- Hired 9 engineers; built the interview loop and leveling guide.\n- Drove the adoption of feature flags and trunk-based development; deploy frequency rose from\n  weekly to 20+ times per day.\n- Partnered with data science to ship a fraud model that reduced chargebacks by 23%."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "skills",
+          "char_start": 1395,
+          "char_end": 1557,
+          "similarity": 0.3728,
+          "labelled": false,
+          "text": "Leadership: hiring, mentoring, roadmap planning, incident management\nEngineering: TypeScript, React, Node.js, Ruby on Rails, PostgreSQL, Elasticsearch, Playwright"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v06_senior_rachel_kim.txt",
+        "varied/v10_multipage_elena_petrova.txt"
+      ],
+      "llm_errors": [],
+      "error": null,
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. partially correct: Elena Petrova is correct but 'two teams of 11 engineers' misreads '11 engineers' across two teams; Rachel Kim (mentored 6) is missed."
+    },
+    {
+      "id": "q07",
+      "kind": "positive",
+      "question": "Who has worked with Terraform?",
+      "http_status": 200,
+      "answer": "Tom Baker and Rachel Kim have worked with Terraform. Tom Baker managed Kubernetes clusters with Terraform at Granite Cloud [1], and Rachel Kim lists Terraform under her skills [2].",
+      "found": true,
+      "generated": true,
+      "summary_unavailable": false,
+      "summary_unavailable_reason": null,
+      "top_similarity": 0.5188240419733505,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v09_no_headings_tom_baker.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 583,
+          "similarity": 0.5188,
+          "labelled": true,
+          "text": "Tom Baker, tom.baker@example.com, (555) 201-0009.\n\nI am a DevOps engineer with about seven years of experience. Most recently at Granite Cloud\n(2021 to now) I run the CI/CD platform: GitHub Actions and Argo CD deploying to three Kubernetes\nclusters, all managed with Terraform. Before that I was a systems administrator at Oakridge\nBank (2017 to 2021), where I automated Linux server patching with Ansible.\n\nI hold the Certified Kubernetes Administrator (CKA) certification and an AWS Solutions\nArchitect Associate certification. I studied Network Engineering at Midvale Polytechnic."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "char_start": 981,
+          "char_end": 1102,
+          "similarity": 0.4959,
+          "labelled": true,
+          "text": "Python, FastAPI, Django, Flask, Kafka, PostgreSQL, MySQL, Redis, Docker, Kubernetes, AWS (EKS,\nRDS, SQS), Terraform, Pact"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v06_senior_rachel_kim.txt",
+        "varied/v09_no_headings_tom_baker.txt"
+      ],
+      "llm_errors": [],
+      "error": null,
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Tom Baker and Rachel Kim, both supported."
+    },
+    {
+      "id": "q08",
+      "kind": "positive",
+      "question": "Find freshers who built a chatbot project.",
+      "http_status": 200,
+      "answer": "varied/v01_fresher_aarav_mehta.txt built the \"Campus Chatbot\" (2025), a retrieval-augmented chatbot over university policy PDFs using LangChain, FAISS, and a small open-source LLM [1].",
+      "found": true,
+      "generated": true,
+      "summary_unavailable": false,
+      "summary_unavailable_reason": null,
+      "top_similarity": 0.5551831245791321,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "projects",
+          "char_start": 244,
+          "char_end": 595,
+          "similarity": 0.5552,
+          "labelled": true,
+          "text": "Campus Chatbot (2025)\nBuilt a retrieval-augmented chatbot over university policy PDFs using LangChain, FAISS and a\nsmall open-source LLM. Answered 300+ student questions during orientation week.\n\nExpense Splitter API (2024)\nREST API in FastAPI with PostgreSQL and SQLAlchemy; containerized with Docker for a class demo.\nNot deployed beyond the course."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v01_fresher_aarav_mehta.txt"
+      ],
+      "llm_errors": [],
+      "error": null,
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Aarav Mehta's Campus Chatbot project (named by file key because the eval names candidates by file)."
+    },
+    {
+      "id": "q09",
+      "kind": "positive",
+      "question": "Who knows React and TypeScript?",
+      "http_status": 200,
+      "answer": "Liam Novak [1][4] and Elena Petrova [2][5] both know React and TypeScript.",
+      "found": true,
+      "generated": true,
+      "summary_unavailable": false,
+      "summary_unavailable_reason": null,
+      "top_similarity": 0.6588195894761184,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v03_fresher_liam_novak.txt",
+          "section": "skills",
+          "char_start": 401,
+          "char_end": 464,
+          "similarity": 0.6588,
+          "labelled": true,
+          "text": "JavaScript, TypeScript, React, HTML, CSS, Tailwind, Jest, Figma"
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 697,
+          "char_end": 905,
+          "similarity": 0.5521,
+          "labelled": true,
+          "text": "Tech Lead, Lindenpay (2018 - 2021)\n- Led the rebuild of the checkout frontend in React and TypeScript with a Node.js BFF.\n- Introduced end-to-end testing with Playwright, cutting checkout regressions by half."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v03_fresher_liam_novak.txt",
+          "section": "projects",
+          "char_start": 179,
+          "char_end": 382,
+          "similarity": 0.4765,
+          "labelled": true,
+          "text": "* Recipe finder - React and TypeScript single-page app using a public recipes API; deployed on Netlify.\n* Accessibility audit tool - browser extension that flags missing alt text and low colour contrast."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "skills",
+          "char_start": 1395,
+          "char_end": 1557,
+          "similarity": 0.4214,
+          "labelled": true,
+          "text": "Leadership: hiring, mentoring, roadmap planning, incident management\nEngineering: TypeScript, React, Node.js, Ruby on Rails, PostgreSQL, Elasticsearch, Playwright"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v03_fresher_liam_novak.txt",
+        "varied/v10_multipage_elena_petrova.txt"
+      ],
+      "llm_errors": [],
+      "error": null,
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Liam Novak and Elena Petrova, all four labelled chunks cited."
+    },
+    {
+      "id": "q10",
+      "kind": "positive",
+      "question": "Who has built Android apps?",
+      "http_status": 200,
+      "answer": "No summary was generated. The cited resume passages below are search results, not an answer to the question.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.6242925997253203,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "summary",
+          "char_start": 66,
+          "char_end": 120,
+          "similarity": 0.6243,
+          "labelled": false,
+          "text": "Mobile developer, 4 years, Android and cross-platform."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "experience",
+          "char_start": 133,
+          "char_end": 337,
+          "similarity": 0.5228,
+          "labelled": true,
+          "text": "Android Developer at Savanna Mobile (2022-present) - shipped a Kotlin and Jetpack\nCompose banking app with 500k installs; Junior Developer at Pixelcraft (2021-2022) - built\nFlutter prototypes for clients."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v03_fresher_liam_novak.txt",
+          "section": "summary",
+          "char_start": 74,
+          "char_end": 159,
+          "similarity": 0.3397,
+          "labelled": false,
+          "text": "Entry-level frontend developer looking for a first role building accessible web apps."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "skills",
+          "char_start": 346,
+          "char_end": 410,
+          "similarity": 0.3336,
+          "labelled": false,
+          "text": "Kotlin, Jetpack Compose, Flutter, Dart, Firebase, REST APIs, Git"
+        },
+        {
+          "number": 5,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 159,
+          "similarity": 0.3047,
+          "labelled": false,
+          "text": "Full-stack developer with a growing focus on AI integrations and LLM application architecture."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "experience",
+          "char_start": 275,
+          "char_end": 423,
+          "similarity": 0.2874,
+          "labelled": false,
+          "text": "3 years\nSoftware Engineer | BluePeak AI | 2021-Present\nImplemented AI features into web products and connected services with OpenAI-compatible APIs."
+        },
+        {
+          "number": 7,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "education",
+          "char_start": 451,
+          "char_end": 511,
+          "similarity": 0.2773,
+          "labelled": false,
+          "text": "Bachelor's in Software Engineering, Arizona State University"
+        },
+        {
+          "number": 8,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "experience",
+          "char_start": 223,
+          "char_end": 366,
+          "similarity": 0.2765,
+          "labelled": false,
+          "text": "4 years\nSoftware Engineer | Nexora Technologies | 2020-Present\nBuilt enterprise services and integrated simple AI features into internal tools."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v11_inline_headings_kwame_asante.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+    },
+    {
+      "id": "q11",
+      "kind": "positive",
+      "question": "Which candidate has compressed large language models to run on a laptop?",
+      "http_status": 200,
+      "answer": "No summary was generated. The cited resume passages below are search results, not an answer to the question.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.5682900499622568,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "experience",
+          "char_start": 308,
+          "char_end": 454,
+          "similarity": 0.5683,
+          "labelled": true,
+          "text": "Research Scientist, Corvid Labs (2024 - Present)\nQuantized 7B-parameter language models to 4-bit for laptop inference with under 2% accuracy loss."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "education",
+          "char_start": 142,
+          "char_end": 295,
+          "similarity": 0.4667,
+          "labelled": false,
+          "text": "Ph.D. Computer Science, Ashford University, 2024. Thesis: \"Structured pruning for small language models\".\nM.S. Computer Science, Ashford University, 2020"
+        },
+        {
+          "number": 3,
+          "candidate": "resume_01_ananya_patel.txt",
+          "section": "skills",
+          "char_start": 189,
+          "char_end": 310,
+          "similarity": 0.427,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, Large Language Models, LangChain, Hugging Face, pandas, NumPy, SQL, Git, GitHub, Docker"
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "summary",
+          "char_start": 67,
+          "char_end": 130,
+          "similarity": 0.4055,
+          "labelled": false,
+          "text": "Efficient transformers, model compression, on-device inference."
+        },
+        {
+          "number": 5,
+          "candidate": "resume_09_emma_thompson.txt",
+          "section": "experience",
+          "char_start": 268,
+          "char_end": 407,
+          "similarity": 0.4026,
+          "labelled": false,
+          "text": "6 years\nResearch Engineer | Insight Labs | 2018-Present\nDeveloped language models, benchmarked NLP systems, and built evaluation pipelines."
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "other",
+          "char_start": 587,
+          "char_end": 719,
+          "similarity": 0.3858,
+          "labelled": false,
+          "text": "- \"Pruning Heads You Can Afford to Lose\", workshop paper, 2023\n- \"Tiny but Mighty: Distilling Speech Models\", conference paper, 2022"
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 158,
+          "char_end": 528,
+          "similarity": 0.3569,
+          "labelled": false,
+          "text": "Machine Learning Engineer, Northwind AI (2022 - Present)\nBuilt a retrieval-augmented generation (RAG) assistant over 2M support articles using pgvector,\na cross-encoder reranker and GPT-class models; cut average handling time by 18%.\nSet up offline evaluation with RAGAS and a 400-question golden set.\nDeployed model services with FastAPI and Docker on Google Cloud Run."
+        },
+        {
+          "number": 8,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "char_start": 162,
+          "char_end": 246,
+          "similarity": 0.3466,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, AWS, Docker, Kubernetes, Git, GitHub, MLflow"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v14_research_scientist_chen_wei.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+    },
+    {
+      "id": "q12",
+      "kind": "positive",
+      "question": "Who has published research papers?",
+      "http_status": 200,
+      "answer": "No summary was generated. The cited resume passages below are search results, not an answer to the question.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.29470944817124306,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "resume_09_emma_thompson.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 147,
+          "similarity": 0.2947,
+          "labelled": false,
+          "text": "Research engineer with expertise in NLP, model evaluation, and applied AI systems."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 907,
+          "char_end": 1122,
+          "similarity": 0.2717,
+          "labelled": false,
+          "text": "Senior Full-Stack Engineer, Marktplatz GmbH (2014 - 2018)\n- Built seller tools in Ruby on Rails and React; scaled the catalog search on Elasticsearch.\n- Ran the migration from MySQL to PostgreSQL with zero downtime."
+        },
+        {
+          "number": 3,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "skills",
+          "char_start": 181,
+          "char_end": 268,
+          "similarity": 0.2503,
+          "labelled": false,
+          "text": "Python, LLMs, LangChain, vector databases, embeddings, SQL, Docker, Git, GitHub, pandas"
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 217,
+          "similarity": 0.2151,
+          "labelled": false,
+          "text": "Former high-school chemistry teacher (6 years) who moved into data analysis through a\nbootcamp. Strong at explaining results to non-technical audiences."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "char_start": 981,
+          "char_end": 1102,
+          "similarity": 0.214,
+          "labelled": false,
+          "text": "Python, FastAPI, Django, Flask, Kafka, PostgreSQL, MySQL, Redis, Docker, Kubernetes, AWS (EKS,\nRDS, SQS), Terraform, Pact"
+        },
+        {
+          "number": 6,
+          "candidate": "varied/v03_fresher_liam_novak.txt",
+          "section": "projects",
+          "char_start": 179,
+          "char_end": 382,
+          "similarity": 0.2126,
+          "labelled": false,
+          "text": "* Recipe finder - React and TypeScript single-page app using a public recipes API; deployed on Netlify.\n* Accessibility audit tool - browser extension that flags missing alt text and low colour contrast."
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "experience",
+          "char_start": 538,
+          "char_end": 633,
+          "similarity": 0.2115,
+          "labelled": false,
+          "text": "Teaching Assistant, Northfield University (2024-2025): ran weekly labs for Intro to Statistics."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "header",
+          "char_start": 0,
+          "char_end": 46,
+          "similarity": 0.2086,
+          "labelled": false,
+          "text": "Chen Wei\nchen.wei@example.com | (555) 201-0014"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v14_research_scientist_chen_wei.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+    },
+    {
+      "id": "q13",
+      "kind": "positive",
+      "question": "Who has built data pipelines with Airflow or dbt?",
+      "http_status": 200,
+      "answer": "No summary was generated. The cited resume passages below are search results, not an answer to the question.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.6552402993847872,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "projects",
+          "char_start": 138,
+          "char_end": 394,
+          "similarity": 0.6552,
+          "labelled": true,
+          "text": "City bike trips pipeline: Airflow DAG that ingests daily CSV dumps into a PostgreSQL warehouse,\nwith dbt models for daily station usage. Ran locally with Docker Compose.\n\nStreaming demo: Kafka producer and consumer in Python that simulated sensor readings."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "skills",
+          "char_start": 411,
+          "char_end": 483,
+          "similarity": 0.5053,
+          "labelled": false,
+          "text": "Python, SQL, Airflow, dbt, Kafka (demo only), PostgreSQL, Docker Compose"
+        },
+        {
+          "number": 3,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "summary",
+          "char_start": 61,
+          "char_end": 131,
+          "similarity": 0.4796,
+          "labelled": false,
+          "text": "Developer with experience in data pipelines and basic AI integrations."
+        },
+        {
+          "number": 4,
+          "candidate": "resume_02_michael_chen.txt",
+          "section": "experience",
+          "char_start": 277,
+          "char_end": 418,
+          "similarity": 0.4262,
+          "labelled": false,
+          "text": "4 years\nML Engineer | Northwind AI | 2020-Present\nDeveloped fine-tuning pipelines, experiment tracking systems, and cloud-hosted AI services."
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "summary",
+          "char_start": 72,
+          "char_end": 119,
+          "similarity": 0.3763,
+          "labelled": false,
+          "text": "Final-year student focused on data engineering."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "char_start": 162,
+          "char_end": 246,
+          "similarity": 0.3706,
+          "labelled": false,
+          "text": "Python, PyTorch, TensorFlow, NLP, LLMs, AWS, Docker, Kubernetes, Git, GitHub, MLflow"
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v06_senior_rachel_kim.txt",
+          "section": "summary",
+          "char_start": 87,
+          "char_end": 179,
+          "similarity": 0.3578,
+          "labelled": false,
+          "text": "Staff backend engineer with 11 years building high-throughput APIs and event-driven systems."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "certifications",
+          "char_start": 453,
+          "char_end": 533,
+          "similarity": 0.3551,
+          "labelled": false,
+          "text": "Data Analytics Bootcamp, Codeway Academy, 2023 (12 weeks, Python, SQL, Power BI)"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v05_fresher_diego_ramos.txt",
+        "varied/v08_two_column_style_priya_s.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+    },
+    {
+      "id": "q14",
+      "kind": "positive",
+      "question": "Who has built dashboards in Power BI?",
+      "http_status": 200,
+      "answer": "No summary was generated. The cited resume passages below are search results, not an answer to the question.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.511437089560792,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "experience",
+          "char_start": 239,
+          "char_end": 393,
+          "similarity": 0.5114,
+          "labelled": true,
+          "text": "Junior Data Analyst, Brightfield Schools Network (2024 - Present)\nBuilt attendance and grade dashboards in Power BI; wrote SQL queries against SQL Server."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "experience",
+          "char_start": 688,
+          "char_end": 802,
+          "similarity": 0.3561,
+          "labelled": false,
+          "text": "Data Intern, Lumen Analytics (Summer 2025, 10 weeks)\nCleaned survey data with pandas and built Tableau dashboards."
+        },
+        {
+          "number": 3,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "experience",
+          "char_start": 133,
+          "char_end": 337,
+          "similarity": 0.3039,
+          "labelled": false,
+          "text": "Android Developer at Savanna Mobile (2022-present) - shipped a Kotlin and Jetpack\nCompose banking app with 500k installs; Junior Developer at Pixelcraft (2021-2022) - built\nFlutter prototypes for clients."
+        },
+        {
+          "number": 4,
+          "candidate": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "char_start": 530,
+          "char_end": 671,
+          "similarity": 0.2988,
+          "labelled": false,
+          "text": "Data Scientist, Bluepeak Retail (2020 - 2022)\nForecasted weekly demand for 3,000 products with LightGBM; owned the feature store in BigQuery."
+        },
+        {
+          "number": 5,
+          "candidate": "resume_06_owen_brooks.txt",
+          "section": "experience",
+          "char_start": 216,
+          "char_end": 369,
+          "similarity": 0.2865,
+          "labelled": false,
+          "text": "1 year\nOperations Analyst | BrightPoint AI | 2023-Present\nSupported internal automation and data reporting tasks with light scripting and analytics work."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "experience",
+          "char_start": 281,
+          "char_end": 439,
+          "similarity": 0.2724,
+          "labelled": false,
+          "text": "3 years\nPrompt Engineer | BrightBridge AI | 2021-Present\nBuilt LLM workflows, benchmarked prompt strategies, and connected retrieval systems to user products."
+        },
+        {
+          "number": 7,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "experience",
+          "char_start": 259,
+          "char_end": 409,
+          "similarity": 0.2536,
+          "labelled": false,
+          "text": "5 years\nApplied AI Engineer | Northwind Cloud | 2019-Present\nDelivered AI-powered services, model monitoring solutions, and cloud-native ML platforms."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v05_fresher_diego_ramos.txt",
+          "section": "projects",
+          "char_start": 138,
+          "char_end": 394,
+          "similarity": 0.2452,
+          "labelled": false,
+          "text": "City bike trips pipeline: Airflow DAG that ingests daily CSV dumps into a PostgreSQL warehouse,\nwith dbt models for daily station usage. Ran locally with Docker Compose.\n\nStreaming demo: Kafka producer and consumer in Python that simulated sensor readings."
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v12_career_changer_hannah_lee.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+    },
+    {
+      "id": "q15",
+      "kind": "positive",
+      "question": "Find a candidate who moved into tech from teaching.",
+      "http_status": 200,
+      "answer": "No summary was generated. The cited resume passages below are search results, not an answer to the question.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.41719273637638,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 217,
+          "similarity": 0.4172,
+          "labelled": true,
+          "text": "Former high-school chemistry teacher (6 years) who moved into data analysis through a\nbootcamp. Strong at explaining results to non-technical audiences."
+        },
+        {
+          "number": 2,
+          "candidate": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "experience",
+          "char_start": 395,
+          "char_end": 438,
+          "similarity": 0.4138,
+          "labelled": false,
+          "text": "Teacher, Westgate High School (2017 - 2023)"
+        },
+        {
+          "number": 3,
+          "candidate": "resume_04_daniel_rivera.txt",
+          "section": "education",
+          "char_start": 435,
+          "char_end": 503,
+          "similarity": 0.4119,
+          "labelled": false,
+          "text": "Bachelor's in Computer Engineering, Illinois Institute of Technology"
+        },
+        {
+          "number": 4,
+          "candidate": "resume_06_owen_brooks.txt",
+          "section": "education",
+          "char_start": 381,
+          "char_end": 431,
+          "similarity": 0.381,
+          "labelled": false,
+          "text": "Associate's in Information Systems, Boston College"
+        },
+        {
+          "number": 5,
+          "candidate": "resume_03_sophia_nguyen.txt",
+          "section": "education",
+          "char_start": 450,
+          "char_end": 507,
+          "similarity": 0.3762,
+          "labelled": false,
+          "text": "Bachelor's in Computer Science, San Jose State University"
+        },
+        {
+          "number": 6,
+          "candidate": "resume_11_maya_chen.txt",
+          "section": "education",
+          "char_start": 421,
+          "char_end": 482,
+          "similarity": 0.3759,
+          "labelled": false,
+          "text": "Master's in Computer Science, Georgia Institute of Technology"
+        },
+        {
+          "number": 7,
+          "candidate": "varied/v02_fresher_sara_okafor.md",
+          "section": "experience",
+          "char_start": 538,
+          "char_end": 633,
+          "similarity": 0.3731,
+          "labelled": false,
+          "text": "Teaching Assistant, Northfield University (2024-2025): ran weekly labs for Intro to Statistics."
+        },
+        {
+          "number": 8,
+          "candidate": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "education",
+          "char_start": 422,
+          "char_end": 478,
+          "similarity": 0.3705,
+          "labelled": false,
+          "text": "B.Sc. Computer Science, Accra Technical University, 2021"
+        }
+      ],
+      "labelled_resumes": [
+        "varied/v12_career_changer_hannah_lee.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+    },
+    {
+      "id": "q16",
+      "kind": "positive",
+      "question": "Who has experience with vector databases or semantic search?",
+      "http_status": 200,
+      "answer": "No summary was generated. The cited resume passages below are search results, not an answer to the question.",
+      "found": true,
+      "generated": false,
+      "summary_unavailable": true,
+      "summary_unavailable_reason": "llm_error",
+      "top_similarity": 0.5533714951480725,
+      "citations": [
+        {
+          "number": 1,
+          "candidate": "resume_03_sophia_nguyen.txt",
+          "section": "experience",
+          "char_start": 295,
+          "char_end": 438,
+          "similarity": 0.5534,
+          "labelled": true,
+          "text": "5 years\nAI Engineer | VectorWorks | 2018-Present\nBuilt semantic search systems, ranking pipelines, and APIs for AI-driven knowledge assistants."
+        },
+        {
+          "number": 2,
+          "candidate": "resume_03_sophia_nguyen.txt",
+          "section": "summary",
+          "char_start": 65,
+          "char_end": 154,
+          "similarity": 0.4875,
+          "labelled": false,
+          "text": "AI engineer with experience in production ML, embeddings, and vector search applications."
+        },
+        {
+          "number": 3,
+          "candidate": "resume_10_javier_lopez.txt",
+          "section": "skills",
+          "char_start": 181,
+          "char_end": 268,
+          "similarity": 0.4838,
+          "labelled": true,
+          "text": "Python, LLMs, LangChain, vector databases, embeddings, SQL, Docker, Git, GitHub, pandas"
+        },
+        {
+          "number": 4,
+          "candidate": "resume_03_sophia_nguyen.txt",
+          "section": "skills",
+          "char_start": 173,
+          "char_end": 282,
+          "similarity": 0.4507,
+          "labelled": true,
+          "text": "Python, PyTorch, NLP, embeddings, vector databases, LangChain, Hugging Face, SQL, pandas, Git, GitHub, pytest"
+        },
+        {
+          "number": 5,
+          "candidate": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "char_start": 907,
+          "char_end": 1122,
+          "similarity": 0.4232,
+          "labelled": false,
+          "text": "Senior Full-Stack Engineer, Marktplatz GmbH (2014 - 2018)\n- Built seller tools in Ruby on Rails and React; scaled the catalog search on Elasticsearch.\n- Ran the migration from MySQL to PostgreSQL with zero downtime."
+        },
+        {
+          "number": 6,
+          "candidate": "resume_05_priya_nair.txt",
+          "section": "skills",
+          "char_start": 167,
+          "char_end": 242,
+          "similarity": 0.4211,
+          "labelled": false,
+          "text": "Python, PyTorch, pandas, NumPy, SQL, NLP, Docker, Git, GitHub, scikit-learn"
+        },
+        {
+          "number": 7,
+          "candidate": "resume_12_tariq_hassan.txt",
+          "section": "skills",
+          "char_start": 173,
+          "char_end": 237,
+          "similarity": 0.4103,
+          "labelled": false,
+          "text": "Python, pandas, NumPy, SQL, scikit-learn, Git, GitHub, basic NLP"
+        },
+        {
+          "number": 8,
+          "candidate": "resume_08_rahul_kumar.txt",
+          "section": "summary",
+          "char_start": 61,
+          "char_end": 131,
+          "similarity": 0.4049,
+          "labelled": false,
+          "text": "Developer with experience in data pipelines and basic AI integrations."
+        }
+      ],
+      "labelled_resumes": [
+        "resume_03_sophia_nguyen.txt",
+        "resume_10_javier_lopez.txt",
+        "varied/v01_fresher_aarav_mehta.txt",
+        "varied/v07_ml_engineer_omar_haddad.txt"
+      ],
+      "llm_errors": [
+        "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
+      ],
+      "error": null,
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+    }
+  ],
+  "commit_note": "Corrected by hand from 0335c84. This run used the runner as of e80b3df, which read HEAD at the end of the run; three builder commits landed meanwhile. The run started at 19:19:51, one second after e80b3df, and `git diff e80b3df 0335c84` is empty for every file /api/ask uses, so the answers come from e80b3df.",
+  "gemini_requests_total": null,
+  "gemini_requests_note": "Not counted: this run started before the per-request counter (f3a9a76). At most 12 requests were made (8 answers, plus q02's first try and up to 3 llm.py retries on 503); the free-tier daily quota of 20 was nevertheless exhausted at q10, so other requests or counted failures used part of it."
+}
