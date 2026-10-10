@@ -39,7 +39,7 @@ def _load_key(env_file: str | None) -> None:
             os.environ["GOOGLE_API_KEY"] = value.strip().strip('"').strip("'")
 
 
-def run(env_file: str | None) -> dict[str, Any]:
+def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
     tmp = tempfile.mkdtemp(prefix="ask_live_")
     os.environ["DATABASE_URL"] = f"sqlite:///{(Path(tmp) / 'ask_live.db').as_posix()}"
     os.environ["ASK_LLM_ENABLED"] = "true"
@@ -86,6 +86,11 @@ def run(env_file: str | None) -> dict[str, Any]:
     benchmark = load()
     questions = [dict(q, kind="positive") for q in benchmark["questions"]]
     questions += [dict(q, kind="negative", relevant=[]) for q in benchmark["negative_questions"]]
+    if ids is not None:
+        unknown = ids - {q["id"] for q in questions}
+        if unknown:
+            raise SystemExit(f"unknown question ids: {', '.join(sorted(unknown))}")
+        questions = [q for q in questions if q["id"] in ids]
     client = app_module.app.test_client()
     rows = []
     last = 0.0
@@ -129,9 +134,13 @@ def run(env_file: str | None) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--env-file", help="read GOOGLE_API_KEY from this .env into the process only")
+    # The free tier allows 20 requests a day, fewer than the 33 questions, so runs go in batches.
+    parser.add_argument("--ids", help="comma-separated question ids to run, e.g. q01,q02 (default: all)")
+    parser.add_argument("--out", type=Path, default=RESULTS_JSON, help="results file (default: %(default)s)")
     args = parser.parse_args(argv)
-    result = run(args.env_file)
-    RESULTS_JSON.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    ids = {i.strip() for i in args.ids.split(",") if i.strip()} if args.ids else None
+    result = run(args.env_file, ids)
+    args.out.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return 0
 
 
