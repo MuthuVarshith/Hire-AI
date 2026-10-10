@@ -128,8 +128,6 @@ def test_validation_errors_do_not_echo_the_input(served):
     {"candidate_id": 2.0},
     {"candidate_id": 2, "composite_score": 100.0},          # unknown fields are refused
 ], ids=["bool", "string", "float", "extra-field"])
-@pytest.mark.xfail(strict=True, reason="BUG: MCP functions take lax-typed parameters (mcp_server.py:57-73), so "
-                                       "true/'2'/2.0 are coerced and extra fields dropped before the strict models")
 def test_arguments_are_as_strict_as_the_agents(served, args):
     server, _, _ = served
     with pytest.raises(ToolError):

@@ -67,3 +67,16 @@ def test_errors_are_short_and_name_no_internals(served):
         asyncio.run(server.call_tool("get_candidate_profile", {"candidate_id": 0}))
     with pytest.raises(ToolError):  # no approval or write tool exists
         asyncio.run(server.call_tool("approve_shortlist", {"thread_id": "x"}))
+
+
+def test_refuses_to_start_unless_agent_llm_is_enabled(monkeypatch):
+    started = []
+    monkeypatch.setattr(mcp_server.MCPServer, "run", lambda self, transport: started.append(transport))
+    monkeypatch.setenv("AGENT_LLM_ENABLED", "false")
+    with pytest.raises(SystemExit, match="AGENT_LLM_ENABLED=true"):
+        mcp_server.main()
+    assert started == []
+    monkeypatch.setenv("AGENT_LLM_ENABLED", "true")
+    monkeypatch.setenv("DATABASE_URL", "sqlite://")
+    mcp_server.main()
+    assert started == ["stdio"]
