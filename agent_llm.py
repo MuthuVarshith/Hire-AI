@@ -24,13 +24,24 @@ import llm
 logger = logging.getLogger(__name__)
 
 PROVIDERS = ("gemini", "openai", "anthropic", "ollama", "none")
-# Defaults for the optional providers; each is overridable, e.g. AGENT_OPENAI_MODEL.
-DEFAULT_MODELS = {"openai": "gpt-4o-mini", "anthropic": "claude-sonnet-4-5", "ollama": "llama3.1"}
-MAX_OUTPUT_TOKENS = 1024
+# Defaults for the optional providers; each is overridable, e.g. AGENT_OPENAI_MODEL. Neither the
+# OpenAI nor the Anthropic default has been run live in this project; both are mocked in tests.
+DEFAULT_MODELS = {"openai": "gpt-5.4-mini", "anthropic": "claude-opus-5-5", "ollama": "llama3.1"}
+# Reasoning and thinking tokens count toward these limits, so they are far above the JSON reply's size.
+OPENAI_MAX_COMPLETION_TOKENS = 16000
+ANTHROPIC_MAX_TOKENS = 16000
+# Anthropic's server-side refusal fallback (beta), on by default; the installed SDK (anthropic 1.11)
+# accepts `betas` and `fallbacks` on client.beta.messages.create.
+ANTHROPIC_BETAS = ["server-side-fallback-2026-07-01"]
 
 
 class ProviderError(RuntimeError):
     """The configured provider can't be used: unknown name or SDK not installed."""
+
+
+class ProviderRefusal(RuntimeError):
+    """The model declined the request or was cut off at its token limit. The agent records a
+    failed planner turn and asks again (within its caps) instead of reading partial output."""
 
 
 class ChatProvider(Protocol):
@@ -79,9 +90,14 @@ class OpenAIProvider:
 
     def generate(self, prompt: str) -> str:
         client = _sdk("openai", self.name).OpenAI(api_key=self.api_key)
-        response = client.chat.completions.create(model=_model(self.name), max_tokens=MAX_OUTPUT_TOKENS,
+        # gpt-5 models reject max_tokens; max_completion_tokens is the current parameter.
+        response = client.chat.completions.create(model=_model(self.name),
+                                                  max_completion_tokens=OPENAI_MAX_COMPLETION_TOKENS,
                                                   messages=[{"role": "user", "content": prompt}])
-        return str(response.choices[0].message.content or "").strip()
+        choice = response.choices[0]
+        if choice.finish_reason in ("length", "content_filter") or getattr(choice.message, "refusal", None):
+            raise ProviderRefusal(f"openai finish_reason={choice.finish_reason}")
+        return str(choice.message.content or "").strip()
 
 
 @dataclass
@@ -91,9 +107,13 @@ class AnthropicProvider:
 
     def generate(self, prompt: str) -> str:
         client = _sdk("anthropic", self.name).Anthropic(api_key=self.api_key)
-        response = client.messages.create(model=_model(self.name), max_tokens=MAX_OUTPUT_TOKENS,
-                                          messages=[{"role": "user", "content": prompt}])
-        return "".join(getattr(block, "text", "") for block in response.content).strip()
+        # No thinking parameter: the default model always thinks, within max_tokens.
+        response = client.beta.messages.create(model=_model(self.name), max_tokens=ANTHROPIC_MAX_TOKENS,
+                                               messages=[{"role": "user", "content": prompt}],
+                                               betas=ANTHROPIC_BETAS, fallbacks="default")
+        if response.stop_reason in ("refusal", "max_tokens"):
+            raise ProviderRefusal(f"anthropic stop_reason={response.stop_reason}")  # content is not read
+        return "".join(block.text for block in response.content if block.type == "text").strip()
 
 
 @dataclass

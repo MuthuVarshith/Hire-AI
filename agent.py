@@ -37,7 +37,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 import agent_tools
 import llm
-from agent_llm import ChatProvider
+from agent_llm import ChatProvider, ProviderRefusal
 from agent_tools import MAX_ID, TOOLS, ScoreInput, ToolContext, ToolError, ToolSpec, validation_message
 from models import AgentDecision, AgentShortlist, Candidate, Job
 
@@ -360,6 +360,10 @@ def build_graph(ctx: ToolContext, planner: Planner,
             return stopped
         try:
             raw = planner(state)
+        except ProviderRefusal:
+            logger.info("Agent planner turn refused or truncated by the model", exc_info=True)
+            return {"turns": turns, "pending": None,
+                    "steps": [*steps, {"type": "refused", "error": "the model declined or was cut off"}]}
         except Exception:
             logger.warning("Agent planner failed", exc_info=True)
             return {"turns": turns, "pending": None, "status": "error",
