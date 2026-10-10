@@ -120,7 +120,11 @@ def parse_action(raw: Any) -> tuple[CallTool | ProposeShortlist | Finish | None,
 
 
 # --- guards (module-level so the injection tests can show each one matters) -------------
-_DELIMITER = re.compile(r"<\s*/?\s*(?:tool_results|excerpts)\s*>", re.IGNORECASE)
+# A data-block tag in any spelling a model might read as one: "</tool_results>", "< /TOOL-RESULTS >",
+# "</tool results/>", "</tool_results\n>", and the escaped forms "\u003c", "\x3c" and "&lt;".
+_LT, _GT = r"(?:<|\\u003c|\\x3c|&lt;)", r"(?:>|\\u003e|\\x3e|&gt;)"
+_GAP = r"(?:\s|\\[nrt])*"
+_DELIMITER = re.compile(f"{_LT}{_GAP}/?{_GAP}(?:tool[\\s_-]*results|excerpts){_GAP}/?{_GAP}{_GT}", re.IGNORECASE)
 # Score-like numbers in model text: "100/100", "95%", "100 out of 100", "92 points", "scored a 100",
 # "rated as 9", "score for Ada is 97", "composite: 88", "ranked 1st". A false positive only withholds text.
 _SCORE_TEXT = re.compile(r"\d+(?:\.\d+)?\s*(?:/\s*\d+|%|percent\b|out\s+of\s+\d+|points?\b|pts\b|marks?\b)"
@@ -197,13 +201,26 @@ def _tool_list() -> str:
     return "\n".join(lines)
 
 
+def _defang_values(value: Any) -> Any:
+    """_defang every string inside a tool result, before json.dumps escapes newlines and quotes."""
+    if isinstance(value, str):
+        return _defang(value)
+    if isinstance(value, dict):
+        return {k: _defang_values(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_defang_values(v) for v in value]
+    return value
+
+
 def _results_block(steps: list[dict[str, Any]]) -> str:
     if not steps:
         return "(none yet)"
     lines = []
     for i, step in enumerate(steps, start=1):
-        outcome = json.dumps(step["result"]) if step.get("ok") else f"error: {step.get('error')}"
-        lines.append(f"[{i}] {step.get('tool', step['type'])} {json.dumps(step.get('args', {}))} -> {outcome}")
+        outcome = (json.dumps(_defang_values(step["result"])) if step.get("ok")
+                   else f"error: {step.get('error')}")
+        args = json.dumps(_defang_values(step.get("args", {})))
+        lines.append(f"[{i}] {step.get('tool', step['type'])} {args} -> {outcome}")
     return _defang("\n".join(lines))
 
 
