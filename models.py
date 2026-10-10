@@ -326,7 +326,8 @@ class AgentDecision(Base):
 
     The row is inserted before the paused run resumes, and thread_id is UNIQUE, so it is the atomic
     claim on the run: of two decisions sent together, one inserts and the other is refused.
-    `outcome` is set after the run resumes: approved, rejected, job_deleted or candidates_deleted.
+    `outcome` is set after the run resumes: approved, rejected, job_deleted or candidates_deleted;
+    record_failed (decided, but saving failed; the same decision may retry) or record_retrying.
     """
     __tablename__ = "agent_decisions"
 

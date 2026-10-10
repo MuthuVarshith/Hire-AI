@@ -27,6 +27,7 @@ import llm
 from embeddings import EmbeddingProvider
 from models import Candidate
 from retrieval import Hit, RetrievalConfig, Retriever
+from text_guard import visible
 
 logger = logging.getLogger(__name__)
 
@@ -96,8 +97,9 @@ _DELIMITER = re.compile(r"<\s*/?\s*excerpts\s*>", re.IGNORECASE)
 
 def _defang(value: str) -> str:
     """Remove excerpt delimiters from untrusted text, so a resume can't end the data block early.
-    This only affects the prompt; citations returned to the client keep the exact resume text."""
-    return _DELIMITER.sub("[removed tag]", value)
+    This only affects the prompt; citations returned to the client keep the exact resume text.
+    Invisible characters go first, so a zero-width space can't hide a tag from the pattern."""
+    return _DELIMITER.sub("[removed tag]", visible(value))
 
 
 def _excerpts(citations: list[Citation]) -> str:

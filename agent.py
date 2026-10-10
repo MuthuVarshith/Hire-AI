@@ -41,6 +41,7 @@ import llm
 from agent_llm import ChatProvider, ProviderRefusal
 from agent_tools import MAX_ID, TOOLS, ScoreInput, ToolContext, ToolError, ToolSpec, validation_message
 from models import AgentDecision, AgentShortlist, Candidate, Job
+from text_guard import visible
 
 logger = logging.getLogger(__name__)
 
@@ -134,8 +135,9 @@ _SCORE_TEXT = re.compile(r"\d+(?:\.\d+)?\s*(?:/\s*\d+|%|percent\b|out\s+of\s+\d+
 
 
 def _defang(value: str) -> str:
-    """Remove data-block delimiters from untrusted text, so a resume can't end the block early."""
-    return _DELIMITER.sub("[removed tag]", value)
+    """Remove data-block delimiters from untrusted text, so a resume can't end the block early.
+    Invisible characters go first, so "</tool​_results>" can't hide a tag from the pattern."""
+    return _DELIMITER.sub("[removed tag]", visible(value))
 
 
 def _resolve_tool(name: str) -> ToolSpec | None:
