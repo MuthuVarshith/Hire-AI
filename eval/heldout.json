@@ -1,0 +1,325 @@
+{
+  "description": "Held-out questions over the same 26 synthetic resumes as the retrieval benchmark. Used only to recalibrate the 'not found' similarity cutoff (ask.NOT_FOUND_THRESHOLD) and to check the LLM judge (eval/answer_eval_protocol.md). No question repeats or paraphrases a benchmark question; `python -m eval.golden validate` checks for obvious overlap. Answerable questions are labelled with the benchmark's labelling_rules; each unanswerable question says why no resume answers it.",
+  "status": "draft, pending review",
+  "labelled_by": "Claude (draft); reviewer: repository owner",
+  "labelling_rules": "The labelling_rules of eval/retrieval_benchmark.json apply unchanged.",
+  "judge_check_rules": [
+    "Each answerable question has one good and one flawed answer, written from its labelled chunks. Citation numbers [n] refer to the question's labels in order: [1] is the first label.",
+    "A good answer states every label's fact and cites the label that supports each claim.",
+    "A flawed answer has exactly one kind of flaw: omission (a labelled candidate is left out), invented_claim (a claim no excerpt supports) or wrong_citation (a true claim cites an excerpt that does not support it)."
+  ],
+  "answerable": [
+    {
+      "id": "h01",
+      "question": "Which candidates have a master's degree in data science?",
+      "relevant": [
+        {"resume": "resume_02_michael_chen.txt", "section": "education", "contains": "Master's in Data Science", "candidate": "Michael Chen"},
+        {"resume": "resume_05_priya_nair.txt", "section": "education", "contains": "Master's in Data Science", "candidate": "Priya Nair"},
+        {"resume": "resume_09_emma_thompson.txt", "section": "education", "contains": "Master's in Data Science", "candidate": "Emma Thompson"},
+        {"resume": "varied/v02_fresher_sara_okafor.md", "section": "education", "contains": "MSc Data Science", "candidate": "Sara Okafor"}
+      ],
+      "rationale": "Michael, Priya Nair and Emma hold a Master's in Data Science and Sara an MSc Data Science; every other master's degree in the corpus is in computer science.",
+      "judge_check": {
+        "good_answer": "Four candidates: Michael Chen, Master's in Data Science from the University of Washington [1]; Priya Nair, from the University of California, Berkeley [2]; Emma Thompson, from Oregon State University [3]; and Sara Okafor, MSc Data Science from Northfield University [4].",
+        "flawed_answer": "Michael Chen [1], Priya Nair [2] and Emma Thompson [3] each hold a Master's in Data Science.",
+        "flaw": "omission",
+        "flaw_note": "Sara Okafor (MSc Data Science) is left out."
+      }
+    },
+    {
+      "id": "h02",
+      "question": "Who has worked at a bank?",
+      "relevant": [
+        {"resume": "varied/v13_security_fatima_zahra.txt", "section": "experience", "contains": "Security Analyst, Northstar Bank", "candidate": "Fatima Zahra"},
+        {"resume": "varied/v09_no_headings_tom_baker.txt", "section": "header", "contains": "systems administrator at Oakridge Bank", "candidate": "Tom Baker"}
+      ],
+      "rationale": "Fatima was a security analyst at Northstar Bank and Tom a systems administrator at Oakridge Bank. Brightline Payments, Lindenpay and Ironclad Insurance are not banks, and Kwame built a banking app for a mobile company.",
+      "judge_check": {
+        "good_answer": "Fatima Zahra was a Security Analyst at Northstar Bank from 2018 to 2021 [1], and Tom Baker was a systems administrator at Oakridge Bank from 2017 to 2021 [2].",
+        "flawed_answer": "Fatima Zahra was a Security Analyst at Northstar Bank [2], and Tom Baker was a systems administrator at Oakridge Bank [1].",
+        "flaw": "wrong_citation",
+        "flaw_note": "The two citations are swapped, so neither claim is supported by the excerpt it cites."
+      }
+    },
+    {
+      "id": "h03",
+      "question": "Who has experience with Tableau?",
+      "relevant": [
+        {"resume": "varied/v01_fresher_aarav_mehta.txt", "section": "experience", "contains": "built Tableau dashboards", "candidate": "Aarav Mehta"},
+        {"resume": "varied/v08_two_column_style_priya_s.txt", "section": "header", "contains": "Looker, Tableau", "candidate": "Priya Subramanian"}
+      ],
+      "rationale": "Aarav built Tableau dashboards in his data internship; Priya lists Tableau in her skills column, and 'experience with' accepts a skills mention.",
+      "judge_check": {
+        "good_answer": "Aarav Mehta built Tableau dashboards as a data intern at Lumen Analytics [1], and Priya Subramanian lists Tableau among her skills [2].",
+        "flawed_answer": "Aarav Mehta built Tableau dashboards as a data intern at Lumen Analytics [1].",
+        "flaw": "omission",
+        "flaw_note": "Priya Subramanian is left out."
+      }
+    },
+    {
+      "id": "h04",
+      "question": "Who has worked with Redis?",
+      "relevant": [
+        {"resume": "varied/v04_fresher_mei_tanaka.txt", "section": "projects", "contains": "backed by Redis", "candidate": "Mei Tanaka"},
+        {"resume": "varied/v04_fresher_mei_tanaka.txt", "section": "skills", "contains": "Go, Python, gRPC, Redis", "candidate": "Mei Tanaka"},
+        {"resume": "varied/v06_senior_rachel_kim.txt", "section": "skills", "contains": "MySQL, Redis", "candidate": "Rachel Kim"}
+      ],
+      "rationale": "Mei built a rate limiter backed by Redis and lists Redis; Rachel lists Redis in her skills, which 'worked with' accepts.",
+      "judge_check": {
+        "good_answer": "Mei Tanaka built a rate limiter service backed by Redis [1] and lists Redis in her skills [2]; Rachel Kim also lists Redis in her skills [3].",
+        "flawed_answer": "Mei Tanaka built a rate limiter service backed by Redis [2]; Rachel Kim lists Redis in her skills [3].",
+        "flaw": "wrong_citation",
+        "flaw_note": "The rate-limiter claim cites Mei's skills list [2], which does not mention the rate limiter."
+      }
+    },
+    {
+      "id": "h05",
+      "question": "Who brought a new kind of automated testing into their team's workflow?",
+      "relevant": [
+        {"resume": "varied/v06_senior_rachel_kim.txt", "section": "experience", "contains": "introduced contract testing with Pact", "candidate": "Rachel Kim"},
+        {"resume": "varied/v10_multipage_elena_petrova.txt", "section": "experience", "contains": "Introduced end-to-end testing with Playwright", "candidate": "Elena Petrova"},
+        {"resume": "varied/v13_security_fatima_zahra.txt", "section": "experience", "contains": "embedded SAST (Semgrep) and dependency scanning in CI", "candidate": "Fatima Zahra"}
+      ],
+      "rationale": "Rachel introduced contract testing (Pact), Elena end-to-end testing (Playwright), and Fatima embedded static application security testing and dependency scanning in CI. A paraphrase test: the question names no tool.",
+      "judge_check": {
+        "good_answer": "Rachel Kim introduced contract testing with Pact at Tidewater Logistics [1]; Elena Petrova introduced end-to-end testing with Playwright at Lindenpay, cutting checkout regressions by half [2]; and Fatima Zahra embedded SAST (Semgrep) and dependency scanning in CI for 300 repositories [3].",
+        "flawed_answer": "Rachel Kim introduced contract testing with Pact [2]; Elena Petrova introduced end-to-end testing with Playwright [1]; and Fatima Zahra embedded SAST and dependency scanning in CI [3].",
+        "flaw": "wrong_citation",
+        "flaw_note": "Rachel's and Elena's citations are swapped."
+      }
+    },
+    {
+      "id": "h06",
+      "question": "Which candidates have completed an internship?",
+      "relevant": [
+        {"resume": "varied/v01_fresher_aarav_mehta.txt", "section": "experience", "contains": "Data Intern, Lumen Analytics", "candidate": "Aarav Mehta"},
+        {"resume": "varied/v14_research_scientist_chen_wei.txt", "section": "experience", "contains": "Research Intern, Halcyon AI", "candidate": "Chen Wei"}
+      ],
+      "rationale": "Aarav was a data intern (summer 2025, 10 weeks) and Chen Wei a research intern (summer 2022). Sara's teaching-assistant job is not an internship.",
+      "judge_check": {
+        "good_answer": "Aarav Mehta was a Data Intern at Lumen Analytics for 10 weeks in summer 2025 [1], and Chen Wei was a Research Intern at Halcyon AI in summer 2022 [2].",
+        "flawed_answer": "Aarav Mehta completed a 10-week data internship at Lumen Analytics in summer 2025 [1].",
+        "flaw": "omission",
+        "flaw_note": "Chen Wei is left out."
+      }
+    },
+    {
+      "id": "h07",
+      "question": "Who has built forecasting models?",
+      "relevant": [
+        {"resume": "resume_05_priya_nair.txt", "section": "experience", "contains": "forecasting and classification models", "candidate": "Priya Nair"},
+        {"resume": "varied/v07_ml_engineer_omar_haddad.txt", "section": "experience", "contains": "Forecasted weekly demand", "candidate": "Omar Haddad"}
+      ],
+      "rationale": "Priya Nair built and deployed forecasting models at Finverse Labs; Omar forecasted weekly demand with LightGBM at Bluepeak Retail.",
+      "judge_check": {
+        "good_answer": "Priya Nair built and deployed forecasting and classification models at Finverse Labs [1]; Omar Haddad forecasted weekly demand for 3,000 products with LightGBM at Bluepeak Retail [2].",
+        "flawed_answer": "Priya Nair built and deployed forecasting and classification models at Finverse Labs [1]; Omar Haddad forecasted weekly demand for 3,000 products with LightGBM at Bluepeak Retail, reaching 95% forecast accuracy [2].",
+        "flaw": "invented_claim",
+        "flaw_note": "The 95% forecast accuracy is in no excerpt."
+      }
+    },
+    {
+      "id": "h08",
+      "question": "Who has a Professional Scrum Master certification?",
+      "relevant": [
+        {"resume": "varied/v10_multipage_elena_petrova.txt", "section": "certifications", "contains": "Professional Scrum Master I", "candidate": "Elena Petrova"}
+      ],
+      "rationale": "Only Elena lists it.",
+      "judge_check": {
+        "good_answer": "Elena Petrova holds the Professional Scrum Master I certification [1].",
+        "flawed_answer": "Elena Petrova holds the Professional Scrum Master I and PMP certifications [1].",
+        "flaw": "invented_claim",
+        "flaw_note": "The PMP certification is invented."
+      }
+    },
+    {
+      "id": "h09",
+      "question": "Who has worked with Elasticsearch?",
+      "relevant": [
+        {"resume": "varied/v10_multipage_elena_petrova.txt", "section": "experience", "contains": "scaled the catalog search on Elasticsearch", "candidate": "Elena Petrova"},
+        {"resume": "varied/v10_multipage_elena_petrova.txt", "section": "skills", "contains": "Elasticsearch", "candidate": "Elena Petrova"}
+      ],
+      "rationale": "Elena scaled Marktplatz's catalog search on Elasticsearch and lists it in her skills.",
+      "judge_check": {
+        "good_answer": "Elena Petrova scaled the catalog search on Elasticsearch at Marktplatz GmbH [1] and lists Elasticsearch in her skills [2].",
+        "flawed_answer": "Elena Petrova scaled the catalog search on Elasticsearch at Marktplatz GmbH [2].",
+        "flaw": "wrong_citation",
+        "flaw_note": "The claim cites her skills list, which does not mention the catalog search."
+      }
+    },
+    {
+      "id": "h10",
+      "question": "Who has worked on knowledge distillation?",
+      "relevant": [
+        {"resume": "varied/v14_research_scientist_chen_wei.txt", "section": "experience", "contains": "Prototyped knowledge distillation", "candidate": "Chen Wei"}
+      ],
+      "rationale": "Chen Wei prototyped knowledge distillation for speech models as a research intern. 'Worked on' is a doing question, so his skills list and the paper title in his publications are not labelled.",
+      "judge_check": {
+        "good_answer": "Chen Wei prototyped knowledge distillation for speech recognition models in PyTorch as a research intern at Halcyon AI [1].",
+        "flawed_answer": "Chen Wei prototyped knowledge distillation for speech recognition models at Halcyon AI and deployed the distilled models to production [1].",
+        "flaw": "invented_claim",
+        "flaw_note": "Nothing says the models were deployed to production."
+      }
+    },
+    {
+      "id": "h11",
+      "question": "Who reached a regional final in a programming competition?",
+      "relevant": [
+        {"resume": "varied/v04_fresher_mei_tanaka.txt", "section": "other", "contains": "ICPC regional finalist 2025", "candidate": "Mei Tanaka"}
+      ],
+      "rationale": "Mei was an ICPC regional finalist in 2025.",
+      "judge_check": {
+        "good_answer": "Mei Tanaka was an ICPC regional finalist in 2025 [1].",
+        "flawed_answer": "Mei Tanaka won the ICPC regional final in 2025 [1].",
+        "flaw": "invented_claim",
+        "flaw_note": "She was a finalist; the excerpt does not say she won."
+      }
+    },
+    {
+      "id": "h12",
+      "question": "Who has built a tool that checks websites for accessibility problems?",
+      "relevant": [
+        {"resume": "varied/v03_fresher_liam_novak.txt", "section": "projects", "contains": "Accessibility audit tool", "candidate": "Liam Novak"}
+      ],
+      "rationale": "Liam built a browser extension that flags missing alt text and low colour contrast. His summary's 'accessible web apps' is a self-description and is not labelled.",
+      "judge_check": {
+        "good_answer": "Liam Novak built an accessibility audit tool, a browser extension that flags missing alt text and low colour contrast [1].",
+        "flawed_answer": "Liam Novak built an accessibility audit tool, a browser extension that flags missing alt text and low colour contrast and is used by 10,000 people [1].",
+        "flaw": "invented_claim",
+        "flaw_note": "The user count is invented."
+      }
+    },
+    {
+      "id": "h13",
+      "question": "Which candidates know Flutter or Dart?",
+      "relevant": [
+        {"resume": "varied/v11_inline_headings_kwame_asante.txt", "section": "experience", "contains": "built Flutter prototypes for clients", "candidate": "Kwame Asante"},
+        {"resume": "varied/v11_inline_headings_kwame_asante.txt", "section": "skills", "contains": "Flutter, Dart", "candidate": "Kwame Asante"}
+      ],
+      "rationale": "Kwame built Flutter prototypes at Pixelcraft and lists Flutter and Dart.",
+      "judge_check": {
+        "good_answer": "Kwame Asante built Flutter prototypes for clients at Pixelcraft [1] and lists Flutter and Dart in his skills [2].",
+        "flawed_answer": "Kwame Asante built Flutter prototypes for clients at Pixelcraft [2] and lists Flutter and Dart in his skills [1].",
+        "flaw": "wrong_citation",
+        "flaw_note": "The two citations are swapped."
+      }
+    },
+    {
+      "id": "h14",
+      "question": "Which candidates studied at a university in Texas?",
+      "relevant": [
+        {"resume": "resume_01_ananya_patel.txt", "section": "education", "contains": "University of Texas at Austin", "candidate": "Ananya Patel"},
+        {"resume": "resume_07_lina_fernandez.txt", "section": "education", "contains": "University of Texas at Dallas", "candidate": "Lina Fernandez"}
+      ],
+      "rationale": "Ananya (UT Austin) and Lina (UT Dallas). Priya Subramanian lives in Austin, TX, but her degree is from Pinecrest College, whose location is not given.",
+      "judge_check": {
+        "good_answer": "Ananya Patel holds a Master's in Computer Science from the University of Texas at Austin [1], and Lina Fernandez one from the University of Texas at Dallas [2].",
+        "flawed_answer": "Ananya Patel studied at the University of Texas at Austin [1].",
+        "flaw": "omission",
+        "flaw_note": "Lina Fernandez is left out."
+      }
+    },
+    {
+      "id": "h15",
+      "question": "Who has an associate's degree?",
+      "relevant": [
+        {"resume": "resume_06_owen_brooks.txt", "section": "education", "contains": "Associate's in Information Systems", "candidate": "Owen Brooks"}
+      ],
+      "rationale": "Only Owen lists an associate's degree.",
+      "judge_check": {
+        "good_answer": "Owen Brooks holds an Associate's in Information Systems from Boston College [1].",
+        "flawed_answer": "Owen Brooks holds an Associate's in Information Systems from Boston College, completed with honours in 2020 [1].",
+        "flaw": "invented_claim",
+        "flaw_note": "The honours and the year are invented."
+      }
+    },
+    {
+      "id": "h16",
+      "question": "Who has run A/B test analyses?",
+      "relevant": [
+        {"resume": "varied/v08_two_column_style_priya_s.txt", "section": "header", "contains": "Analysed A/B tests for the patient portal", "candidate": "Priya Subramanian"}
+      ],
+      "rationale": "Priya analysed A/B tests for the patient portal at Cedar Health; her two-column resume is one unlabelled chunk.",
+      "judge_check": {
+        "good_answer": "Priya Subramanian analysed A/B tests for the patient portal as a data analyst at Cedar Health [1].",
+        "flawed_answer": "Priya Subramanian analysed A/B tests for the patient portal at Cedar Health, raising sign-ups by 15% [1].",
+        "flaw": "invented_claim",
+        "flaw_note": "The 15% increase is invented."
+      }
+    },
+    {
+      "id": "h17",
+      "question": "Who has maintained Flask applications?",
+      "relevant": [
+        {"resume": "varied/v06_senior_rachel_kim.txt", "section": "experience", "contains": "Maintained internal tools in Flask and MySQL", "candidate": "Rachel Kim"}
+      ],
+      "rationale": "Rachel maintained internal Flask tools at Quarry Labs. Her skills list also names Flask, but this is a doing question.",
+      "judge_check": {
+        "good_answer": "Rachel Kim maintained internal tools in Flask and MySQL at Quarry Labs from 2014 to 2016 [1].",
+        "flawed_answer": "Rachel Kim maintained internal tools in Flask and MySQL at Quarry Labs and later migrated them to Django [1].",
+        "flaw": "invented_claim",
+        "flaw_note": "The migration to Django is invented."
+      }
+    },
+    {
+      "id": "h18",
+      "question": "Who has worked with Microsoft SQL Server?",
+      "relevant": [
+        {"resume": "varied/v12_career_changer_hannah_lee.txt", "section": "experience", "contains": "wrote SQL queries against SQL Server", "candidate": "Hannah Lee"},
+        {"resume": "varied/v12_career_changer_hannah_lee.txt", "section": "skills", "contains": "SQL Server, Power BI", "candidate": "Hannah Lee"}
+      ],
+      "rationale": "Hannah wrote SQL Server queries as a junior data analyst and lists SQL Server; other candidates list SQL in general, not SQL Server.",
+      "judge_check": {
+        "good_answer": "Hannah Lee wrote SQL queries against SQL Server at Brightfield Schools Network [1] and lists SQL Server in her skills [2].",
+        "flawed_answer": "Hannah Lee wrote SQL queries against SQL Server at Brightfield Schools Network [2].",
+        "flaw": "wrong_citation",
+        "flaw_note": "The claim cites her skills list, which does not mention Brightfield or writing queries."
+      }
+    },
+    {
+      "id": "h19",
+      "question": "Who studied at an Indian Institute of Technology?",
+      "relevant": [
+        {"resume": "resume_08_rahul_kumar.txt", "section": "education", "contains": "Indian Institute of Technology Delhi", "candidate": "Rahul Kumar"}
+      ],
+      "rationale": "Rahul holds a Bachelor's in Electronics Engineering from IIT Delhi.",
+      "judge_check": {
+        "good_answer": "Rahul Kumar holds a Bachelor's in Electronics Engineering from the Indian Institute of Technology Delhi [1].",
+        "flawed_answer": "Rahul Kumar holds a Bachelor's and a Master's in Electronics Engineering from the Indian Institute of Technology Delhi [1].",
+        "flaw": "invented_claim",
+        "flaw_note": "The master's degree is invented."
+      }
+    },
+    {
+      "id": "h20",
+      "question": "Who has connected products to OpenAI-compatible APIs?",
+      "relevant": [
+        {"resume": "resume_04_daniel_rivera.txt", "section": "experience", "contains": "OpenAI-compatible APIs", "candidate": "Daniel Rivera"}
+      ],
+      "rationale": "Daniel connected services with OpenAI-compatible APIs at BluePeak AI. Omar's RAG assistant used 'GPT-class models', which does not say OpenAI APIs.",
+      "judge_check": {
+        "good_answer": "Daniel Rivera implemented AI features in web products and connected services with OpenAI-compatible APIs at BluePeak AI [1].",
+        "flawed_answer": "Daniel Rivera connected services with OpenAI-compatible APIs at BluePeak AI [1], and Omar Haddad integrated the OpenAI API into a support assistant [1].",
+        "flaw": "invented_claim",
+        "flaw_note": "The claim about Omar Haddad is supported by no excerpt."
+      }
+    }
+  ],
+  "unanswerable": [
+    {"id": "u01", "question": "Who has experience with Rust?", "absent_terms": ["Rust"], "rationale": "No resume mentions Rust."},
+    {"id": "u02", "question": "Who has written iOS apps in Swift?", "absent_terms": ["iOS", "Swift"], "rationale": "No resume mentions iOS or Swift. Kwame is an Android and cross-platform developer, which does not establish iOS work in Swift."},
+    {"id": "u03", "question": "Which candidates are certified public accountants?", "absent_terms": ["CPA", "accountant", "accounting"], "rationale": "No accounting qualification appears; Rachel's payment-reconciliation service is software work."},
+    {"id": "u04", "question": "Who speaks Japanese?", "absent_terms": ["Japanese"], "rationale": "No resume lists Japanese. Mei Tanaka lists no languages, and a language must not be inferred from a name."},
+    {"id": "u05", "question": "Who has used Snowflake as a data warehouse?", "absent_terms": ["Snowflake"], "rationale": "Diego's warehouse is PostgreSQL and Omar used BigQuery; no resume mentions Snowflake."},
+    {"id": "u06", "question": "Who has implemented SAP ERP systems?", "absent_terms": ["SAP", "ERP"], "rationale": "No resume mentions SAP or ERP systems."},
+    {"id": "u07", "question": "Who holds a pilot's license?", "absent_terms": ["pilot"], "rationale": "No resume mentions flying or a pilot's license."},
+    {"id": "u08", "question": "Who has managed a team of more than 50 people?", "absent_terms": [], "rationale": "The largest team stated is Elena's 11 engineers across two teams; Rachel mentored 6. No resume states a team of more than 50."},
+    {"id": "u09", "question": "Who has a PMP certification?", "absent_terms": ["PMP", "Project Management Professional"], "rationale": "Elena holds Professional Scrum Master I, which is not PMP; no resume lists PMP."},
+    {"id": "u10", "question": "Who has developed games with Unity or Unreal Engine?", "absent_terms": ["Unity", "Unreal"], "rationale": "No resume mentions game development."},
+    {"id": "u11", "question": "Who has administered Oracle databases?", "absent_terms": ["Oracle"], "rationale": "The databases named are PostgreSQL, MySQL, SQL Server, Redis and BigQuery; none is Oracle."},
+    {"id": "u12", "question": "Who has written smart contracts for Ethereum?", "absent_terms": ["Ethereum", "blockchain", "Solidity", "smart contract"], "rationale": "No resume mentions blockchain work."},
+    {"id": "u13", "question": "Who holds a government security clearance?", "absent_terms": ["clearance"], "rationale": "Fatima is a security engineer, but no resume states a security clearance."},
+    {"id": "u14", "question": "Who has designed printed circuit boards?", "absent_terms": ["PCB", "circuit board", "circuit boards"], "rationale": "Rahul studied electronics engineering, but no resume describes hardware design."},
+    {"id": "u15", "question": "Who has deployed workloads on Microsoft Azure?", "absent_terms": ["Azure"], "rationale": "The clouds named are AWS and Google Cloud; no resume mentions Azure."}
+  ]
+}
