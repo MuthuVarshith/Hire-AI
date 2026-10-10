@@ -327,28 +327,31 @@ How it answers:
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/api/agent/run` | Body `{"request": "...", "job_id": 1}` (`job_id` optional, needed for a shortlist). Returns `thread_id`, `status`, `message`, the tool `steps`, and a `proposal` when the agent proposes a shortlist |
-| `POST` | `/api/agent/approve/<thread_id>` | Body `{"decision": "approve" or "reject", "reviewer": "...", "note": "..."}`. Resumes the paused run. Approving saves the shortlist with the reviewer and time; 404 if no run is waiting, 409 if already approved |
+| `POST` | `/api/agent/approve/<thread_id>` | Body `{"decision": "approve" or "reject", "reviewer": "...", "note": "..."}`. Records the decision, then resumes the paused run. Approving saves the shortlist with the reviewer and time. 404 if no run is waiting, 409 if the run was already decided, 410 if its job (or every proposed candidate) was deleted meanwhile |
+
+Both endpoints accept only `Content-Type: application/json` and send no CORS headers, so only the dashboard's own origin can call them; a cross-site page or form can't run the agent or approve a shortlist from a visitor's browser. **There is no authentication yet: `reviewer` (stored as `approved_by`) is whatever the caller types.** Treat it as a label, not proof of who approved, until the app has accounts.
 
 The dashboard's **Agent** view does the same: ask, review the proposed shortlist with each candidate's score and cited passages, then approve or reject.
 
 How it works (`agent.py`, a LangGraph `StateGraph`):
 - **Tools** (`agent_tools.py`): `search_candidates`, `get_candidate_profile`, `score_candidate`, `compare_candidates` and `skill_gap_report`. All are read-only, with strict Pydantic input and output models. `score_candidate` returns the stored screening score, or computes one with the same code as `/api/screen` without saving it.
 - **Planner:** an LLM when `AGENT_LLM_ENABLED=true` and the provider has a key; otherwise a rule-based router that maps keywords (search, profile, score, compare, skill gap, shortlist) to the same tools.
-- **Human approval:** a proposed shortlist pauses the graph with `interrupt()`. The state is checkpointed to `AGENT_CHECKPOINT_DB` (SQLite), so a paused run survives a restart, and only the approve endpoint resumes it. A shortlist exists only after approval (table `agent_shortlists`).
-- **Guards:** the LLM can call only the five tools, with validated arguments, and at most 6 tool calls per run. It has no action that approves or writes. Tool results reach it inside a delimited data block, with delimiter tags stripped. A shortlist keeps only candidates that exist and appeared in tool results; scores come from `score_candidate` and set the order; model text that states a score is withheld. Tests: `tests/injection/test_agent_injection.py`.
+- **Human approval:** a proposed shortlist pauses the graph with `interrupt()`. The state is checkpointed to `AGENT_CHECKPOINT_DB` (SQLite), so a paused run survives a restart, and only the approve endpoint resumes it. Every decision is first inserted into `agent_decisions`, whose `thread_id` is unique, so of two decisions sent at once exactly one wins. A shortlist exists only after approval (table `agent_shortlists`). Both tables are audit records: they keep the job title and candidate names after a job or candidate is deleted.
+- **Checkpoint retention:** a run's checkpoints are deleted when it finishes or is decided. Runs still waiting for approval keep theirs, and those include resume passages from the tool results, so the checkpoint file is as sensitive as the database.
+- **Guards:** the LLM can call only the five tools, with validated arguments, and at most 6 tool calls per run; after the last one it may still propose or finish. It has no action that approves or writes. Tool results reach it inside a delimited data block, with delimiter tags stripped. A shortlist may name only candidates returned by `search_candidates` in that run, or named by id in the recruiter's request, and only on the run's job. Scores come from `score_candidate` and set the order; model text that states a score is withheld. Tests: `tests/injection/test_agent_injection.py`.
 
 **LLM providers.** Gemini (the default) goes through `llm.py` and uses `GOOGLE_API_KEY`. The others are optional and not in `requirements.txt`:
 
 | `AGENT_LLM_PROVIDER` | Needs | Model setting |
 |---|---|---|
-| `openai` | `pip install openai`, `OPENAI_API_KEY` | `AGENT_OPENAI_MODEL` |
-| `anthropic` | `pip install anthropic`, `ANTHROPIC_API_KEY` | `AGENT_ANTHROPIC_MODEL` |
+| `openai` | `pip install openai`, `OPENAI_API_KEY` | `AGENT_OPENAI_MODEL` (default `gpt-5.4-mini`, sent with `max_completion_tokens`) |
+| `anthropic` | `pip install anthropic`, `ANTHROPIC_API_KEY` | `AGENT_ANTHROPIC_MODEL` (default `claude-opus-5-5`, with the server-side refusal fallback beta) |
 | `ollama` | a local Ollama server (`OLLAMA_HOST`, default `http://localhost:11434`); no SDK | `AGENT_OLLAMA_MODEL` |
 | `none` | nothing: always the rule-based router | |
 
-A selected SDK that isn't installed returns 503 with a generic message (details in the server log). A missing key falls back to the rule-based router.
+A selected SDK that isn't installed returns 503 with a generic message (details in the server log). A missing key falls back to the rule-based router. A refusal, or a reply cut off at the token limit, counts as a failed planner turn. **The OpenAI, Anthropic and Ollama providers are tested only with mocked SDKs, not live.**
 
-**MCP server.** `python mcp_server.py` serves the five tools over stdio to MCP clients, with the official `mcp` SDK (`MCPServer`, which mcp 2.x renamed from FastMCP). It reads `DATABASE_URL`, marks every tool read-only, and rolls back each call's session. It has no approval tool; approval stays in the web app.
+**MCP server.** `python mcp_server.py` serves the five tools over stdio to MCP clients, with the official `mcp` SDK (`MCPServer`, which mcp 2.x renamed from FastMCP). It starts only with `AGENT_LLM_ENABLED=true`, because the client passes the results, which include resume passages, to its own LLM: synthetic data only. It reads `DATABASE_URL`, checks arguments with the same strict models as the agent, marks every tool read-only, and rolls back each call's session. It has no approval tool; approval stays in the web app.
 
 ### Analytics and health
 
@@ -514,6 +517,7 @@ Hire-AI/
 ├── indexing.py               # Chunk + embed on save; `python -m indexing --reindex`
 ├── agent.py                  # Recruiting agent: LangGraph graph, approval interrupt, rule-based router
 ├── agent_tools.py            # The agent's five read-only tools (Pydantic models)
+├── agent_api.py              # Request handling for the agent endpoints (typed; app.py routes call it)
 ├── agent_llm.py              # Agent LLM providers: gemini, openai, anthropic, ollama, none
 ├── screening.py              # Scorer inputs shared by /api/screen and score_candidate
 ├── mcp_server.py             # Read-only MCP server for the five tools
