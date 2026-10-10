@@ -35,14 +35,14 @@ The injection tests in `tests/injection/test_agent_injection.py` each have an `_
 
 | Check | Result |
 |---|---|
-| Full suite, SQLite (end of fix round, run by the builder) | 621 passed, 24 skipped (need PostgreSQL), 3 xfailed (known ask-injection limits) |
-| Full suite, PostgreSQL (tester, before the fix round) | 582 passed, 2 skipped, 18 xfailed |
+| Full suite, SQLite (final, at `249e737`) | 647 passed, 24 skipped (need PostgreSQL), 3 xfailed (known ask-injection limits) |
+| Full suite, PostgreSQL | **Pending.** Last run by the tester before the fix round: 582 passed, 2 skipped, 18 xfailed. The final run, which includes migration 0005's upgrade and downgrade, couldn't run because Docker Desktop's engine won't start on this machine |
 | 120-case score-equality test | Passes |
 | ruff, strict mypy (34 files, nothing added to the overrides list) | Clean |
 | Coverage of new modules (tester, before the fix round) | agent 99%, agent_tools 100%, agent_llm 86%, mcp_server 94%, screening 100% |
 | Bugs pinned as strict xfails by the tester | 6, all fixed and flipped to normal tests |
 
-**Not run this round, at your request:** the PostgreSQL suite after the fixes (so migration 0005's PostgreSQL path is untested) and a tester re-pass. The OpenAI and Anthropic providers have only mocked tests.
+**Not run:** the PostgreSQL suite after the fixes (blocked by Docker), and a tester re-pass (skipped at your request). The OpenAI, Anthropic and Ollama providers have only mocked tests.
 
 ## Live checks
 
@@ -61,18 +61,25 @@ The injection tests in `tests/injection/test_agent_injection.py` each have an `_
 - **Provider defaults.** The Anthropic provider defaults to `claude-opus-5-5`, with Anthropic's server-side refusal fallback on. OpenAI defaults to `gpt-5.4-mini`. Both are overridable and untested live.
 - **No authentication yet.** `approved_by` is whatever name the caller sends. Same-origin and JSON-only requests stop other websites from calling the endpoints, but anyone who can reach the server can approve.
 
-## Open issues (left open after the second review, as agreed)
+## Fixed after the second review, at your request
+
+- **Stuck run after a failed approval save** (`cc4c071`). The decision is kept and marked `record_failed`, and the same decision retries only the save, claimed atomically. A failure before the decision is checkpointed still releases it.
+- **Invisible characters in delimiter tags** (`ea360fc`). `text_guard.visible()` applies NFKC and strips zero-width, bidi, tag and control characters before the delimiter check, in the agent, ask and resume-parser prompts.
+- **MCP made optional** (`db6f215`). With starlette 1.7 a FastAPI 0.115 app fails to start, so `mcp` moved to `requirements-mcp.txt`. A test shows the app and agent import with `mcp` blocked.
+- **Gemini retries** (`249e737`). A 5xx is retried at most once, and the SDK itself doesn't retry (tested), so each attempt is one request.
+
+Each fix has a test that fails on the code before it.
+
+## Open issues
 
 | Severity | Issue |
 |---|---|
-| Medium | **A database error while recording an approval strands the run.** The claim is released, but the run has already moved past the approval step, so it can't be decided again (404) and its checkpoint stays. Fix: keep the claim marked failed and retry the record step (`agent.py:607-614`) |
-| Low | If the record commits and a later checkpoint write fails, the claim is deleted but the shortlist row stays. If deleting the claim fails, the run is refused with 409 for good |
+| Low | If the record step commits the shortlist but the checkpoint after it fails to save, the run still sits at "record". A retry then hits the shortlist's unique `thread_id` and fails: the shortlist is saved, but the decision row stays `record_failed`. Separately, if releasing a claim fails, that run is refused with 409 for good |
 | Low | `agent_decisions.entries` keeps resume passages, rejected runs included, so pruning checkpoints doesn't remove them |
 | Low | `steps[].error` in the API response can repeat model text. Bare numbers like "Ada (97)" pass the score-text check; displayed scores still come from the scorer |
-| Low | A zero-width character inside a delimiter tag gets past `_defang` |
 | Low | Checkpoints aren't pruned when a run raises |
 | Untested | Migration 0005 and the post-fix suite on PostgreSQL; the OpenAI and Anthropic providers live |
-| Phase 5 | Real authentication. The `mcp` install pulled starlette 1.7, which conflicts with an unrelated FastAPI 0.115 in the environment |
+| Phase 5 | Real authentication. `mcp` (now optional, `requirements-mcp.txt`) needs starlette 0.49.1 or newer, which breaks FastAPI 0.115. Pick a FastAPI version compatible with it, or keep MCP in its own environment |
 
 ## Interview questions
 
