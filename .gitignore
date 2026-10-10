@@ -24,6 +24,10 @@ env/
 # Local data: contains candidate PII (resumes, emails, phone numbers)
 recruiting_agent.db
 *.db
+# SQLite's side files (write-ahead log, shared memory, rollback journal) hold the same data
+*.db-wal
+*.db-shm
+*.db-journal
 uploads/
 
 # OS
