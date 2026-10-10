@@ -17,6 +17,10 @@ that a human must approve.
 
 The LLM sees tool results only inside a <tool_results> block, with delimiter tags stripped
 from the data (as ask._defang does for excerpts). Tool results and resume text are data.
+
+With Langfuse tracing configured (tracing.py, synthetic data only), each run and each decision is
+traced: planner turns and LLM calls, tool calls, and the guards that fired. Tracing is a no-op
+otherwise and never changes the run.
 """
 import json
 import logging
@@ -38,6 +42,7 @@ from sqlalchemy.orm import Session
 
 import agent_tools
 import llm
+import tracing
 from agent_llm import ChatProvider, ProviderRefusal
 from agent_tools import MAX_ID, TOOLS, ScoreInput, ToolContext, ToolError, ToolSpec, validation_message
 from models import AgentDecision, AgentShortlist, Candidate, Job
@@ -349,9 +354,25 @@ def _citations(candidate_id: int, steps: list[dict[str, Any]]) -> list[dict[str,
     return sorted(found.values(), key=lambda h: -h["similarity"])[:CITATIONS_PER_CANDIDATE]
 
 
-def build_graph(ctx: ToolContext, planner: Planner,
-                checkpointer: BaseCheckpointSaver[Any]) -> CompiledStateGraph[AgentState, None, AgentState, AgentState]:
-    """Compiled per request: the nodes close over this request's database session."""
+def _planner_call(planner: Planner, state: AgentState, trace: tracing.Span, turn: int) -> Any:
+    """Call the planner; an LLM planner's prompt and reply are traced as a generation."""
+    if not (trace.active and isinstance(planner, LLMPlanner)):
+        return planner(state)
+    generation = trace.generation("planner.llm", model=getattr(planner.provider, "name", None),
+                                  input=build_prompt(state), metadata={"turn": turn})
+    try:
+        raw = planner(state)
+    except Exception as exc:
+        generation.end(level="ERROR", status_message=type(exc).__name__)
+        raise
+    generation.end(output=raw if isinstance(raw, str) else json.dumps(raw, default=str))
+    return raw
+
+
+def build_graph(ctx: ToolContext, planner: Planner, checkpointer: BaseCheckpointSaver[Any],
+                trace: tracing.Span = tracing.NOOP
+                ) -> CompiledStateGraph[AgentState, None, AgentState, AgentState]:
+    """Compiled per request: the nodes close over this request's database session (and trace, if any)."""
 
     def plan(state: AgentState) -> dict[str, Any]:
         turns = state.get("turns", 0) + 1
@@ -360,24 +381,31 @@ def build_graph(ctx: ToolContext, planner: Planner,
                    "message": f"Stopped: the run reached its limit of {MAX_TOOL_CALLS} tool calls "
                               f"or {MAX_TURNS} planner turns without a result."}
         if turns > MAX_TURNS:
+            trace.event("guard.turn_limit", metadata={"turns": turns, "max_turns": MAX_TURNS}, level="WARNING")
             return stopped
         try:
-            raw = planner(state)
+            raw = _planner_call(planner, state, trace, turns)
         except ProviderRefusal:
             logger.info("Agent planner turn refused or truncated by the model", exc_info=True)
+            trace.event("guard.planner_refused", metadata={"turn": turns}, level="WARNING")
             return {"turns": turns, "pending": None,
                     "steps": [*steps, {"type": "refused", "error": "the model declined or was cut off"}]}
         except Exception:
             logger.warning("Agent planner failed", exc_info=True)
+            trace.event("planner.error", metadata={"turn": turns}, level="ERROR")
             return {"turns": turns, "pending": None, "status": "error",
                     "message": "The agent's language model is unavailable. Try again later, "
                                "or use AGENT_LLM_PROVIDER=none for the rule-based router."}
         action, reason = parse_action(raw)
         if action is None:
+            trace.event("guard.invalid_action", metadata={"turn": turns, "reason": reason}, level="WARNING")
             return {"turns": turns, "pending": None, "steps": [*steps, {"type": "refused", "error": reason}]}
         if isinstance(action, CallTool) and state.get("tool_calls", 0) >= MAX_TOOL_CALLS:
             # Out of tool calls: the planner may still propose or finish, but another call ends the run.
+            trace.event("guard.tool_call_limit", metadata={"turn": turns, "max_tool_calls": MAX_TOOL_CALLS},
+                        level="WARNING")
             return {**stopped, "steps": [*steps, {"type": "refused", "error": "tool-call limit reached"}]}
+        trace.event("plan", metadata={"turn": turns, "action": action.model_dump()})
         return {"turns": turns, "pending": action.model_dump()}
 
     def after_plan(state: AgentState) -> str:
@@ -393,6 +421,7 @@ def build_graph(ctx: ToolContext, planner: Planner,
         name, args = action["tool"], action["args"]
         step: dict[str, Any] = {"type": "tool", "tool": name, "args": args, "ok": False}
         eligible = list(state.get("eligible", []))
+        span = trace.span(f"tool.{name}", input=args)
         spec = _resolve_tool(name)
         if spec is None:
             step["error"] = f"'{name}' is not an allowed tool"
@@ -410,6 +439,11 @@ def build_graph(ctx: ToolContext, planner: Planner,
                 ctx.session.rollback()
                 logger.exception("Database error in agent tool %s", name)
                 step["error"] = "the tool failed with a database error"
+        if step["ok"]:
+            span.end(output=step["result"])
+        else:
+            span.end(output={"error": step.get("error")}, level="WARNING",
+                     status_message="not an allowed tool" if spec is None else "tool error")
         return {"steps": [*state.get("steps", []), step], "tool_calls": state.get("tool_calls", 0) + 1,
                 "eligible": eligible, "pending": None}
 
@@ -440,6 +474,9 @@ def build_graph(ctx: ToolContext, planner: Planner,
                             "citations": _citations(cid, state.get("steps", []))})
         note, removed = _vet_text(action.note)
         dropped = [cid for cid in dict.fromkeys(action.candidate_ids) if cid not in kept]
+        trace.event("guard.proposal", metadata={"requested": action.candidate_ids, "kept": kept,
+                                                "dropped": dropped, "note_removed": removed, "job_id": job_id},
+                    level="WARNING" if dropped or removed else None)
         if not entries:
             return {"pending": None, "proposal": None, "status": "answered",
                     "message": "No shortlist: none of the proposed candidates came from the tool results."}
@@ -487,6 +524,7 @@ def build_graph(ctx: ToolContext, planner: Planner,
             return {"pending": None, "status": "answered", "message": action.message}
         message, removed = _vet_text(action.message)
         if removed:
+            trace.event("guard.score_text", metadata={"withheld": True}, level="WARNING")
             message = "The agent's answer stated scores, so it was withheld; see the tool results."
         return {"pending": None, "status": "answered", "message": message}
 
@@ -562,15 +600,26 @@ def start_run(ctx: ToolContext, request: str, planner: Planner, checkpointer: Ba
     Only a paused run keeps its checkpoints."""
     request = validate_request(request, job_id)
     thread_id = thread_id or uuid.uuid4().hex
-    graph = build_graph(ctx, planner, checkpointer)
-    graph.invoke({"request": request, "job_id": job_id, "steps": [], "tool_calls": 0, "turns": 0,
-                  "eligible": named_ids(request),
-                  "proposal": None, "decision": None, "shortlist_id": None, "status": "running", "message": ""},
-                 _config(thread_id))
-    result = _result(ctx, graph, thread_id)
+    planner_kind = "llm" if isinstance(planner, LLMPlanner) else "rule_based"
+    with tracing.trace("agent.run", input={"request": request, "job_id": job_id},
+                       metadata={"thread_id": thread_id, "planner": planner_kind}) as trace:
+        graph = build_graph(ctx, planner, checkpointer, trace)
+        graph.invoke({"request": request, "job_id": job_id, "steps": [], "tool_calls": 0, "turns": 0,
+                      "eligible": named_ids(request),
+                      "proposal": None, "decision": None, "shortlist_id": None, "status": "running", "message": ""},
+                     _config(thread_id))
+        result = _result(ctx, graph, thread_id)
+        trace.end(output=_trace_summary(result))
     if result["status"] != "pending_approval":
         _forget(checkpointer, thread_id)
     return result
+
+
+def _trace_summary(result: dict[str, Any]) -> dict[str, Any]:
+    proposal = result.get("proposal") or {}
+    return {"status": result["status"], "message": result["message"], "steps": len(result.get("steps", [])),
+            "proposed_ids": [e["candidate_id"] for e in proposal.get("entries", [])],
+            "shortlist_id": (result.get("shortlist") or {}).get("id")}
 
 
 def is_pending(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> bool:
@@ -665,9 +714,13 @@ def resume_run(ctx: ToolContext, thread_id: str, decision: dict[str, Any], plann
         ctx.session.rollback()
         raise AlreadyDecided(thread_id) from None
     claim_id = claim.id
-    try:
-        graph.invoke(Command(resume=choice.model_dump()), _config(thread_id))
-    except Exception:
-        _after_failure(ctx, checkpointer, thread_id, claim_id)
-        raise
-    return _finish_decision(ctx, graph, claim_id, thread_id, checkpointer)
+    with tracing.trace("agent.decision", input={"decision": choice.decision, "reviewer": choice.reviewer},
+                       metadata={"thread_id": thread_id}) as trace:
+        try:
+            graph.invoke(Command(resume=choice.model_dump()), _config(thread_id))
+        except Exception:
+            _after_failure(ctx, checkpointer, thread_id, claim_id)
+            raise
+        result = _finish_decision(ctx, graph, claim_id, thread_id, checkpointer)
+        trace.end(output=_trace_summary(result))
+    return result

@@ -200,6 +200,7 @@ Everything works without editing `.env`. The settings you're most likely to chan
 | `AGENT_LLM_ENABLED` | `false` | Lets the recruiting agent's planner use an LLM, which sees tool results including resume passages. Synthetic data only. When `false`, a rule-based router plans instead |
 | `AGENT_LLM_PROVIDER` | `gemini` | The agent's LLM: `gemini`, `openai`, `anthropic`, `ollama` or `none`. See [Recruiting agent](#recruiting-agent) |
 | `AGENT_CHECKPOINT_DB` | `agent_checkpoints.db` next to `app.py` | SQLite file holding paused agent runs (gitignored). It contains resume passages, so treat it like the database |
+| `LANGFUSE_ENABLED` | `false` | Traces `/api/ask` and agent runs to Langfuse when `true` and `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` and `LANGFUSE_HOST` are all set. Synthetic data only; see [Tracing](#tracing-with-langfuse-optional) |
 | `MAX_RESUME_SIZE_MB` | `10` | Upload size limit |
 | `ALLOWED_RESUME_EXTENSIONS` | `.txt,.pdf,.docx` | Accepted resume file types |
 | `HOST` / `PORT` | `127.0.0.1` / `5000` | Server address, used by `python app.py` |
@@ -356,6 +357,24 @@ A selected SDK that isn't installed returns 503 with a generic message (details 
 **MCP server (optional).** It isn't in `requirements.txt`: install it with `pip install -r requirements-mcp.txt`, preferably in its own virtual environment. `mcp` needs starlette 0.49.1 or newer (through sse-starlette), and FastAPI 0.115 needs starlette below 0.47, so the two can't share one environment. The Flask app and the agent don't import `mcp`. Without it the MCP tests are skipped.
 
 `python mcp_server.py` serves the five tools over stdio to MCP clients, with the official `mcp` SDK (`MCPServer`, which mcp 2.x renamed from FastMCP). It starts only with `AGENT_LLM_ENABLED=true`, because the client passes the results, which include resume passages, to its own LLM: synthetic data only. It reads `DATABASE_URL`, checks arguments with the same strict models as the agent, marks every tool read-only, and rolls back each call's session. It has no approval tool; approval stays in the web app.
+
+### Tracing with Langfuse (optional)
+
+**Synthetic data only.** Traces contain questions, LLM prompts and resume excerpts, and Langfuse Cloud is a third-party service. Turn tracing on only for sample or synthetic resumes, the same rule as for [Gemini](#using-gemini-synthetic-data-only).
+
+Tracing is off unless all of these are set (in `.env` or the environment), and the `langfuse` package is installed (`pip install -r requirements-eval.txt`):
+
+| Variable | Value |
+|---|---|
+| `LANGFUSE_ENABLED` | `true` |
+| `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | your project's keys |
+| `LANGFUSE_HOST` | for example `https://cloud.langfuse.com` |
+
+When on, `tracing.py` records:
+- **`/api/ask`:** the retrieval (hits, similarities, offsets), the LLM call (prompt and reply), the citations, and each guard that fired (similarity floor, LLM disabled, no grounded answer).
+- **Agent runs and decisions:** each planner turn (an LLM planner's prompt and reply), each tool call with its arguments and result, and the guards (invalid action, tool-call or turn limit, dropped shortlist candidates, withheld score text).
+
+Without the settings or the package, every tracing call is a no-op. An error inside tracing is logged and ignored, so it never changes an answer or fails a request.
 
 ### Analytics and health
 

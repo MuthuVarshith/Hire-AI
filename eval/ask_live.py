@@ -31,7 +31,7 @@ RESULTS_JSON = ROOT / "eval" / "ask_live_results.json"
 # The code POST /api/ask runs. A run refuses to start if any of these has uncommitted changes, so
 # the commit recorded at the start is the code that answered every question.
 ASK_PATH = ["app.py", "ask.py", "llm.py", "retrieval.py", "embeddings.py", "chunking.py", "indexing.py",
-            "database.py", "models.py", "config.py", "migrations",
+            "database.py", "models.py", "config.py", "migrations", "text_guard.py", "tracing.py",
             # The run's inputs too: questions, labels, the corpus and how it is indexed.
             "eval/ask_live.py", "eval/benchmark.py", "eval/pool.py", "eval/retrieval_benchmark.json",
             "sample_resumes"]
