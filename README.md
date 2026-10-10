@@ -418,6 +418,15 @@ Neither fusion nor the reranker improved MRR@10 by a statistically reliable marg
 
 So the app uses **vector search**. The full method and per-question results are in [eval/retrieval_results.md](eval/retrieval_results.md), and the not-found threshold in [eval/ask_calibration.md](eval/ask_calibration.md).
 
+### Answer evaluation (set up, not yet measured)
+
+The answers of "Ask the candidate pool" are evaluated under a protocol frozen before any measurement, [eval/answer_eval_protocol.md](eval/answer_eval_protocol.md). Nothing has been measured yet; [eval/report.md](eval/report.md) shows "not yet measured" until it is.
+
+- **Data.** `eval/golden.json`: a reference answer, required key facts (45, each tied to a labelled chunk) and a rationale for each of the 30 benchmark questions, which stay a test set. `eval/heldout.json`: 20 new answerable and 15 new unanswerable questions, used only to recalibrate the not-found cutoff and to check the judge. `python -m eval.golden validate` checks both; the review pages are `eval/golden_review.md` and `eval/heldout_review.md`.
+- **No LLM:** `python -m eval.evaluate` (context recall and precision of the retrieval `/api/ask` uses, citation validity of the live answers, refusals by similarity) and `python -m eval.cutoff` (proposes a cutoff from the held-out set only).
+- **Judge model, Gemini free tier:** `python -m eval.judge run --set judge-check|benchmark --max-requests N` runs RAGAS faithfulness and answer relevancy and a rubric judge on the live answers, never regenerating them. It counts every request, stops before `N`, and caches each result so runs resume across days. `python -m eval.judge plan` shows what is left without any LLM call. Needs `pip install -r requirements-eval.txt`.
+- **Report:** `python -m eval.judge summarize`, then `python -m eval.report`.
+
 ---
 
 ## Command-line mode
@@ -549,6 +558,7 @@ Hire-AI/
 ├── interview_generator.py    # Candidate-specific interview questions
 ├── scorer.py                 # Four-signal scoring engine (original)
 ├── text_guard.py             # Strips invisible characters before prompt-delimiter checks
+├── tracing.py                # Optional Langfuse tracing of /api/ask and agent runs (synthetic data only)
 ├── resume_parser.py          # Resume extraction (original)
 ├── jd_parser.py              # Job description extraction (original)
 ├── ranker.py                 # Ranking and explanations for the CLI (original)
@@ -560,6 +570,7 @@ Hire-AI/
 ├── requirements.txt          # Runtime dependencies
 ├── requirements-dev.txt      # + pytest, coverage, ruff, mypy
 ├── requirements-mcp.txt      # + mcp, for the optional MCP server (own environment)
+├── requirements-eval.txt     # + ragas and langfuse, for the answer evaluation and tracing
 ├── pyproject.toml            # ruff, mypy and pytest settings
 ├── alembic.ini
 ├── migrations/               # Alembic environment and schema revisions

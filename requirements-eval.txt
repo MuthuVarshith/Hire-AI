@@ -1,0 +1,18 @@
+# Optional: the answer evaluation (eval/judge.py runs RAGAS) and Langfuse tracing (tracing.py).
+#   pip install -r requirements-eval.txt
+# The app doesn't need either: tracing.py imports langfuse only when tracing is configured, and
+# only eval/judge.py and eval/evaluate.py import ragas.
+#
+# Installed into the development environment (Python 3.13, the app's packages already present) with
+# the app's packages pinned. After ragas went in, `pip check` reported only the fastapi/starlette
+# conflict that requirements-mcp.txt already causes; langchain-community was then moved to 0.3.31,
+# for which pip's resolver reported no conflict. Two pins below keep ragas from breaking that environment:
+# - ragas -> datasets would otherwise upgrade huggingface-hub to 2.x, and transformers 4.x (behind
+#   sentence-transformers) requires huggingface-hub<1.0.
+# - ragas 0.4.3 imports langchain_community.chat_models.vertexai, which langchain-community 0.4
+#   removed; 0.3.31 still has it and accepts the app's langchain-core 1.x.
+-r requirements.txt
+ragas==0.4.3                        # pinned by eval/answer_eval_protocol.md: its prompts are part of the method
+langchain-community>=0.3.31,<0.4
+huggingface-hub<1.0
+langfuse>=3.15,<4                   # tracing.py uses the v3 span API (start_span, start_generation)
