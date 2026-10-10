@@ -24,7 +24,7 @@ import re
 import sqlite3
 import uuid
 from collections.abc import Callable
-from typing import Annotated, Any, Literal, TypedDict
+from typing import Annotated, Any, Literal, TypedDict, cast
 
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -34,6 +34,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command, interrupt
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.orm import Session
 
 import agent_tools
 import llm
@@ -513,9 +514,13 @@ def sqlite_checkpointer(path: str) -> SqliteSaver:
     return saver
 
 
+def _values(graph: CompiledStateGraph[AgentState, None, AgentState, AgentState], thread_id: str) -> AgentState:
+    return cast(AgentState, graph.get_state(_config(thread_id)).values)
+
+
 def _result(ctx: ToolContext, graph: CompiledStateGraph[AgentState, None, AgentState, AgentState],
             thread_id: str) -> dict[str, Any]:
-    values: AgentState = graph.get_state(_config(thread_id)).values  # type: ignore[assignment]
+    values = _values(graph, thread_id)
     shortlist_id = values.get("shortlist_id")
     shortlist = ctx.session.get(AgentShortlist, shortlist_id) if shortlist_id else None
     return {"thread_id": thread_id, "status": values.get("status", "running"), "message": values.get("message", ""),
@@ -568,8 +573,8 @@ def start_run(ctx: ToolContext, request: str, planner: Planner, checkpointer: Ba
 
 def is_pending(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> bool:
     """True when the thread exists and is paused at the approval interrupt."""
-    graph = build_graph(ToolContext(session=None, provider=None), rule_based_planner,  # type: ignore[arg-type]
-                        checkpointer)
+    # Reading state runs no node, so the graph needs no database session.
+    graph = build_graph(ToolContext(session=cast(Session, None), provider=None), rule_based_planner, checkpointer)
     return bool(graph.get_state(_config(thread_id)).next == ("approval",))
 
 
@@ -587,7 +592,7 @@ def resume_run(ctx: ToolContext, thread_id: str, decision: dict[str, Any], plann
     if not is_pending(checkpointer, thread_id):
         raise RunNotPending(thread_id)
     graph = build_graph(ctx, planner, checkpointer)
-    paused: AgentState = graph.get_state(_config(thread_id)).values  # type: ignore[assignment]
+    paused = _values(graph, thread_id)
     proposal = paused.get("proposal") or {}
     job = ctx.session.get(Job, proposal.get("job_id") or 0)
     claim = AgentDecision(thread_id=thread_id, decision=choice.decision, reviewer=choice.reviewer, note=choice.note,
