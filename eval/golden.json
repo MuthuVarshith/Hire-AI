@@ -1,0 +1,635 @@
+{
+  "description": "Golden answers for the 30 retrieval-benchmark questions (eval/retrieval_benchmark.json) and its 3 negatives. Each answerable question has a reference answer, the required key facts and a one-line rationale. Everything is written from the question's labelled chunks only, following the benchmark's labelling_rules. Each key fact is tied to one labelled chunk by resume, section and a quote the chunk must contain, as the benchmark labels are. All resumes are synthetic.",
+  "status": "draft, pending review",
+  "written_by": "Claude (draft); reviewer: repository owner",
+  "benchmark": "eval/retrieval_benchmark.json",
+  "writing_rules": [
+    "Use only the question's labelled chunks: no other chunk, no outside knowledge.",
+    "The reference answer names every labelled candidate and says, for each, what in the labelled chunk answers the question. Extra detail from the same chunks (employers, numbers) is context, not a requirement.",
+    "Required key facts: one per labelled candidate, the minimum a correct answer must state. When a candidate has several labelled chunks, the key fact is tied to the chunk that evidences the act (experience or project before skills for doing questions); the other labelled chunks remain valid citations.",
+    "Each key fact reuses the benchmark label's resume, section and quote, so it resolves to exactly one labelled chunk (checked by `python -m eval.golden validate`).",
+    "The rationale says why the answer is what it is and names the near-miss candidates a correct answer leaves out."
+  ],
+  "questions": [
+    {
+      "id": "q01",
+      "question": "Who has run FastAPI services in production?",
+      "reference_answer": "Rachel Kim and Omar Haddad. Rachel led the migration of a shipment-tracking platform to FastAPI microservices running in production on Kubernetes (EKS), serving 40M requests per day, at Tidewater Logistics. Omar deployed model services with FastAPI and Docker on Google Cloud Run at Northwind AI.",
+      "key_facts": [
+        {
+          "id": "q01.f1",
+          "candidate": "Rachel Kim",
+          "fact": "Runs FastAPI microservices in production (Tidewater Logistics).",
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "contains": "FastAPI\n  microservices running in production"
+        },
+        {
+          "id": "q01.f2",
+          "candidate": "Omar Haddad",
+          "fact": "Deployed model services with FastAPI on Google Cloud Run (Northwind AI).",
+          "resume": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "contains": "Deployed model services with FastAPI"
+        }
+      ],
+      "rationale": "Both ran FastAPI in production; Aarav's FastAPI API was coursework 'not deployed beyond the course', so naming him is wrong."
+    },
+    {
+      "id": "q02",
+      "question": "Which candidates have built retrieval-augmented generation (RAG) systems?",
+      "reference_answer": "Ananya Patel, Omar Haddad and Aarav Mehta. Ananya built retrieval-augmented generation systems at Nova AI Labs. Omar built a RAG assistant over 2M support articles using pgvector, a cross-encoder reranker and GPT-class models at Northwind AI. Aarav built a retrieval-augmented campus chatbot over university policy PDFs with LangChain, FAISS and a small open-source LLM, as a student project.",
+      "key_facts": [
+        {
+          "id": "q02.f1",
+          "candidate": "Ananya Patel",
+          "fact": "Built retrieval-augmented generation systems (Nova AI Labs).",
+          "resume": "resume_01_ananya_patel.txt",
+          "section": "experience",
+          "contains": "retrieval-augmented generation systems"
+        },
+        {
+          "id": "q02.f2",
+          "candidate": "Omar Haddad",
+          "fact": "Built a RAG assistant over 2M support articles (Northwind AI).",
+          "resume": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "contains": "retrieval-augmented generation (RAG) assistant"
+        },
+        {
+          "id": "q02.f3",
+          "candidate": "Aarav Mehta",
+          "fact": "Built a retrieval-augmented chatbot over university policy PDFs (student project).",
+          "resume": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "projects",
+          "contains": "retrieval-augmented chatbot"
+        }
+      ],
+      "rationale": "All three built a RAG system, Aarav as a student project; Javier only 'connected retrieval systems to user products', which his resume does not call RAG."
+    },
+    {
+      "id": "q03",
+      "question": "Who has hands-on Kafka experience?",
+      "reference_answer": "Rachel Kim and Diego Ramos. Rachel designed the Kafka-based event backbone (30+ topics) for real-time shipment status updates at Tidewater Logistics. Diego built a Kafka producer and consumer in Python that simulated sensor readings, as a streaming demo project.",
+      "key_facts": [
+        {
+          "id": "q03.f1",
+          "candidate": "Rachel Kim",
+          "fact": "Designed a Kafka-based event backbone with 30+ topics (Tidewater Logistics).",
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "contains": "Kafka-based event backbone"
+        },
+        {
+          "id": "q03.f2",
+          "candidate": "Diego Ramos",
+          "fact": "Built a Kafka producer and consumer in Python (streaming demo project).",
+          "resume": "varied/v05_fresher_diego_ramos.txt",
+          "section": "projects",
+          "contains": "Kafka producer and consumer"
+        }
+      ],
+      "rationale": "Both did hands-on Kafka work; Diego's was a demo, which an answer may point out without dropping him."
+    },
+    {
+      "id": "q04",
+      "question": "Find candidates with a Certified Kubernetes Administrator (CKA) certification.",
+      "reference_answer": "Tom Baker holds the Certified Kubernetes Administrator (CKA) certification.",
+      "key_facts": [
+        {
+          "id": "q04.f1",
+          "candidate": "Tom Baker",
+          "fact": "Holds the Certified Kubernetes Administrator (CKA) certification.",
+          "resume": "varied/v09_no_headings_tom_baker.txt",
+          "section": "header",
+          "contains": "Certified Kubernetes Administrator (CKA)"
+        }
+      ],
+      "rationale": "Only Tom states a CKA; his resume has no headings, so the evidence is his single unlabelled chunk."
+    },
+    {
+      "id": "q05",
+      "question": "Who has security certifications such as OSCP or CISSP?",
+      "reference_answer": "Fatima Zahra holds both the OSCP and the CISSP.",
+      "key_facts": [
+        {
+          "id": "q05.f1",
+          "candidate": "Fatima Zahra",
+          "fact": "Holds the OSCP and CISSP certifications.",
+          "resume": "varied/v13_security_fatima_zahra.txt",
+          "section": "certifications",
+          "contains": "OSCP, CISSP"
+        }
+      ],
+      "rationale": "Fatima's certifications section lists both; no other resume lists a security certification."
+    },
+    {
+      "id": "q06",
+      "question": "Which candidates have managed or mentored engineers?",
+      "reference_answer": "Rachel Kim and Elena Petrova. Rachel mentored 6 engineers at Tidewater Logistics. Elena manages two teams with 11 engineers in total at Lindenpay, and hired 9 engineers.",
+      "key_facts": [
+        {
+          "id": "q06.f1",
+          "candidate": "Rachel Kim",
+          "fact": "Mentored 6 engineers (Tidewater Logistics).",
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "contains": "Mentored 6 engineers"
+        },
+        {
+          "id": "q06.f2",
+          "candidate": "Elena Petrova",
+          "fact": "Manages two teams totalling 11 engineers (Lindenpay).",
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "contains": "Manage two teams (11 engineers)"
+        }
+      ],
+      "rationale": "Rachel mentored and Elena manages; '11 engineers' is the total across two teams, not two teams of 11, and Elena's skills word 'mentoring' is not evidence on its own."
+    },
+    {
+      "id": "q07",
+      "question": "Who has worked with Terraform?",
+      "reference_answer": "Rachel Kim and Tom Baker. Rachel lists Terraform in her skills. Tom runs Kubernetes clusters at Granite Cloud that are all managed with Terraform.",
+      "key_facts": [
+        {
+          "id": "q07.f1",
+          "candidate": "Rachel Kim",
+          "fact": "Lists Terraform in her skills.",
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "skills",
+          "contains": "Terraform"
+        },
+        {
+          "id": "q07.f2",
+          "candidate": "Tom Baker",
+          "fact": "Manages Kubernetes clusters with Terraform (Granite Cloud).",
+          "resume": "varied/v09_no_headings_tom_baker.txt",
+          "section": "header",
+          "contains": "all managed with Terraform"
+        }
+      ],
+      "rationale": "'Has worked with' accepts a skills mention, so Rachel's list counts; Tom's evidence is in his unlabelled chunk."
+    },
+    {
+      "id": "q08",
+      "question": "Find freshers who built a chatbot project.",
+      "reference_answer": "Aarav Mehta built the Campus Chatbot (2025), a retrieval-augmented chatbot over university policy PDFs using LangChain, FAISS and a small open-source LLM; it answered 300+ student questions during orientation week.",
+      "key_facts": [
+        {
+          "id": "q08.f1",
+          "candidate": "Aarav Mehta",
+          "fact": "Built the Campus Chatbot project (2025).",
+          "resume": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "projects",
+          "contains": "Campus Chatbot"
+        }
+      ],
+      "rationale": "Aarav is the only fresher with a chatbot project; Omar built a RAG assistant but in a job, not as a fresher."
+    },
+    {
+      "id": "q09",
+      "question": "Who knows React and TypeScript?",
+      "reference_answer": "Liam Novak and Elena Petrova. Liam built a React and TypeScript single-page app (a recipe finder) and lists both in his skills. Elena led the rebuild of Lindenpay's checkout frontend in React and TypeScript and lists both in her skills.",
+      "key_facts": [
+        {
+          "id": "q09.f1",
+          "candidate": "Liam Novak",
+          "fact": "Built a React and TypeScript single-page app.",
+          "resume": "varied/v03_fresher_liam_novak.txt",
+          "section": "projects",
+          "contains": "React and TypeScript single-page app"
+        },
+        {
+          "id": "q09.f2",
+          "candidate": "Elena Petrova",
+          "fact": "Rebuilt a checkout frontend in React and TypeScript (Lindenpay).",
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "contains": "checkout frontend in React and TypeScript"
+        }
+      ],
+      "rationale": "Both show React and TypeScript in a project or job and in skills; the skills chunks are valid citations but not separate required facts."
+    },
+    {
+      "id": "q10",
+      "question": "Who has built Android apps?",
+      "reference_answer": "Kwame Asante shipped a Kotlin and Jetpack Compose banking app with 500k installs as an Android developer at Savanna Mobile.",
+      "key_facts": [
+        {
+          "id": "q10.f1",
+          "candidate": "Kwame Asante",
+          "fact": "Shipped a Kotlin and Jetpack Compose Android banking app (Savanna Mobile).",
+          "resume": "varied/v11_inline_headings_kwame_asante.txt",
+          "section": "experience",
+          "contains": "Kotlin and Jetpack Compose banking app"
+        }
+      ],
+      "rationale": "Only Kwame built Android apps; his resume uses inline headings."
+    },
+    {
+      "id": "q11",
+      "question": "Which candidate has compressed large language models to run on a laptop?",
+      "reference_answer": "Chen Wei quantized 7B-parameter language models to 4-bit for laptop inference with under 2% accuracy loss, as a research scientist at Corvid Labs.",
+      "key_facts": [
+        {
+          "id": "q11.f1",
+          "candidate": "Chen Wei",
+          "fact": "Quantized 7B-parameter language models to 4-bit for laptop inference.",
+          "resume": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "experience",
+          "contains": "Quantized 7B-parameter language models"
+        }
+      ],
+      "rationale": "Quantizing models for laptop inference is compressing them to run on a laptop."
+    },
+    {
+      "id": "q12",
+      "question": "Who has published research papers?",
+      "reference_answer": "Chen Wei has published two papers: the workshop paper 'Pruning Heads You Can Afford to Lose' (2023) and the conference paper 'Tiny but Mighty: Distilling Speech Models' (2022).",
+      "key_facts": [
+        {
+          "id": "q12.f1",
+          "candidate": "Chen Wei",
+          "fact": "Has published a workshop paper (2023) and a conference paper (2022).",
+          "resume": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "other",
+          "contains": "workshop paper"
+        }
+      ],
+      "rationale": "Only Chen Wei lists publications; Emma 'benchmarked NLP systems' but lists none."
+    },
+    {
+      "id": "q13",
+      "question": "Who has built data pipelines with Airflow or dbt?",
+      "reference_answer": "Diego Ramos and Priya Subramanian. Diego built an Airflow DAG that ingests daily CSV dumps into a PostgreSQL warehouse, with dbt models for daily station usage. Priya automated monthly KPI reporting in SQL and dbt at Cedar Health.",
+      "key_facts": [
+        {
+          "id": "q13.f1",
+          "candidate": "Diego Ramos",
+          "fact": "Built an Airflow DAG with dbt models (city bike trips pipeline project).",
+          "resume": "varied/v05_fresher_diego_ramos.txt",
+          "section": "projects",
+          "contains": "Airflow DAG"
+        },
+        {
+          "id": "q13.f2",
+          "candidate": "Priya Subramanian",
+          "fact": "Automated monthly KPI reporting in SQL and dbt (Cedar Health).",
+          "resume": "varied/v08_two_column_style_priya_s.txt",
+          "section": "header",
+          "contains": "SQL and dbt"
+        }
+      ],
+      "rationale": "Diego used Airflow and dbt in a project and Priya used dbt in her job; her two-column resume is one unlabelled chunk."
+    },
+    {
+      "id": "q14",
+      "question": "Who has built dashboards in Power BI?",
+      "reference_answer": "Hannah Lee built attendance and grade dashboards in Power BI as a junior data analyst at Brightfield Schools Network.",
+      "key_facts": [
+        {
+          "id": "q14.f1",
+          "candidate": "Hannah Lee",
+          "fact": "Built attendance and grade dashboards in Power BI (Brightfield Schools Network).",
+          "resume": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "experience",
+          "contains": "dashboards in Power BI"
+        }
+      ],
+      "rationale": "Priya built dashboards in Looker, not Power BI, so she is left out."
+    },
+    {
+      "id": "q15",
+      "question": "Find a candidate who moved into tech from teaching.",
+      "reference_answer": "Hannah Lee, a former high-school chemistry teacher (6 years), moved into data analysis through a bootcamp.",
+      "key_facts": [
+        {
+          "id": "q15.f1",
+          "candidate": "Hannah Lee",
+          "fact": "Former high-school chemistry teacher who moved into data analysis.",
+          "resume": "varied/v12_career_changer_hannah_lee.txt",
+          "section": "summary",
+          "contains": "Former high-school chemistry teacher"
+        }
+      ],
+      "rationale": "Sara was a teaching assistant during her degree, which is not a career change."
+    },
+    {
+      "id": "q16",
+      "question": "Who has experience with vector databases or semantic search?",
+      "reference_answer": "Sophia Nguyen, Javier Lopez, Omar Haddad and Aarav Mehta. Sophia built semantic search systems at VectorWorks and lists vector databases. Javier lists vector databases. Omar built a RAG assistant using pgvector and lists pgvector and FAISS. Aarav used FAISS in his campus chatbot project and lists it.",
+      "key_facts": [
+        {
+          "id": "q16.f1",
+          "candidate": "Sophia Nguyen",
+          "fact": "Built semantic search systems (VectorWorks).",
+          "resume": "resume_03_sophia_nguyen.txt",
+          "section": "experience",
+          "contains": "semantic search systems"
+        },
+        {
+          "id": "q16.f2",
+          "candidate": "Javier Lopez",
+          "fact": "Lists vector databases in his skills.",
+          "resume": "resume_10_javier_lopez.txt",
+          "section": "skills",
+          "contains": "vector databases"
+        },
+        {
+          "id": "q16.f3",
+          "candidate": "Omar Haddad",
+          "fact": "Built a RAG assistant using pgvector (Northwind AI).",
+          "resume": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "contains": "using pgvector"
+        },
+        {
+          "id": "q16.f4",
+          "candidate": "Aarav Mehta",
+          "fact": "Used FAISS in his campus chatbot project.",
+          "resume": "varied/v01_fresher_aarav_mehta.txt",
+          "section": "projects",
+          "contains": "LangChain, FAISS and a small open-source LLM"
+        }
+      ],
+      "rationale": "'Has experience with' accepts skills lists, and FAISS counts as vector-database experience (reviewer decision in the benchmark)."
+    },
+    {
+      "id": "q17",
+      "question": "Who has evaluated an LLM system with a golden dataset?",
+      "reference_answer": "Omar Haddad set up offline evaluation with RAGAS and a 400-question golden set at Northwind AI.",
+      "key_facts": [
+        {
+          "id": "q17.f1",
+          "candidate": "Omar Haddad",
+          "fact": "Set up offline evaluation with RAGAS and a 400-question golden set (Northwind AI).",
+          "resume": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "contains": "400-question golden set"
+        }
+      ],
+      "rationale": "Michael and Emma mention evaluation in general, not a golden dataset."
+    },
+    {
+      "id": "q18",
+      "question": "Which candidates list MLflow experience?",
+      "reference_answer": "Michael Chen and Maya Chen list MLflow in their skills.",
+      "key_facts": [
+        {
+          "id": "q18.f1",
+          "candidate": "Michael Chen",
+          "fact": "Lists MLflow in his skills.",
+          "resume": "resume_02_michael_chen.txt",
+          "section": "skills",
+          "contains": "MLflow"
+        },
+        {
+          "id": "q18.f2",
+          "candidate": "Maya Chen",
+          "fact": "Lists MLflow in her skills.",
+          "resume": "resume_11_maya_chen.txt",
+          "section": "skills",
+          "contains": "MLflow"
+        }
+      ],
+      "rationale": "A 'list' question, so skills lists are the evidence; no resume shows MLflow used in a job or project."
+    },
+    {
+      "id": "q19",
+      "question": "Which candidates hold a PhD?",
+      "reference_answer": "Chen Wei holds a Ph.D. in Computer Science from Ashford University (2024).",
+      "key_facts": [
+        {
+          "id": "q19.f1",
+          "candidate": "Chen Wei",
+          "fact": "Holds a Ph.D. in Computer Science (Ashford University, 2024).",
+          "resume": "varied/v14_research_scientist_chen_wei.txt",
+          "section": "education",
+          "contains": "Ph.D. Computer Science"
+        }
+      ],
+      "rationale": "Only Chen Wei; the resume writes the degree as 'Ph.D.'."
+    },
+    {
+      "id": "q20",
+      "question": "Who has fine-tuned transformer models?",
+      "reference_answer": "Michael Chen and Sara Okafor. Michael developed fine-tuning pipelines as an ML engineer at Northwind AI. Sara fine-tuned a DistilBERT model with PyTorch and Hugging Face Transformers on movie reviews, in a project reproducing a sentiment paper.",
+      "key_facts": [
+        {
+          "id": "q20.f1",
+          "candidate": "Michael Chen",
+          "fact": "Developed fine-tuning pipelines (Northwind AI).",
+          "resume": "resume_02_michael_chen.txt",
+          "section": "experience",
+          "contains": "fine-tuning pipelines"
+        },
+        {
+          "id": "q20.f2",
+          "candidate": "Sara Okafor",
+          "fact": "Fine-tuned a DistilBERT model (sentiment project).",
+          "resume": "varied/v02_fresher_sara_okafor.md",
+          "section": "projects",
+          "contains": "Fine-tuned a DistilBERT model"
+        }
+      ],
+      "rationale": "A doing question needs a job or project passage; Lina's summary self-describes fine-tuning but no passage shows it, so naming her rests on weaker evidence."
+    },
+    {
+      "id": "q21",
+      "question": "Who made a slow nightly batch job much faster?",
+      "reference_answer": "Rachel Kim reduced a nightly job's run time from 5 hours to 40 minutes with partitioned tables, on the payment-reconciliation service at Brightline Payments.",
+      "key_facts": [
+        {
+          "id": "q21.f1",
+          "candidate": "Rachel Kim",
+          "fact": "Reduced nightly job time from 5 hours to 40 minutes (Brightline Payments).",
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "contains": "from 5 hours to 40 minutes"
+        }
+      ],
+      "rationale": "Paraphrase of 'reduced nightly job time from 5 hours to 40 minutes'; no other resume describes speeding up a batch job."
+    },
+    {
+      "id": "q22",
+      "question": "Who has led a migration from a monolith to microservices?",
+      "reference_answer": "Rachel Kim led the migration of the shipment-tracking platform from a Django monolith to FastAPI microservices at Tidewater Logistics.",
+      "key_facts": [
+        {
+          "id": "q22.f1",
+          "candidate": "Rachel Kim",
+          "fact": "Led the migration from a Django monolith to FastAPI microservices (Tidewater Logistics).",
+          "resume": "varied/v06_senior_rachel_kim.txt",
+          "section": "experience",
+          "contains": "Django monolith to FastAPI"
+        }
+      ],
+      "rationale": "Elena's MySQL-to-PostgreSQL migration is a database migration, not monolith to microservices."
+    },
+    {
+      "id": "q23",
+      "question": "Who has introduced feature flags or trunk-based development?",
+      "reference_answer": "Elena Petrova drove the adoption of feature flags and trunk-based development at Lindenpay, raising deploy frequency from weekly to 20+ times per day, and spoke about trunk-based development at a regional JavaScript meetup.",
+      "key_facts": [
+        {
+          "id": "q23.f1",
+          "candidate": "Elena Petrova",
+          "fact": "Drove the adoption of feature flags and trunk-based development (Lindenpay).",
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "contains": "adoption of feature flags and trunk-based development"
+        }
+      ],
+      "rationale": "The meetup talk (projects) supports it, but the required fact is the adoption she drove."
+    },
+    {
+      "id": "q24",
+      "question": "Who has worked on fraud detection?",
+      "reference_answer": "Elena Petrova manages teams at Lindenpay that own fraud detection, and partnered with data science to ship a fraud model that reduced chargebacks by 23%.",
+      "key_facts": [
+        {
+          "id": "q24.f1",
+          "candidate": "Elena Petrova",
+          "fact": "Her teams own fraud detection at Lindenpay.",
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "experience",
+          "contains": "fraud detection"
+        }
+      ],
+      "rationale": "Only Elena's resume mentions fraud."
+    },
+    {
+      "id": "q25",
+      "question": "Who speaks German?",
+      "reference_answer": "Elena Petrova speaks German (native); she also lists English (fluent) and Russian (native).",
+      "key_facts": [
+        {
+          "id": "q25.f1",
+          "candidate": "Elena Petrova",
+          "fact": "Speaks German (native).",
+          "resume": "varied/v10_multipage_elena_petrova.txt",
+          "section": "other",
+          "contains": "German (native)"
+        }
+      ],
+      "rationale": "Her languages section is the evidence; living in Berlin is not."
+    },
+    {
+      "id": "q26",
+      "question": "Who knows the Go programming language?",
+      "reference_answer": "Mei Tanaka and Fatima Zahra. Mei built a rate limiter service in Go backed by Redis and lists Go in her skills. Fatima lists Go in her skills.",
+      "key_facts": [
+        {
+          "id": "q26.f1",
+          "candidate": "Mei Tanaka",
+          "fact": "Built a rate limiter service in Go.",
+          "resume": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "projects",
+          "contains": "rate limiter service in Go"
+        },
+        {
+          "id": "q26.f2",
+          "candidate": "Fatima Zahra",
+          "fact": "Lists Go in her skills.",
+          "resume": "varied/v13_security_fatima_zahra.txt",
+          "section": "skills",
+          "contains": "Python, Go, AWS IAM"
+        }
+      ],
+      "rationale": "'Knows' accepts a skills mention, so Fatima's list counts; 'Go' is the programming language here."
+    },
+    {
+      "id": "q27",
+      "question": "Who has used gradient boosting models such as XGBoost or LightGBM?",
+      "reference_answer": "Sara Okafor and Omar Haddad. Sara used gradient-boosted trees (XGBoost) with SHAP explanations for telecom churn prediction (AUC 0.87). Omar forecasted weekly demand for 3,000 products with LightGBM at Bluepeak Retail.",
+      "key_facts": [
+        {
+          "id": "q27.f1",
+          "candidate": "Sara Okafor",
+          "fact": "Used gradient-boosted trees (XGBoost) for churn prediction (project).",
+          "resume": "varied/v02_fresher_sara_okafor.md",
+          "section": "projects",
+          "contains": "Gradient-boosted trees (XGBoost)"
+        },
+        {
+          "id": "q27.f2",
+          "candidate": "Omar Haddad",
+          "fact": "Forecasted weekly demand with LightGBM (Bluepeak Retail).",
+          "resume": "varied/v07_ml_engineer_omar_haddad.txt",
+          "section": "experience",
+          "contains": "LightGBM"
+        }
+      ],
+      "rationale": "'Has used' needs a project or job passage; both have one, and skills lists alone would not count."
+    },
+    {
+      "id": "q28",
+      "question": "Who has managed secrets with a tool like HashiCorp Vault?",
+      "reference_answer": "Fatima Zahra led the response to a leaked API key incident at Ironclad Insurance, rotating secrets and moving them to HashiCorp Vault.",
+      "key_facts": [
+        {
+          "id": "q28.f1",
+          "candidate": "Fatima Zahra",
+          "fact": "Rotated secrets and moved them to HashiCorp Vault (Ironclad Insurance).",
+          "resume": "varied/v13_security_fatima_zahra.txt",
+          "section": "experience",
+          "contains": "moved them to HashiCorp Vault"
+        }
+      ],
+      "rationale": "A doing question, so her job passage is the evidence; her skills list alone would not count."
+    },
+    {
+      "id": "q29",
+      "question": "Who built a high-throughput rate limiter?",
+      "reference_answer": "Mei Tanaka built a rate limiter service in Go backed by Redis, load-tested to 5k requests per second on a laptop.",
+      "key_facts": [
+        {
+          "id": "q29.f1",
+          "candidate": "Mei Tanaka",
+          "fact": "Built a rate limiter service in Go, load-tested to 5k requests/second.",
+          "resume": "varied/v04_fresher_mei_tanaka.txt",
+          "section": "projects",
+          "contains": "rate limiter service in Go"
+        }
+      ],
+      "rationale": "Only Mei built a rate limiter."
+    },
+    {
+      "id": "q30",
+      "question": "Who has worked as a teaching assistant?",
+      "reference_answer": "Sara Okafor was a teaching assistant at Northfield University (2024-2025), running weekly labs for Intro to Statistics.",
+      "key_facts": [
+        {
+          "id": "q30.f1",
+          "candidate": "Sara Okafor",
+          "fact": "Teaching Assistant at Northfield University (2024-2025).",
+          "resume": "varied/v02_fresher_sara_okafor.md",
+          "section": "experience",
+          "contains": "Teaching Assistant"
+        }
+      ],
+      "rationale": "Hannah was a teacher, not a teaching assistant."
+    }
+  ],
+  "negative_questions": [
+    {
+      "id": "n01",
+      "question": "Who has COBOL mainframe experience?",
+      "reference_answer": "Not found in resumes.",
+      "rationale": "No resume mentions COBOL or mainframes; any named candidate is wrong."
+    },
+    {
+      "id": "n02",
+      "question": "Who is a licensed medical doctor?",
+      "reference_answer": "Not found in resumes.",
+      "rationale": "No resume mentions medicine; any named candidate is wrong."
+    },
+    {
+      "id": "n03",
+      "question": "Who is a certified Salesforce administrator?",
+      "reference_answer": "Not found in resumes.",
+      "rationale": "No resume mentions Salesforce; any named candidate is wrong."
+    }
+  ]
+}
