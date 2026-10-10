@@ -237,12 +237,12 @@ class RequestCounter:
             self.take()
             return await real_async(client, *args, **kwargs)
 
-        setattr(cls, "_request_once", counting)
-        setattr(cls, "_async_request_once", counting_async)
+        cls._request_once = counting  # type: ignore[method-assign,assignment]
+        cls._async_request_once = counting_async  # type: ignore[method-assign,assignment]
 
         def uninstall() -> None:
-            setattr(cls, "_request_once", real_sync)
-            setattr(cls, "_async_request_once", real_async)
+            cls._request_once = real_sync  # type: ignore[method-assign]
+            cls._async_request_once = real_async  # type: ignore[method-assign]
         return uninstall
 
 

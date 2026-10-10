@@ -93,7 +93,7 @@ def retrieve(questions: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
 
 
 def context_block(questions: list[dict[str, Any]], runs: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    rows = []
+    rows: list[dict[str, Any]] = []
     for q in questions:
         run = runs[q["id"]]
         retrieved, labelled = run["retrieved"], set(run["labelled"])
@@ -118,7 +118,7 @@ def refusals(top1: dict[str, float | None], cutoff: float) -> dict[str, Any]:
 # --- live answers ------------------------------------------------------------------------
 def citation_validity(answers: list[LiveAnswer]) -> dict[str, Any]:
     """Share of each answered row's citations that are labelled chunks (ask_live's `labelled` flag)."""
-    rows = []
+    rows: list[dict[str, Any]] = []
     for a in answers:
         if a.outcome != ANSWERED or a.row is None:
             continue
@@ -179,9 +179,10 @@ def run() -> dict[str, Any]:
     ragas_check: dict[str, Any] = {"ragas_version": None}
     if theirs is not None:
         version, scores = theirs
+        both = list(zip(ours, scores, strict=True))
         ragas_check = {"ragas_version": version,
-                       "id_based_precision_agrees": all(abs(a[0] - b[0]) < 1e-9 for a, b in zip(ours, scores)),
-                       "id_based_recall_agrees": all(abs(a[1] - b[1]) < 1e-9 for a, b in zip(ours, scores))}
+                       "id_based_precision_agrees": all(abs(a[0] - b[0]) < 1e-9 for a, b in both),
+                       "id_based_recall_agrees": all(abs(a[1] - b[1]) < 1e-9 for a, b in both)}
 
     answers = select_answers()
     cutoff = ask.NOT_FOUND_THRESHOLD

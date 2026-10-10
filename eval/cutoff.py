@@ -12,6 +12,7 @@ import datetime
 import json
 import math
 from collections.abc import Iterable
+from itertools import pairwise
 from typing import Any
 
 from eval.benchmark import ROOT
@@ -33,7 +34,7 @@ def refused(scores: Iterable[float], cutoff: float) -> int:
 
 def candidates(values: Iterable[float]) -> list[float]:
     distinct = sorted(set(values))
-    return [(a + b) / 2 for a, b in zip(distinct, distinct[1:])]
+    return [(a + b) / 2 for a, b in pairwise(distinct)]
 
 
 def _round_down(cutoff: float, answerable: list[float], unanswerable: list[float]) -> float:
