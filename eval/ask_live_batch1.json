@@ -36,7 +36,8 @@
       ],
       "llm_errors": [],
       "error": null,
-      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. partially correct: Rachel Kim is correct and correctly cited; Omar Haddad (labelled) is missed."
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. partially correct: Rachel Kim is correct and correctly cited; Omar Haddad (labelled) is missed.",
+      "gemini_requests": "1-4"
     },
     {
       "id": "q02",
@@ -140,7 +141,8 @@
         "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
       ],
       "error": null,
-      "judgement": "Not judged: no generated answer (503 UNAVAILABLE after retries); the route correctly returned passages with summary_unavailable=true."
+      "judgement": "Not judged: no generated answer (503 UNAVAILABLE after retries); the route correctly returned passages with summary_unavailable=true.",
+      "gemini_requests": 4
     },
     {
       "id": "q03",
@@ -201,7 +203,8 @@
       ],
       "llm_errors": [],
       "error": null,
-      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Rachel Kim and Diego Ramos, every citation supports its claim."
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Rachel Kim and Diego Ramos, every citation supports its claim.",
+      "gemini_requests": "1-4"
     },
     {
       "id": "q04",
@@ -231,7 +234,8 @@
       ],
       "llm_errors": [],
       "error": null,
-      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Tom Baker, CKA cited from his header."
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Tom Baker, CKA cited from his header.",
+      "gemini_requests": "1-4"
     },
     {
       "id": "q05",
@@ -271,7 +275,8 @@
       ],
       "llm_errors": [],
       "error": null,
-      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Fatima Zahra, certifications chunk cited."
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Fatima Zahra, certifications chunk cited.",
+      "gemini_requests": "1-4"
     },
     {
       "id": "q06",
@@ -312,7 +317,8 @@
       ],
       "llm_errors": [],
       "error": null,
-      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. partially correct: Elena Petrova is correct but 'two teams of 11 engineers' misreads '11 engineers' across two teams; Rachel Kim (mentored 6) is missed."
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. partially correct: Elena Petrova is correct but 'two teams of 11 engineers' misreads '11 engineers' across two teams; Rachel Kim (mentored 6) is missed.",
+      "gemini_requests": "1-4"
     },
     {
       "id": "q07",
@@ -353,7 +359,8 @@
       ],
       "llm_errors": [],
       "error": null,
-      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Tom Baker and Rachel Kim, both supported."
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Tom Baker and Rachel Kim, both supported.",
+      "gemini_requests": "1-4"
     },
     {
       "id": "q08",
@@ -383,7 +390,8 @@
       ],
       "llm_errors": [],
       "error": null,
-      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Aarav Mehta's Campus Chatbot project (named by file key because the eval names candidates by file)."
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Aarav Mehta's Campus Chatbot project (named by file key because the eval names candidates by file).",
+      "gemini_requests": "1-4"
     },
     {
       "id": "q09",
@@ -444,7 +452,8 @@
       ],
       "llm_errors": [],
       "error": null,
-      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Liam Novak and Elena Petrova, all four labelled chunks cited."
+      "judgement": "Opinion of the checking model (Claude Opus 5.5), not a metric. correct: Liam Novak and Elena Petrova, all four labelled chunks cited.",
+      "gemini_requests": "1-4"
     },
     {
       "id": "q10",
@@ -546,7 +555,8 @@
         "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
       ],
       "error": null,
-      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true.",
+      "gemini_requests": 1
     },
     {
       "id": "q11",
@@ -648,7 +658,8 @@
         "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
       ],
       "error": null,
-      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true.",
+      "gemini_requests": 1
     },
     {
       "id": "q12",
@@ -750,7 +761,8 @@
         "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
       ],
       "error": null,
-      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true.",
+      "gemini_requests": 1
     },
     {
       "id": "q13",
@@ -853,7 +865,8 @@
         "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
       ],
       "error": null,
-      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true.",
+      "gemini_requests": 1
     },
     {
       "id": "q14",
@@ -955,7 +968,8 @@
         "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
       ],
       "error": null,
-      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true.",
+      "gemini_requests": 1
     },
     {
       "id": "q15",
@@ -1057,7 +1071,8 @@
         "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
       ],
       "error": null,
-      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true.",
+      "gemini_requests": 1
     },
     {
       "id": "q16",
@@ -1162,10 +1177,15 @@
         "ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google."
       ],
       "error": null,
-      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true."
+      "judgement": "Not judged: no generated answer (429 daily free-tier quota exhausted); the route correctly returned passages with summary_unavailable=true.",
+      "gemini_requests": 1
     }
   ],
   "commit_note": "Corrected by hand from 0335c84. This run used the runner as of e80b3df, which read HEAD at the end of the run; three builder commits landed meanwhile. The run started at 19:19:51, one second after e80b3df, and `git diff e80b3df 0335c84` is empty for every file /api/ask uses, so the answers come from e80b3df.",
   "gemini_requests_total": null,
-  "gemini_requests_note": "Not counted: this run started before the per-request counter (f3a9a76). At most 12 requests were made (8 answers, plus q02's first try and up to 3 llm.py retries on 503); the free-tier daily quota of 20 was nevertheless exhausted at q10, so other requests or counted failures used part of it."
+  "gemini_requests_note": "Exact count not recoverable: this run predates the per-request counter (f3a9a76), and llm.py retried transient errors silently. The SDK itself does not retry (no retry_options: 'never retry'), so each llm.py attempt was one HTTP request. Exact: q02 = 4 (first try + 3 retries, all 503), q10-q16 = 1 each (daily-quota 429 is not retried). q01 and q03-q09 succeeded after 1 to 4 attempts each (a 503 followed by success is not logged). Total 19 to 43 requests; at least 12 before the quota ran out at q10. An earlier note said 'at most 12', which ignored retries that ended in success.",
+  "gemini_requests_bounds": {
+    "min": 19,
+    "max": 43
+  }
 }

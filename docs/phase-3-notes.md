@@ -50,6 +50,7 @@ The injection tests in `tests/injection/test_agent_injection.py` each have an `_
   - 8 generated answers: 6 correct and 2 partly correct, each partial missing one labelled candidate. No invented claims; every citation supports its claim. This is the checking model's opinion (Claude Opus 5.5), not a metric, and 8 answers are too few for a rate.
   - q02 fell back to passages after a 503.
   - q10–q16 fell back after the daily quota of 20 ran out.
+  - Gemini requests: 19 to 43. The exact number isn't known because retries that ended in success weren't logged. q02 made exactly 4, q10–q16 exactly 1 each. Since then a 5xx is retried at most once (`llm.MAX_SERVER_ERROR_RETRIES`), and live runs count every request.
   - Details are in `eval/ask_live_batch1.md`.
 - **Live agent check: not run.** The quota was exhausted on 2026-10-10, so it moves to a later day, after the remaining ask questions.
 

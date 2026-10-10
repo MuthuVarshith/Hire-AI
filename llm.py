@@ -18,7 +18,10 @@ def _client(api_key: str) -> genai.Client:
     return genai.Client(api_key=api_key)
 
 
-RETRY_DELAYS = (2.0, 5.0, 10.0)  # seconds; Gemini's free tier returns 503 "high demand" at busy times
+RETRY_DELAYS = (2.0, 5.0, 10.0)  # seconds of backoff before each retry
+# Gemini's free tier returns 503 "high demand" at busy times, and each retry is another request
+# against the daily quota (20 a day), so a server error is retried at most this many times.
+MAX_SERVER_ERROR_RETRIES = 1
 
 
 def _server_retry_delay(exc: Exception) -> float | None:
@@ -50,8 +53,11 @@ def _is_transient(exc: Exception) -> bool:
 def generate_text(prompt: str, api_key: str) -> str:
     """Send a prompt to the configured Gemini model and return the stripped text.
 
-    Transient errors are retried with backoff; anything else is raised immediately.
+    Transient errors are retried with backoff (server errors at most MAX_SERVER_ERROR_RETRIES
+    times); anything else is raised immediately. The SDK itself doesn't retry (no retry_options),
+    so each attempt here is exactly one HTTP request.
     """
+    server_retries = 0
     for delay in (*RETRY_DELAYS, None):
         try:
             response = _client(api_key).models.generate_content(model=config.GEMINI_MODEL, contents=prompt)
@@ -59,6 +65,10 @@ def generate_text(prompt: str, api_key: str) -> str:
         except Exception as exc:
             if delay is None or not _is_transient(exc):
                 raise
+            if getattr(exc, "code", 0) >= 500:
+                if server_retries >= MAX_SERVER_ERROR_RETRIES:
+                    raise
+                server_retries += 1
             time.sleep(delay)
     raise AssertionError("unreachable")
 

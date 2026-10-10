@@ -15,6 +15,7 @@ from config import CandidateScore
 
 # Captured at import, before the autouse conftest fixture swaps them out.
 REAL_GENERATE_TEXT = llm.generate_text
+REAL_CLIENT = llm._client
 REAL_GET_API_KEY = config.get_api_key
 REPO = Path(__file__).resolve().parent.parent
 
@@ -150,14 +151,35 @@ def test_permanent_errors_are_not_retried(monkeypatch):
     assert models.calls == 1
 
 
-def test_gives_up_after_the_last_retry(monkeypatch):
-    models = _FlakyModels([_api_error(503)] * 10)
+def test_rate_limits_give_up_after_the_last_retry(monkeypatch):
+    models = _FlakyModels([_api_error(429)] * 10)
     monkeypatch.setattr(llm, "_client", lambda key: SimpleNamespace(models=models))
     monkeypatch.setattr(llm, "generate_text", REAL_GENERATE_TEXT)
     monkeypatch.setattr(llm.time, "sleep", lambda s: None)
-    with pytest.raises(RuntimeError, match="503"):
+    with pytest.raises(RuntimeError, match="429"):
         llm.generate_text("p", "k")
     assert models.calls == 4  # first try + 3 retries
+
+
+@pytest.mark.parametrize("code", [500, 503])
+def test_server_errors_are_retried_once_to_save_the_daily_quota(monkeypatch, code):
+    models = _FlakyModels([_api_error(code)] * 10)
+    sleeps = []
+    monkeypatch.setattr(llm, "_client", lambda key: SimpleNamespace(models=models))
+    monkeypatch.setattr(llm, "generate_text", REAL_GENERATE_TEXT)
+    monkeypatch.setattr(llm.time, "sleep", sleeps.append)
+    with pytest.raises(RuntimeError, match=str(code)):
+        llm.generate_text("p", "k")
+    assert models.calls == 1 + llm.MAX_SERVER_ERROR_RETRIES == 2 and sleeps == [2.0]
+
+
+def test_the_sdk_does_not_retry_on_its_own():
+    """Each llm.py attempt is one HTTP request: the client is built without retry_options."""
+    from google.genai import _api_client
+
+    client = REAL_CLIENT.__wrapped__("test-key")  # the real factory, without its lru_cache
+    assert client._api_client._http_options.retry_options is None
+    assert _api_client.retry_args(None)["stop"].max_attempt_number == 1
 
 
 def _quota_error(retry_delay):

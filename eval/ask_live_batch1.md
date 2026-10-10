@@ -14,7 +14,15 @@ Run on 2026-10-10 through `POST /api/ask` on the Flask test client, with a throw
 
 All 16 returned HTTP 200. Every passages-only response set `summary_unavailable=true` with reason `llm_error`.
 
-**Requests.** This run started before the per-request counter existed. It made at most 12 Gemini requests (8 answers, plus q02's first try and up to 3 retries). The quota of 20 still ran out at q10, so other requests or counted failures used part of the day's quota.
+**Requests: 19 to 43, not exactly known.** This run predates the per-request counter, and `llm.py` retried transient errors without logging them. The Gemini SDK does not retry on its own here, so each `llm.py` attempt was one request.
+
+| Questions | Requests |
+|---|---|
+| q02 | 4, exactly: the first try and 3 retries, all 503 |
+| q10–q16 | 1 each, exactly: the daily-quota 429 is not retried |
+| q01, q03–q09 | 1 to 4 each: a 503 followed by a success is not logged |
+
+At least 12 requests were made before the quota ran out at q10. An earlier version of this note said "at most 12"; that ignored retries that ended in success. Since then, a 5xx is retried at most once, and later runs count every request.
 
 ## Answer quality (8 generated answers)
 
