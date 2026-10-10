@@ -24,7 +24,7 @@ Answers are **not regenerated** for this evaluation. The judged answers are the 
 | `eval/ask_live_batch3.json` | pinned at run time | q17–q30, n01, n02, n03 | To run: 16 requests (n02 is refused by the similarity floor and makes none) |
 
 Rules:
-- For each question, the judged row is the **first row with `generated: true`** across `eval/ask_live_batch*.json`, in batch-number order. A question with no such row is reported as "no generated answer (LLM unavailable)", not as wrong.
+- For each question, the judged row is the **first row with `generated: true`** across `eval/ask_live_batch*.json`, in batch-number order. A question with no such row but a refusal by the similarity floor (no LLM call is made, so a later batch can't differ) uses that row. Any other question is reported as "no generated answer (LLM unavailable)", not as wrong.
 - `eval/ask_live_results.json` (attempt 1, every call refused by the daily quota) has no generated answers and is not used.
 - Batches 2 and 3 run before `ask.NOT_FOUND_THRESHOLD` changes (section 6), so every judged answer comes from the 0.25 code.
 - Answers from different commits: the report lists each answer's commit and the `/api/ask` files that differ between the batch commits. Between `e80b3df` and the commit this protocol is written at, `ask.py` changed only by passing excerpts through `text_guard.visible()`, which leaves all 26 resumes unchanged (checked), so the prompts for these resumes are identical.
