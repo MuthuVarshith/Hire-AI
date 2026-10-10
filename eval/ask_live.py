@@ -28,6 +28,14 @@ from eval.benchmark import ROOT, corpus_files, load, resume_key
 
 PACING_SECONDS = 6.0
 RESULTS_JSON = ROOT / "eval" / "ask_live_results.json"
+# The code POST /api/ask runs. A run refuses to start if any of these has uncommitted changes, so
+# the commit recorded at the start is the code that answered every question.
+ASK_PATH = ["app.py", "ask.py", "llm.py", "retrieval.py", "embeddings.py", "chunking.py", "indexing.py",
+            "database.py", "models.py", "config.py", "migrations"]
+
+
+def _git(*args: str) -> str:
+    return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
 
 
 def _load_key(env_file: str | None) -> None:
@@ -40,6 +48,11 @@ def _load_key(env_file: str | None) -> None:
 
 
 def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
+    commit = _git("rev-parse", "--short", "HEAD")
+    dirty = _git("status", "--porcelain", "--", *ASK_PATH)
+    if dirty:
+        raise SystemExit("uncommitted changes in the /api/ask code; commit them or run from a clean "
+                         f"worktree:\n{dirty}")
     tmp = tempfile.mkdtemp(prefix="ask_live_")
     os.environ["DATABASE_URL"] = f"sqlite:///{(Path(tmp) / 'ask_live.db').as_posix()}"
     os.environ["ASK_LLM_ENABLED"] = "true"
@@ -69,6 +82,18 @@ def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
             errors.append(f"{type(exc).__name__}: {str(exc)[:200]}")
             raise
     llm.generate_text = recording_generate
+
+    # Count every HTTP request to Gemini, including llm.py's retries and the SDK's own: each attempt
+    # goes through BaseApiClient._request_once. The free tier allows 20 requests a day.
+    from google.genai import _api_client
+
+    requests_made = [0]
+    real_request_once = _api_client.BaseApiClient._request_once
+
+    def counting_request_once(self: Any, *args: Any, **kwargs: Any) -> Any:
+        requests_made[0] += 1
+        return real_request_once(self, *args, **kwargs)
+    _api_client.BaseApiClient._request_once = counting_request_once  # type: ignore[method-assign]
 
     provider = embeddings.get_provider()
     session = app_module.SessionLocal()
@@ -101,6 +126,7 @@ def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
         if wait > 0:
             time.sleep(wait)
         errors.clear()
+        before = requests_made[0]
         resp = client.post("/api/ask", json={"question": q["question"]})
         last = time.monotonic()
         body = resp.get_json() or {}
@@ -116,6 +142,7 @@ def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
             "top_similarity": body.get("top_similarity"), "citations": cits,
             "labelled_resumes": sorted({lab["resume"] for lab in q["relevant"]}),
             "llm_errors": list(errors), "error": body.get("error"),
+            "gemini_requests": requests_made[0] - before,
         })
         print(f"{q['id']}: status={resp.status_code} found={body.get('found')} generated={body.get('generated')} "
               f"reason={body.get('summary_unavailable_reason')} errors={len(errors)}", flush=True)
@@ -124,7 +151,8 @@ def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
     return {
         "model": config.GEMINI_MODEL,
         "date": datetime.date.today().isoformat(),
-        "commit": subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, text=True).strip(),
+        "commit": commit,  # recorded at the start; the /api/ask code was clean at that commit
+        "gemini_requests_total": requests_made[0],
         "route": "POST /api/ask (Flask test client, throwaway SQLite)",
         "candidates_indexed": n_candidates, "pacing_seconds": PACING_SECONDS,
         "threshold": ask.NOT_FOUND_THRESHOLD, "results": rows,
