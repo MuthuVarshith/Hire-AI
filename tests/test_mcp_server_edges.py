@@ -7,17 +7,19 @@ import asyncio
 import json
 
 import pytest
-from mcp.server.mcpserver.exceptions import ToolError
 from sqlalchemy.orm import Session, sessionmaker
 
 import agent_tools
-import mcp_server
 import screening
 from agent_tools import ToolSpec
 from database import create_database_engine
 from models import AgentShortlist, ScreeningResult
 from tests import test_agent_tools, test_mcp_server
 from tests.test_retrieval import KeywordProvider
+
+# mcp is optional (requirements-mcp.txt); without it these tests are skipped.
+ToolError = pytest.importorskip("mcp.server.mcpserver.exceptions").ToolError
+import mcp_server  # noqa: E402  (after the skip: it imports mcp)
 
 no_model, served = test_agent_tools.no_model, test_mcp_server.served  # fixtures
 FIVE = {"search_candidates", "get_candidate_profile", "score_candidate", "compare_candidates", "skill_gap_report"}

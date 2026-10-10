@@ -327,7 +327,7 @@ How it answers:
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/api/agent/run` | Body `{"request": "...", "job_id": 1}` (`job_id` optional, needed for a shortlist). Returns `thread_id`, `status`, `message`, the tool `steps`, and a `proposal` when the agent proposes a shortlist |
-| `POST` | `/api/agent/approve/<thread_id>` | Body `{"decision": "approve" or "reject", "reviewer": "...", "note": "..."}`. Records the decision, then resumes the paused run. Approving saves the shortlist with the reviewer and time. 404 if no run is waiting, 409 if the run was already decided, 410 if its job (or every proposed candidate) was deleted meanwhile |
+| `POST` | `/api/agent/approve/<thread_id>` | Body `{"decision": "approve" or "reject", "reviewer": "...", "note": "..."}`. Records the decision, then resumes the paused run. Approving saves the shortlist with the reviewer and time. 404 if no run is waiting, 409 if the run was already decided, 410 if its job (or every proposed candidate) was deleted meanwhile. If saving fails after the decision is recorded (a 500), the decision is kept and the same decision can be sent again to retry the save |
 
 Both endpoints accept only `Content-Type: application/json` and send no CORS headers, so only the dashboard's own origin can call them; a cross-site page or form can't run the agent or approve a shortlist from a visitor's browser. **There is no authentication yet: `reviewer` (stored as `approved_by`) is whatever the caller types.** Treat it as a label, not proof of who approved, until the app has accounts.
 
@@ -349,9 +349,13 @@ How it works (`agent.py`, a LangGraph `StateGraph`):
 | `ollama` | a local Ollama server (`OLLAMA_HOST`, default `http://localhost:11434`); no SDK | `AGENT_OLLAMA_MODEL` |
 | `none` | nothing: always the rule-based router | |
 
-A selected SDK that isn't installed returns 503 with a generic message (details in the server log). A missing key falls back to the rule-based router. A refusal, or a reply cut off at the token limit, counts as a failed planner turn. **The OpenAI, Anthropic and Ollama providers are tested only with mocked SDKs, not live.**
+A selected SDK that isn't installed returns 503 with a generic message (details in the server log). A missing key falls back to the rule-based router. A refusal, or a reply cut off at the token limit, counts as a failed planner turn.
 
-**MCP server.** `python mcp_server.py` serves the five tools over stdio to MCP clients, with the official `mcp` SDK (`MCPServer`, which mcp 2.x renamed from FastMCP). It starts only with `AGENT_LLM_ENABLED=true`, because the client passes the results, which include resume passages, to its own LLM: synthetic data only. It reads `DATABASE_URL`, checks arguments with the same strict models as the agent, marks every tool read-only, and rolls back each call's session. It has no approval tool; approval stays in the web app.
+**Only Gemini has been tested live** (`gemini-3.8-flash`, synthetic resumes only), and so far only through Ask the candidate pool (`eval/ask_live_batch1.md`); a live check of the agent with Gemini is still to run. The OpenAI, Anthropic and Ollama providers are tested only with mocked SDKs.
+
+**MCP server (optional).** It isn't in `requirements.txt`: install it with `pip install -r requirements-mcp.txt`, preferably in its own virtual environment. `mcp` needs starlette 0.49.1 or newer (through sse-starlette), and FastAPI 0.115 needs starlette below 0.47, so the two can't share one environment. The Flask app and the agent don't import `mcp`. Without it the MCP tests are skipped.
+
+`python mcp_server.py` serves the five tools over stdio to MCP clients, with the official `mcp` SDK (`MCPServer`, which mcp 2.x renamed from FastMCP). It starts only with `AGENT_LLM_ENABLED=true`, because the client passes the results, which include resume passages, to its own LLM: synthetic data only. It reads `DATABASE_URL`, checks arguments with the same strict models as the agent, marks every tool read-only, and rolls back each call's session. It has no approval tool; approval stays in the web app.
 
 ### Analytics and health
 
@@ -525,6 +529,7 @@ Hire-AI/
 ├── duplicate_detection.py    # Email / phone / fuzzy-name duplicate checks
 ├── interview_generator.py    # Candidate-specific interview questions
 ├── scorer.py                 # Four-signal scoring engine (original)
+├── text_guard.py             # Strips invisible characters before prompt-delimiter checks
 ├── resume_parser.py          # Resume extraction (original)
 ├── jd_parser.py              # Job description extraction (original)
 ├── ranker.py                 # Ranking and explanations for the CLI (original)
@@ -535,6 +540,7 @@ Hire-AI/
 ├── scoring_method.md         # Scoring methodology in detail
 ├── requirements.txt          # Runtime dependencies
 ├── requirements-dev.txt      # + pytest, coverage, ruff, mypy
+├── requirements-mcp.txt      # + mcp, for the optional MCP server (own environment)
 ├── pyproject.toml            # ruff, mypy and pytest settings
 ├── alembic.ini
 ├── migrations/               # Alembic environment and schema revisions
