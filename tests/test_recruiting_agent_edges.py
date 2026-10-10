@@ -10,12 +10,13 @@ from datetime import datetime, timezone
 
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 import agent
 from agent_tools import ToolContext
 from database import create_database_engine
-from models import AgentShortlist, Candidate, Job
+from models import AgentDecision, AgentShortlist, Candidate, Job
 from tests import test_agent_tools, test_recruiting_agent
 from tests.test_recruiting_agent import ScriptedLLM
 from tests.test_retrieval import KeywordProvider
@@ -314,3 +315,54 @@ def test_finish_text_stating_scores_is_withheld(env, message):
     ctx, ids, saver = env
     result, _ = llm_run(ctx, saver, {"action": "finish", "message": message})
     assert result["status"] == "answered" and not any(ch.isdigit() for ch in result["message"])
+
+
+# --- a failure while resuming --------------------------------------------------------------------
+def _fail_commit(monkeypatch, session, on_call):
+    """Make the session's n-th commit fail once, as a locked database would."""
+    real, calls = session.commit, {"n": 0}
+
+    def flaky():
+        calls["n"] += 1
+        if calls["n"] == on_call:
+            raise OperationalError("INSERT INTO agent_shortlists", {}, Exception("database is locked"))
+        return real()
+    monkeypatch.setattr(session, "commit", flaky)
+
+
+def test_a_failed_save_after_approval_keeps_the_claim_and_can_be_retried(env, monkeypatch):
+    ctx, ids, saver = env
+    thread = agent.start_run(ctx, "shortlist python", agent.rule_based_planner, saver,
+                             job_id=ids["backend"])["thread_id"]
+    _fail_commit(monkeypatch, ctx.session, on_call=2)  # 1: the claim; 2: the shortlist row in "record"
+    with pytest.raises(OperationalError):
+        decide(ctx, saver, thread)
+    claim = ctx.session.query(AgentDecision).filter_by(thread_id=thread).one()  # kept, not released
+    assert claim.outcome == agent.RECORD_FAILED and ctx.session.query(AgentShortlist).count() == 0
+    with pytest.raises(agent.AlreadyDecided):  # a different decision can't take over the run
+        decide(ctx, saver, thread, decision="reject")
+    done = decide(ctx, saver, thread)          # the same decision retries the save
+    assert done["status"] == "approved" and ctx.session.query(AgentShortlist).count() == 1
+    ctx.session.refresh(claim)
+    assert claim.outcome == "approved"
+    with pytest.raises(agent.AlreadyDecided):
+        decide(ctx, saver, thread)
+
+
+def test_a_failure_before_the_decision_is_checkpointed_releases_the_claim(env, monkeypatch):
+    ctx, ids, saver = env
+    thread = agent.start_run(ctx, "shortlist python", agent.rule_based_planner, saver,
+                             job_id=ids["backend"])["thread_id"]
+    real, calls = agent._human_decision, {"n": 0}
+
+    def flaky(payload):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("approval step failed")
+        return real(payload)
+    monkeypatch.setattr(agent, "_human_decision", flaky)
+    with pytest.raises(RuntimeError):
+        decide(ctx, saver, thread)
+    assert agent.is_pending(saver, thread)
+    assert ctx.session.query(AgentDecision).filter_by(thread_id=thread).count() == 0
+    assert decide(ctx, saver, thread, decision="reject")["status"] == "rejected"

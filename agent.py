@@ -578,17 +578,75 @@ def is_pending(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> bool:
     return bool(graph.get_state(_config(thread_id)).next == ("approval",))
 
 
+RECORD_FAILED = "record_failed"   # agent_decisions.outcome: decided, but saving the result failed
+RECORD_RETRYING = "record_retrying"
+
+
+def _set_outcome(ctx: ToolContext, claim_id: int, outcome: str, only_if: str | None = None) -> bool:
+    """Set a claim's outcome in its own commit; with only_if, only when the current outcome matches."""
+    query = ctx.session.query(AgentDecision).filter(AgentDecision.id == claim_id)
+    if only_if is not None:
+        query = query.filter(AgentDecision.outcome == only_if)
+    changed = query.update({AgentDecision.outcome: outcome}, synchronize_session=False)
+    ctx.session.commit()
+    return bool(changed)
+
+
+def _after_failure(ctx: ToolContext, checkpointer: BaseCheckpointSaver[Any], thread_id: str, claim_id: int) -> None:
+    """After resuming raised: release the claim if the run is still paused, else mark it for a retry.
+
+    Once the approval step has run, its decision is in the checkpoint and the graph waits at "record".
+    Releasing the claim then would strand the run (no longer pending, never recorded), so the claim
+    stays, marked RECORD_FAILED, and the same decision can retry just the record step.
+    """
+    ctx.session.rollback()
+    if is_pending(checkpointer, thread_id):
+        ctx.session.query(AgentDecision).filter(AgentDecision.id == claim_id).delete()
+        ctx.session.commit()
+    else:
+        _set_outcome(ctx, claim_id, RECORD_FAILED)
+
+
+def _retry_record(ctx: ToolContext, claim: AgentDecision, choice: Decision, planner: Planner,
+                  checkpointer: BaseCheckpointSaver[Any]) -> dict[str, Any]:
+    """Re-run the record step of a run whose decision was checkpointed but not saved."""
+    thread_id = claim.thread_id
+    graph = build_graph(ctx, planner, checkpointer)
+    if (claim.outcome != RECORD_FAILED or claim.decision != choice.decision
+            or graph.get_state(_config(thread_id)).next != ("record",)):
+        raise AlreadyDecided(thread_id)
+    # Of two retries sent together, only the one that flips the outcome runs the record step.
+    if not _set_outcome(ctx, claim.id, RECORD_RETRYING, only_if=RECORD_FAILED):
+        raise AlreadyDecided(thread_id)
+    try:
+        graph.invoke(None, _config(thread_id))  # continue from the checkpoint: runs "record" only
+    except Exception:
+        _after_failure(ctx, checkpointer, thread_id, claim.id)
+        raise
+    return _finish_decision(ctx, graph, claim.id, thread_id, checkpointer)
+
+
+def _finish_decision(ctx: ToolContext, graph: CompiledStateGraph[AgentState, None, AgentState, AgentState],
+                     claim_id: int, thread_id: str, checkpointer: BaseCheckpointSaver[Any]) -> dict[str, Any]:
+    result = _result(ctx, graph, thread_id)
+    _set_outcome(ctx, claim_id, result["status"])
+    _forget(checkpointer, thread_id)
+    return result
+
+
 def resume_run(ctx: ToolContext, thread_id: str, decision: dict[str, Any], planner: Planner,
                checkpointer: BaseCheckpointSaver[Any]) -> dict[str, Any]:
     """Continue a paused run with the human's decision.
 
     The decision is first inserted into agent_decisions, whose thread_id is UNIQUE: that insert is
-    the claim on the run, so of two decisions sent together exactly one resumes it. Raises
-    ValidationError for a bad decision, AlreadyDecided, or RunNotPending.
+    the claim on the run, so of two decisions sent together exactly one resumes it. If saving the
+    result then fails, the claim is kept and the same decision may be sent again to retry the save.
+    Raises ValidationError for a bad decision, AlreadyDecided, or RunNotPending.
     """
     choice = Decision.model_validate(decision)  # fail before claiming, so a bad body leaves the run paused
-    if ctx.session.query(AgentDecision.id).filter(AgentDecision.thread_id == thread_id).first() is not None:
-        raise AlreadyDecided(thread_id)
+    existing = ctx.session.query(AgentDecision).filter(AgentDecision.thread_id == thread_id).first()
+    if existing is not None:
+        return _retry_record(ctx, existing, choice, planner, checkpointer)
     if not is_pending(checkpointer, thread_id):
         raise RunNotPending(thread_id)
     graph = build_graph(ctx, planner, checkpointer)
@@ -604,16 +662,10 @@ def resume_run(ctx: ToolContext, thread_id: str, decision: dict[str, Any], plann
     except IntegrityError:
         ctx.session.rollback()
         raise AlreadyDecided(thread_id) from None
+    claim_id = claim.id
     try:
         graph.invoke(Command(resume=choice.model_dump()), _config(thread_id))
     except Exception:
-        # Release the claim so the run, still paused, can be decided again.
-        ctx.session.rollback()
-        ctx.session.query(AgentDecision).filter(AgentDecision.id == claim.id).delete()
-        ctx.session.commit()
+        _after_failure(ctx, checkpointer, thread_id, claim_id)
         raise
-    result = _result(ctx, graph, thread_id)
-    claim.outcome = result["status"]
-    ctx.session.commit()
-    _forget(checkpointer, thread_id)
-    return result
+    return _finish_decision(ctx, graph, claim_id, thread_id, checkpointer)
