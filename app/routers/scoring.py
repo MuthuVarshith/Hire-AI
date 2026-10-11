@@ -107,7 +107,7 @@ Matched Skills: {', '.join(score_result.matched_skills) if score_result.matched_
 Missing Skills: {', '.join(score_result.missing_skills) if score_result.missing_skills else 'None'}
 
 Provide clear, actionable insight for recruiters. No markdown."""
-        return str(llm.generate_text(prompt, cfg.get_api_key()))
+        return str(llm.generate_text(prompt, cfg.get_api_key() or ""))
     except Exception as e:
         logger.warning("LLM explanation failed: %s", e)
         return ""

@@ -56,7 +56,25 @@ def client(app_module, tmp_path, monkeypatch):
         create_default_templates(session)
     monkeypatch.setattr(app_module.app.state, "upload_folder", str(tmp_path))
     monkeypatch.setattr(scorer, "load_embedding_model", lambda: None)
-    return TestClient(app_module.app)
+    return logged_in(app_module.app)
+
+
+def logged_in(app):
+    """A TestClient signed in as a test admin; creates the user in the current database if needed."""
+    from app import auth
+    from app.auth import UsernameTaken
+
+    with db.SessionLocal() as session:
+        try:
+            auth.create_user(session, "tester", "test-password-long", "admin")
+            session.commit()
+        except UsernameTaken:
+            session.rollback()
+    test_client = TestClient(app)
+    login = test_client.post("/api/auth/login", json={"username": "tester", "password": "test-password-long"})
+    assert login.status_code == 200, login.text
+    test_client.headers["Authorization"] = f"Bearer {login.json()['token']}"
+    return test_client
 
 
 def make_job(client, title="AI Engineer", text=SAMPLE_JD, **extra):

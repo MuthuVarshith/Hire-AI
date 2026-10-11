@@ -5,7 +5,8 @@ import uuid
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
+
+from tests.test_api_contract import logged_in
 
 from app import db
 from sqlalchemy import create_engine, text
@@ -66,7 +67,7 @@ def client(app_module, tmp_path, monkeypatch):
         create_default_templates(session)
     monkeypatch.setattr(app_module.app.state, "upload_folder", str(tmp_path))
     monkeypatch.setattr(scorer, "load_embedding_model", lambda: None)
-    return TestClient(app_module.app)
+    return logged_in(app_module.app)
 
 
 def _job(client, description=SAMPLE_JD):

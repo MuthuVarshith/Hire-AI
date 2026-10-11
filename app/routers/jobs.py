@@ -30,7 +30,7 @@ def create_job(user: Recruiter, _json: JsonRequired, body: JobCreate, session: D
         raise HTTPException(400, "title is required")
     if not body.description_text:
         raise HTTPException(400, "description_text is required")
-    jd = jd_parser.parse_jd_text(body.description_text, cfg.get_api_key())
+    jd = jd_parser.parse_jd_text(body.description_text, cfg.get_api_key() or "")
     job = Job(title=body.title or jd.title, description_text=body.description_text,
               required_skills=jd.required_skills, preferred_skills=jd.preferred_skills,
               min_experience_years=jd.min_experience_years, required_education=jd.required_education,

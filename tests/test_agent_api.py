@@ -1,6 +1,9 @@
 """POST /api/agent/run and POST /api/agent/approve/<thread_id>: the rule-based agent end to end."""
 import pytest
 
+import embeddings
+
+from app import db
 import agent_llm
 from models import AgentShortlist
 from tests.test_api_contract import app_module, client, make_job, upload  # noqa: F401  (fixtures)
@@ -12,14 +15,14 @@ RESUMES = ("resume_01_ananya_patel.txt", "resume_02_michael_chen.txt", "resume_0
 @pytest.fixture
 def pool(client, app_module, monkeypatch):  # noqa: F811
     """(test client, job id, app module) with three sample resumes uploaded and indexed."""
-    monkeypatch.setattr(app_module.embeddings, "get_provider", lambda: KeywordProvider())
+    monkeypatch.setattr(embeddings, "get_provider", lambda: KeywordProvider())
     job = make_job(client)
     for name in RESUMES:
         assert upload(client, job["id"], name).status_code == 201
     return client, job["id"], app_module
 
 
-APPROVE = {"decision": "approve", "reviewer": "Rita"}
+APPROVE = {"decision": "approve"}
 
 
 def run(api, request, **body):
@@ -30,36 +33,36 @@ def test_shortlist_waits_for_approval_and_records_the_reviewer(pool):
     api, job_id, app = pool
     response = run(api, "Shortlist the top 2 Python engineers", job_id=job_id)
     assert response.status_code == 200
-    body = response.get_json()
+    body = response.json()
     assert body["status"] == "pending_approval" and body["shortlist"] is None
     entries = body["proposal"]["entries"]
     assert 1 <= len(entries) <= 2 and all("composite_score" in e and "citations" in e for e in entries)
-    with app.SessionLocal() as session:
+    with db.SessionLocal() as session:
         assert session.query(AgentShortlist).count() == 0
 
     url = f"/api/agent/approve/{body['thread_id']}"
-    approved = api.post(url, json={"decision": "approve", "reviewer": "Rita", "note": "ok"})
+    approved = api.post(url, json={"decision": "approve", "note": "ok"})
     assert approved.status_code == 200
-    shortlist = approved.get_json()["shortlist"]
-    assert (shortlist["approved_by"], shortlist["note"], shortlist["job_id"]) == ("Rita", "ok", job_id)
+    shortlist = approved.json()["shortlist"]
+    assert (shortlist["approved_by"], shortlist["note"], shortlist["job_id"]) == ("tester", "ok", job_id)
     assert shortlist["entries"] == entries and shortlist["approved_at"]
-    again = api.post(url, json={"decision": "reject", "reviewer": "Rita"})
-    assert (again.status_code, again.get_json()) == (409, {"error": "This run was already decided"})
+    again = api.post(url, json={"decision": "reject"})
+    assert (again.status_code, again.json()) == (409, {"error": "This run was already decided"})
 
 
 def test_rejected_runs_save_nothing_and_cannot_be_decided_twice(pool):
     api, job_id, app = pool
-    thread = run(api, "shortlist python", job_id=job_id).get_json()["thread_id"]
+    thread = run(api, "shortlist python", job_id=job_id).json()["thread_id"]
     url = f"/api/agent/approve/{thread}"
-    assert api.post(url, json={"decision": "reject", "reviewer": "Rita"}).get_json()["status"] == "rejected"
-    assert api.post(url, json={"decision": "approve", "reviewer": "Rita"}).status_code == 409
-    with app.SessionLocal() as session:
+    assert api.post(url, json={"decision": "reject"}).json()["status"] == "rejected"
+    assert api.post(url, json={"decision": "approve"}).status_code == 409
+    with db.SessionLocal() as session:
         assert session.query(AgentShortlist).count() == 0
 
 
 def test_answers_without_a_shortlist(pool):
     api, _, _ = pool
-    body = run(api, "Who knows Python?").get_json()
+    body = run(api, "Who knows Python?").json()
     assert body["status"] == "answered" and body["proposal"] is None
     assert body["steps"][0]["tool"] == "search_candidates"
 
@@ -78,21 +81,20 @@ def test_run_validation(pool, body, status):
 
 
 @pytest.mark.parametrize("body", [
-    {}, {"decision": "approve"}, {"decision": "maybe", "reviewer": "r"},
-    {"decision": "approve", "reviewer": "r", "note": 5}, {"decision": "approve", "reviewer": ""},
+    {}, {"decision": "maybe"}, {"decision": "approve", "note": 5},
 ])
 def test_approve_validation(pool, body):
     api, job_id, _ = pool
-    thread = run(api, "shortlist python", job_id=job_id).get_json()["thread_id"]
+    thread = run(api, "shortlist python", job_id=job_id).json()["thread_id"]
     assert api.post(f"/api/agent/approve/{thread}", json=body).status_code == 400
     assert api.post(f"/api/agent/approve/{thread}",  # still pending after a bad request
-                       json={"decision": "approve", "reviewer": "r"}).status_code == 200
+                       json={"decision": "approve"}).status_code == 200
 
 
 def test_unknown_thread_is_404(pool):
     api, _, _ = pool
     for thread in ("does-not-exist", "x" * 65):
-        response = api.post(f"/api/agent/approve/{thread}", json={"decision": "approve", "reviewer": "r"})
+        response = api.post(f"/api/agent/approve/{thread}", json={"decision": "approve"})
         assert response.status_code == 404
 
 
@@ -105,7 +107,7 @@ def test_misconfigured_provider_is_a_generic_503(pool, monkeypatch):
         raise ImportError(name)
     monkeypatch.setattr(agent_llm.importlib, "import_module", missing)
     response = run(api, "Who knows Python?")
-    assert (response.status_code, response.get_json()) == (503, {"error": "The agent's LLM provider is not available"})
+    assert (response.status_code, response.json()) == (503, {"error": "The agent's LLM provider is not available"})
 
 
 def test_large_bodies_are_rejected(pool):
@@ -124,17 +126,18 @@ def test_agent_endpoints_send_no_cors_headers_but_others_still_do(pool):
         assert "Access-Control-Allow-Origin" not in preflight.headers
         posted = api.post(url, json={"request": "Who knows Python?", **APPROVE}, headers=origin)
         assert "Access-Control-Allow-Origin" not in posted.headers
-    assert api.get("/api/jobs", headers=origin).headers.get("Access-Control-Allow-Origin")  # other routes keep CORS
+    assert api.get("/api/jobs", headers=origin).headers.get("Access-Control-Allow-Origin") is None  # no CORS anywhere
 
 
 @pytest.mark.parametrize("content_type", ["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
 def test_agent_endpoints_accept_only_json_bodies(pool, content_type):
     api, job_id, app = pool
-    thread = run(api, "shortlist python", job_id=job_id).get_json()["thread_id"]
-    form = api.post("/api/agent/run", data="request=Who+knows+Python", content_type=content_type)
-    approve = api.post(f"/api/agent/approve/{thread}", data="decision=approve&reviewer=x", content_type=content_type)
+    thread = run(api, "shortlist python", job_id=job_id).json()["thread_id"]
+    form = api.post("/api/agent/run", data="request=Who+knows+Python", headers={"Content-Type": content_type})
+    approve = api.post(f"/api/agent/approve/{thread}", data="decision=approve&reviewer=x",
+                       headers={"Content-Type": content_type})
     for response in (form, approve):
         assert response.status_code == 400
-        assert response.get_json() == {"error": "Content-Type must be application/json"}
-    with app.SessionLocal() as session:
+        assert response.json() == {"error": "Content-Type must be application/json"}
+    with db.SessionLocal() as session:
         assert session.query(AgentShortlist).count() == 0

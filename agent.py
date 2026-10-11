@@ -674,6 +674,14 @@ def is_pending(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> bool:
 
 RECORD_FAILED = "record_failed"   # agent_decisions.outcome: decided, but saving the result failed
 RECORD_RETRYING = "record_retrying"
+RETRY_STALE_SECONDS = 300
+
+
+def _older_than(stamp: datetime | None, seconds: float) -> bool:
+    """True when a stored UTC timestamp (naive, as the models store it) is older than `seconds`."""
+    if stamp is None:
+        return True
+    return (datetime.now(timezone.utc).replace(tzinfo=None) - stamp).total_seconds() > seconds
 RELEASING = "releasing"           # being given up; a claim left with it is released by the next decision
 # A claim with no outcome this old belongs to a decision that died or could not update it. Resuming
 # runs only the approval and record steps (no LLM), which take seconds.
@@ -761,11 +769,15 @@ def _retry_record(ctx: ToolContext, claim: AgentDecision, choice: Decision, plan
         _prune_after_error(checkpointer, thread_id)
         raise AlreadyDecided(thread_id)
     graph = build_graph(ctx, planner, checkpointer)
-    if (claim.outcome != RECORD_FAILED or claim.decision != choice.decision
+    # A retry that died mid-way (process stopped) leaves RECORD_RETRYING behind; once it is older than
+    # RETRY_STALE_SECONDS it can be taken over. Two takeovers at once still can't both save: the shortlist's
+    # thread_id is unique.
+    stuck = claim.outcome == RECORD_RETRYING and _older_than(claim.decided_at, RETRY_STALE_SECONDS)
+    if ((claim.outcome != RECORD_FAILED and not stuck) or claim.decision != choice.decision
             or graph.get_state(_config(thread_id)).next != ("record",)):
         raise AlreadyDecided(thread_id)
     # Of two retries sent together, only the one that flips the outcome runs the record step.
-    if not _set_outcome(ctx, claim.id, RECORD_RETRYING, only_if=RECORD_FAILED):
+    if not _set_outcome(ctx, claim.id, RECORD_RETRYING, only_if=claim.outcome):
         raise AlreadyDecided(thread_id)
     try:
         try:

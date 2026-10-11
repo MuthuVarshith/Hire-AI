@@ -10,7 +10,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
+
+from tests.test_api_contract import logged_in
 
 from app import db
 
@@ -50,7 +51,7 @@ def client(app_module, tmp_path, monkeypatch):
         return real_semantic(*args, **kwargs)
 
     monkeypatch.setattr(scorer, "compute_semantic_score", slow_semantic)
-    return TestClient(app_module.app)
+    return logged_in(app_module.app)
 
 
 def _setup_two_jobs(client):
@@ -78,7 +79,7 @@ def test_concurrent_screening_uses_each_jobs_own_weights(client, app_module):
     def screen(item):
         label, cid = item
         if not hasattr(local, "client"):
-            local.client = TestClient(app_module.app)
+            local.client = logged_in(app_module.app)
             start.wait()  # release every thread at once
         response = local.client.post(f"/api/screen/{cid}/{jobs[label]}")
         assert response.status_code == 201, response.json()

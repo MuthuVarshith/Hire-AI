@@ -19,6 +19,8 @@ Validation is stricter than /api/ask's because the markers are part of the displ
 needs at least one [n] marker, and every marker must be one of the passages given.
 """
 import json
+import queue
+import threading
 import logging
 import re
 from collections.abc import Callable, Generator, Iterable, Iterator
@@ -144,3 +146,40 @@ def _answer(span: tracing.Span, session: Session, question: str, provider: Embed
     said_not_found = text.lower().startswith(ask.NOT_FOUND.rstrip(".").lower())
     return ask.grounded_answer(question, passages, not said_not_found, text, markers(text),
                                every_citation_valid=True, span=span)
+
+
+KEEPALIVE_SECONDS = 15.0
+_END = object()
+
+
+def with_keepalive(events: Iterator[str], interval: float = KEEPALIVE_SECONDS) -> Iterator[str]:
+    """Pass events through unchanged; when none arrives for `interval` seconds, send an SSE comment
+    (": ping") so proxies and clients don't drop a stream that is waiting on the LLM.
+
+    The events are produced in a worker thread, so the wait can time out while the producer is busy.
+    A failure in the producer is re-raised in the consumer after the events already produced.
+    """
+    box: queue.Queue[object] = queue.Queue()
+    failure: list[BaseException] = []
+
+    def pump() -> None:
+        try:
+            for event in events:
+                box.put(event)
+        except BaseException as exc:  # re-raised below, on the consumer's side
+            failure.append(exc)
+        finally:
+            box.put(_END)
+
+    threading.Thread(target=pump, daemon=True).start()
+    while True:
+        try:
+            item = box.get(timeout=interval)
+        except queue.Empty:
+            yield ": ping\n\n"
+            continue
+        if item is _END:
+            break
+        yield str(item)
+    if failure:
+        raise failure[0]

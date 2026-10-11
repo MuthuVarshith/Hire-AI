@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 import models
 from app.auth import (SESSION_COOKIE, Admin, Recruiter, Role, User, UsernameTaken, authenticate, create_user,
                       is_https, issue_token, public_user, request_token, revoke_token, token_ttl)
+from app import ratelimit
 from app.db import get_session
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -48,9 +49,18 @@ def _user_out(user: models.User) -> UserOut:
 
 @router.post("/login")
 def login(body: LoginIn, request: Request, response: Response, session: DbSession) -> LoginOut:
+    client = request.client.host if request.client else "unknown"
+    keys = [f"ip:{client}", f"user:{body.username.strip().lower()}"]
+    wait = ratelimit.retry_after(keys)
+    if wait:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail="Too many failed logins; try again later",
+                            headers={"Retry-After": str(wait)})
     user = authenticate(session, body.username, body.password)
     if user is None:
+        ratelimit.record_failure(keys)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=INVALID_LOGIN)
+    ratelimit.clear([f"user:{body.username.strip().lower()}"])
     token, expires_at = issue_token(session, user)
     response.set_cookie(SESSION_COOKIE, token, max_age=int(token_ttl().total_seconds()), path="/",
                         httponly=True, samesite="strict", secure=is_https(request))

@@ -65,8 +65,8 @@ def test_malformed_parser_reply_falls_back_to_regex(monkeypatch):
 # --- Screening explanation and interview questions -----------------------------------------
 
 def _upload(client, job_id, text, filename="r.txt"):  # noqa: F811
-    return client.post(f"/api/candidates?job_id={job_id}", content_type="multipart/form-data",
-                       data={"resume": (io.BytesIO(text.encode("utf-8")), filename)}).get_json()
+    return client.post(f"/api/candidates?job_id={job_id}",
+                       files={"resume": (filename, io.BytesIO(text.encode("utf-8")))}).json()
 
 
 @pytest.mark.parametrize("name", NAMES)
@@ -105,5 +105,5 @@ def test_limit_compliant_interview_questions_pass_through(client, monkeypatch): 
     for module in (config, interview_generator):
         monkeypatch.setattr(module, "get_api_key", lambda: "test-key")
     monkeypatch.setattr(llm, "generate_text", lambda prompt, key: json.dumps(planted))
-    body = client.get(f"/api/candidates/{candidate['id']}/jobs/{job['id']}/interview-questions").get_json()
+    body = client.get(f"/api/candidates/{candidate['id']}/jobs/{job['id']}/interview-questions").json()
     assert body["technical_questions"] == planted

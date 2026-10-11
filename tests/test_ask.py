@@ -2,7 +2,8 @@
 import json
 
 import pytest
-from fastapi.testclient import TestClient
+
+from tests.test_api_contract import logged_in
 from sqlalchemy.orm import Session
 
 import ask
@@ -105,7 +106,7 @@ def test_endpoint_validates_input_and_answers(monkeypatch):
     import app.main as app_module
 
     monkeypatch.setattr(embeddings, "get_provider", lambda: KeywordProvider())
-    client = TestClient(app_module.app)
+    client = logged_in(app_module.app)
     assert client.post("/api/ask", json={}).status_code == 400
     assert client.post("/api/ask", json={"question": "React?", "job_id": "1"}).status_code == 400
     assert client.post("/api/ask", json={"question": "React?", "job_id": 999999}).status_code == 404
@@ -146,7 +147,7 @@ def test_endpoint_reports_summary_unavailable(pool, monkeypatch):
     monkeypatch.setattr(ask, "answer_question",
                         lambda db, question, prov, **kw: real(session, question, prov, **kw))
     monkeypatch.delenv("ASK_LLM_ENABLED", raising=False)
-    body = TestClient(app_module.app).post("/api/ask", json={"question": "Who knows React?"}).json()
+    body = logged_in(app_module.app).post("/api/ask", json={"question": "Who knows React?"}).json()
     assert body["found"] is True and body["citations"]
     assert body["summary_unavailable"] is True and body["summary_unavailable_reason"] == "llm_disabled"
     assert body["answer"] == ask.PASSAGES_ONLY
@@ -194,7 +195,7 @@ def _client_on_pool(monkeypatch, pool, generate):
     monkeypatch.setattr(embeddings, "get_provider", lambda: provider)
     monkeypatch.setattr(ask, "answer_question",
                         lambda db, question, prov, **kw: real(session, question, prov, generate=generate, **kw))
-    return TestClient(app_module.app)
+    return logged_in(app_module.app)
 
 
 @pytest.mark.parametrize("path", sorted(PASSAGES_ONLY_PATHS))
@@ -271,7 +272,7 @@ def test_endpoint_rejects_bad_input(monkeypatch, payload):
 
     called = []
     monkeypatch.setattr(ask, "answer_question", lambda *a, **k: called.append(1))
-    response = TestClient(app_module.app).post("/api/ask", json=payload)
+    response = logged_in(app_module.app).post("/api/ask", json=payload)
     assert response.status_code == 400 and "error" in response.json()
     assert called == []
 
@@ -282,7 +283,7 @@ def test_endpoint_rejects_oversize_body(monkeypatch):
     called = []
     monkeypatch.setattr(ask, "answer_question", lambda *a, **k: called.append(1))
     big = {"question": "x" * (ask_router.ASK_MAX_BODY_BYTES + 1)}
-    response = TestClient(app_module.app).post("/api/ask", json=big)
+    response = logged_in(app_module.app).post("/api/ask", json=big)
     assert response.status_code == 413 and called == []
 
 

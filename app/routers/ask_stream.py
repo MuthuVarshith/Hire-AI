@@ -97,5 +97,5 @@ async def ask_stream_route(request: Request, user: Recruiter) -> Response:
         question, job_id = ask.validate_input(question, job_id)
     except ValueError as exc:
         return _error(400, str(exc))
-    return StreamingResponse(_events(question, job_id), media_type="text/event-stream",
+    return StreamingResponse(ask_stream.with_keepalive(_events(question, job_id)), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

@@ -342,38 +342,39 @@ class AgentDecision(Base):
     request: Mapped[Optional[str]] = mapped_column(Text)
     entries: Mapped[Optional[list[dict[str, Any]]]] = mapped_column(JSON)  # the proposal as the reviewer saw it
     outcome: Mapped[Optional[str]] = mapped_column(String(32))
+    # The signed-in user who decided (migration 0006); NULL for decisions made before auth or a deleted user.
+    reviewer_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL", name="fk_agent_decisions_reviewer_id"), index=True)
 
 
-class User:
-    """Compatibility shim for the auth layer.
+class User(Base):
+    """A person who can sign in (app/auth.py). Passwords are stored only as argon2id hashes."""
+    __tablename__ = "users"
+    __table_args__ = (CheckConstraint("role IN ('admin', 'recruiter')", name="ck_users_role"),)
 
-    The repo is pinned to Alembic head 0005, so the durable schema intentionally does not include
-    users/sessions. These lightweight classes keep the app/auth.py contract importable and allow
-    code paths that only materialize a signed-in user object to run without reintroducing schema drift.
-    """
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=_utcnow)
 
-    __slots__ = ("id", "username", "password_hash", "role", "created_at")
-
-    def __init__(self, *, id: int, username: str, password_hash: str, role: str, created_at: Optional[datetime] = None):
-        self.id = id
-        self.username = username
-        self.password_hash = password_hash
-        self.role = role
-        self.created_at = created_at or datetime.now(timezone.utc).replace(tzinfo=None)
+    sessions: Mapped[list["AuthSession"]] = relationship(back_populates="user", cascade="all, delete-orphan",
+                                                         passive_deletes=True)
 
 
-class AuthSession:
-    """Compatibility shim for the auth layer; the schema itself remains at migration 0005."""
+class AuthSession(Base):
+    """A sign-in: the SHA-256 hash of a random bearer token (never the token itself) and when it expires.
+    Logging out deletes the row. Named AuthSession because models.py already uses sqlalchemy's Session."""
+    __tablename__ = "sessions"
 
-    __slots__ = ("id", "token_hash", "user_id", "created_at", "expires_at")
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
+                                         index=True)
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=_utcnow)
+    expires_at: Mapped[datetime] = mapped_column(nullable=False)
 
-    def __init__(self, *, id: int | None = None, token_hash: str, user_id: int, created_at: Optional[datetime] = None,
-                 expires_at: Optional[datetime] = None):
-        self.id = id
-        self.token_hash = token_hash
-        self.user_id = user_id
-        self.created_at = created_at or datetime.now(timezone.utc).replace(tzinfo=None)
-        self.expires_at = expires_at or self.created_at
+    user: Mapped[User] = relationship(back_populates="sessions")
 
 
 def init_db(database_url: str) -> Engine:

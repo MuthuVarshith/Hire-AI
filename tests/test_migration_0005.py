@@ -20,22 +20,22 @@ def add_decision(eng, thread_id, job_id=None):
 
 
 def test_0005_is_the_head():
-    assert database.head_revision() == "0005"
+    assert database.head_revision() == "0006"  # 0006 adds users, sessions and reviewer_id
 
 
 def test_upgrade_from_0004_keeps_shortlists_and_snapshots_the_job_title(engine):
     migrate(engine, "upgrade", "0004")
     job_id = add_job(engine)
     add_shortlist(engine, job_id, "t-1")
-    migrate(engine, "upgrade", "0005")
-    assert revision(engine) == "0005" and test_migrations._schema_drift(engine) == []
+    migrate(engine, "upgrade", "head")  # the models describe the head, so drift is checked there
+    assert revision(engine) == "0006" and test_migrations._schema_drift(engine) == []
 
     inspector = inspect(engine)
     columns = {c["name"]: c["nullable"] for c in inspector.get_columns("agent_shortlists")}
     assert (columns["job_id"], columns["job_title"], columns["dropped_ids"]) == (True, True, True)
     (fk,) = inspector.get_foreign_keys("agent_shortlists")
     assert (fk["referred_table"], fk["options"].get("ondelete")) == ("jobs", "SET NULL")
-    (decision_fk,) = inspector.get_foreign_keys("agent_decisions")
+    decision_fk = next(f for f in inspector.get_foreign_keys("agent_decisions") if f["referred_table"] == "jobs")
     assert decision_fk["options"].get("ondelete") == "SET NULL"
     with engine.connect() as conn:
         assert conn.execute(text("SELECT thread_id, job_id, job_title FROM agent_shortlists")).all() == [

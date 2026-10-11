@@ -65,13 +65,13 @@ def test_screen_route_score_ignores_a_compliant_explanation(client, monkeypatch)
     """The explanation is written after scoring; its text cannot move the stored numbers."""
     job = make_job(client)
     data = (FIXTURES / "injected_score_claim.txt").read_bytes()
-    candidate = client.post(f"/api/candidates?job_id={job['id']}", content_type="multipart/form-data",
-                            data={"resume": (io.BytesIO(data), "score_claim.txt")}).get_json()
+    candidate = client.post(f"/api/candidates?job_id={job['id']}",
+                            files={"resume": ("score_claim.txt", io.BytesIO(data))}).json()
     monkeypatch.setattr(config, "get_api_key", lambda: "test-key")
     stored = {}
     for reply in (COMPLIANT, REFUSING):
         monkeypatch.setattr(llm, "generate_text", lambda prompt, key, r=reply: r)
-        stored[reply] = screen(client, candidate["id"], job["id"]).get_json()
+        stored[reply] = screen(client, candidate["id"], job["id"]).json()
     numbers = ("composite_score", "semantic_score", "skill_match_score", "experience_score", "education_score")
     assert [stored[COMPLIANT][k] for k in numbers] == [stored[REFUSING][k] for k in numbers]
     assert stored[COMPLIANT]["composite_score"] == CLEAN_COMPOSITE
