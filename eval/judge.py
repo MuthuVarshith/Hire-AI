@@ -1,9 +1,13 @@
 """RAGAS faithfulness and answer relevancy, and a rubric LLM judge, on a free-tier judge model
 (eval/answer_eval_protocol.md, sections 4.4-4.7, 5 and 7, and its dated deviations).
 
-    python -m eval.judge plan [--set judge-check|benchmark]       # what is left and what it costs; no LLM
-    python -m eval.judge run --set judge-check|benchmark --max-requests N [--env-file PATH]
-    python -m eval.judge summarize                                 # writes eval/results/judge_summary.json
+    python -m eval.judge plan [--set judge-check|benchmark] [--mode combined|ragas]   # no LLM
+    python -m eval.judge run --set judge-check|benchmark --max-requests N [--mode ...] [--env-file PATH]
+    python -m eval.judge summarize [--mode ...]                    # writes eval/results/judge_summary.json
+
+Modes: "combined" (default) asks for faithfulness statements, a question for answer relevancy and the
+rubric in one request per answer, with the prompt in the protocol's combined-prompt block; "ragas" is
+the original four requests per answer (RAGAS faithfulness 2, RAGAS relevancy 1, rubric 1).
 
 The judge is configurable:
     JUDGE_PROVIDER  openrouter (default) or gemini
@@ -69,15 +73,21 @@ RUNS_LOG = RESULTS_DIR / "judge_runs.jsonl"
 SUMMARY_JSON = RESULTS_DIR / "judge_summary.json"
 SETS = ("judge-check", "benchmark")
 
-FAITHFULNESS, RELEVANCY, RUBRIC = "faithfulness", "answer_relevancy", "rubric"
-# Requests per metric when nothing is retried: faithfulness makes two calls (statements, then verdicts).
-METRIC_REQUESTS = {FAITHFULNESS: 2, RELEVANCY: 1, RUBRIC: 1}
+FAITHFULNESS, RELEVANCY, RUBRIC, COMBINED = "faithfulness", "answer_relevancy", "rubric", "combined"
+# Requests per metric when nothing is retried: RAGAS faithfulness makes two calls (statements, then
+# verdicts); the combined judge returns faithfulness statements, relevancy and the rubric in one.
+METRIC_REQUESTS = {FAITHFULNESS: 2, RELEVANCY: 1, RUBRIC: 1, COMBINED: 1}
+# Judge modes (protocol deviation of 2026-10-11): "combined" (default) is one request per answer;
+# "ragas" is the original four-request method (RAGAS faithfulness and relevancy plus the rubric).
+MODE_COMBINED, MODE_RAGAS = "combined", "ragas"
+MODES = (MODE_COMBINED, MODE_RAGAS)
 NO_KEY_FACTS = "(none: no resume answers this question)"
 
 # A run refuses to start if any of these has uncommitted changes, so the commit recorded is what judged.
 JUDGE_INPUTS = ["eval/judge.py", "eval/openrouter.py", "eval/answers.py", "eval/golden.py", "eval/benchmark.py",
-                "eval/golden.json", "eval/heldout.json", "eval/answer_eval_protocol.md", "eval/retrieval_benchmark.json",
-                "eval/ask_live_batch*.json", "llm.py", "config.py", "embeddings.py", "chunking.py", "sample_resumes"]
+                "eval/golden.json", "eval/heldout.json", "eval/answer_eval_protocol.md",
+                "eval/retrieval_benchmark.json", "eval/ask_live_batch*.json", "llm.py", "config.py",
+                "embeddings.py", "chunking.py", "sample_resumes"]
 
 M = TypeVar("M", bound=BaseModel)
 
@@ -111,8 +121,14 @@ class Item:
     reference: str
     key_facts: tuple[KeyFact, ...]
     notes: str
-    metrics: tuple[str, ...]
     commit: str | None = None  # the commit that generated the answer (benchmark)
+
+    def metrics(self, mode: str) -> tuple[str, ...]:
+        """What is judged in this mode. The judge check scores the rubric only (protocol 4.7), with the
+        same prompt as the benchmark, so in combined mode it uses the combined prompt."""
+        if mode == MODE_COMBINED:
+            return (COMBINED,)
+        return (FAITHFULNESS, RELEVANCY, RUBRIC) if self.set == "benchmark" else (RUBRIC,)
 
     def answer_hash(self) -> str:
         payload = [self.question, self.answer, [[e.number, e.candidate, e.section, e.text] for e in self.excerpts]]
@@ -133,7 +149,7 @@ def benchmark_items() -> list[Item]:
                          for c in answer.row.get("citations", []))
         items.append(Item("benchmark", answer.question_id, answer.question_id, answer.kind, answer.question,
                           str(answer.row.get("answer") or ""), excerpts, gold["reference_answer"], facts,
-                          gold["rationale"], (FAITHFULNESS, RELEVANCY, RUBRIC), answer.commit))
+                          gold["rationale"], answer.commit))
     return items
 
 
@@ -154,7 +170,7 @@ def judge_check_items() -> list[Item]:
         for variant, kind, text in (("good", "good", check["good_answer"]),
                                     ("flawed", check["flaw"], check["flawed_answer"])):
             items.append(Item("judge-check", f"{q['id']}.{variant}", q["id"], kind, q["question"], text,
-                              tuple(excerpts), reference, tuple(facts), q["rationale"], (RUBRIC,)))
+                              tuple(excerpts), reference, tuple(facts), q["rationale"]))
     return items
 
 
@@ -163,15 +179,26 @@ def items_for(set_name: str) -> list[Item]:
 
 
 # --- the rubric prompt (read from the frozen protocol) ----------------------------------------
-_PROMPT_BLOCK = re.compile(r"<!-- judge-prompt:start -->\s*```text\n(.*?)\n```\s*<!-- judge-prompt:end -->", re.S)
+def _prompt_block(name: str) -> str:
+    text = PROTOCOL.read_text(encoding="utf-8").replace("\r\n", "\n")
+    match = re.search(rf"<!-- {name}:start -->\s*```text\n(.*?)\n```\s*<!-- {name}:end -->", text, re.S)
+    if match is None:
+        raise SystemExit(f"no {name} between the markers in {PROTOCOL.relative_to(ROOT)}")
+    return match.group(1)
 
 
 def rubric_prompt() -> str:
-    text = PROTOCOL.read_text(encoding="utf-8").replace("\r\n", "\n")
-    match = _PROMPT_BLOCK.search(text)
-    if match is None:
-        raise SystemExit(f"no judge prompt between the markers in {PROTOCOL.relative_to(ROOT)}")
-    return match.group(1)
+    return _prompt_block("judge-prompt")
+
+
+def combined_prompt() -> str:
+    """The combined judge's prompt (protocol deviation of 2026-10-11), read from the protocol."""
+    return _prompt_block("combined-prompt")
+
+
+def prompt_for(mode: str) -> str:
+    """The prompt template the rubric (ragas mode) or combined judge (combined mode) fills in."""
+    return combined_prompt() if mode == MODE_COMBINED else rubric_prompt()
 
 
 def sha256(text: str) -> str:
@@ -201,6 +228,53 @@ def parse_verdict(raw: str, fact_ids: set[str]) -> Verdict:
     data = llm.parse_json_response(raw)
     if not isinstance(data, dict) or set(data) != _VERDICT_KEYS:
         raise ValueError(f"expected exactly the keys {sorted(_VERDICT_KEYS)}")
+    return _validate_verdict(data, fact_ids)
+
+
+@dataclass(frozen=True)
+class CombinedVerdict:
+    statements: tuple[tuple[str, bool], ...]   # (statement, supported by the cited excerpts)
+    generated_question: str
+    noncommittal: bool
+    rubric: Verdict
+
+    @property
+    def faithfulness(self) -> float | None:
+        """Supported statements / statements, as RAGAS computes it; None (undefined) with no statements."""
+        if not self.statements:
+            return None
+        return sum(1 for _, ok in self.statements if ok) / len(self.statements)
+
+
+_COMBINED_KEYS = {"statements", "generated_question", "noncommittal", *_VERDICT_KEYS}
+
+
+def parse_combined(raw: str, fact_ids: set[str]) -> CombinedVerdict:
+    """Strict: one JSON object with exactly the combined prompt's eight keys and their types
+    (protocol deviation of 2026-10-11). Raises ValueError."""
+    data = llm.parse_json_response(raw)
+    if not isinstance(data, dict) or set(data) != _COMBINED_KEYS:
+        raise ValueError(f"expected exactly the keys {sorted(_COMBINED_KEYS)}")
+    statements = data["statements"]
+    if not isinstance(statements, list):
+        raise ValueError("statements must be a list")
+    parsed: list[tuple[str, bool]] = []
+    for s in statements:
+        if not isinstance(s, dict) or set(s) != {"statement", "supported"}:
+            raise ValueError("each statement must be an object with exactly 'statement' and 'supported'")
+        if not isinstance(s["statement"], str) or not s["statement"].strip() or type(s["supported"]) is not bool:
+            raise ValueError("statement must be a non-empty string and supported a boolean")
+        parsed.append((s["statement"], s["supported"]))
+    if type(data["noncommittal"]) is not bool:
+        raise ValueError("noncommittal must be a boolean")
+    question = data["generated_question"]
+    if not isinstance(question, str) or (not question.strip() and not data["noncommittal"]):
+        raise ValueError("generated_question must be a string, non-empty unless the answer is noncommittal")
+    rubric = _validate_verdict({k: data[k] for k in _VERDICT_KEYS}, fact_ids)
+    return CombinedVerdict(tuple(parsed), question, data["noncommittal"], rubric)
+
+
+def _validate_verdict(data: dict[str, Any], fact_ids: set[str]) -> Verdict:
     for key in ("correctness", "citation_support"):
         if type(data[key]) is not int or data[key] not in (0, 1, 2):
             raise ValueError(f"{key} must be the integer 0, 1 or 2")
@@ -381,22 +455,42 @@ def ragas_metrics(judge: Judge) -> RagasMetrics:
                         version)
 
 
+_EMBEDDER: list[Any] = []
+
+
+def relevancy(question: str, generated_question: str, noncommittal: bool) -> float:
+    """RAGAS's answer-relevancy formula with strictness 1: cosine similarity between the question and
+    the question the judge wrote for the answer, 0 if the answer is noncommittal. Local embeddings
+    (all-MiniLM-L6-v2, query mode), so no requests."""
+    if noncommittal:
+        return 0.0
+    if not _EMBEDDER:
+        from embeddings import SentenceTransformerProvider
+
+        _EMBEDDER.append(SentenceTransformerProvider())
+    a, b = _EMBEDDER[0].embed([question, generated_question], kind="query")
+    norm = math.sqrt(sum(x * x for x in a)) * math.sqrt(sum(y * y for y in b))
+    return float(sum(x * y for x, y in zip(a, b, strict=True)) / norm) if norm else 0.0
+
+
 # --- cache -------------------------------------------------------------------------------------
-def prompt_id(metric: str, rubric_sha: str) -> str:
-    if metric == RUBRIC:
-        return rubric_sha
+def prompt_id(metric: str, prompt_sha: str) -> str:
+    """prompt_sha is the SHA-256 of the mode's template: the rubric prompt, or the combined prompt."""
+    if metric in (RUBRIC, COMBINED):
+        return prompt_sha
     suffix = f"-strictness{RELEVANCY_STRICTNESS}" if metric == RELEVANCY else ""
     return f"ragas-{RAGAS_VERSION}-{metric}{suffix}"
 
 
-def cache_path(item: Item, metric: str, rubric_sha: str, cfg: JudgeConfig) -> Path:
-    key = sha256(json.dumps([item.set, item.item_id, item.answer_hash(), cfg.provider, cfg.model, metric,
-                             prompt_id(metric, rubric_sha)]))[:16]
-    return CACHE_DIR / item.set / f"{item.item_id}__{metric}__{key}.json"
+def cache_path(item: Item, metric: str, prompt_sha: str, cfg: JudgeConfig, mode: str) -> Path:
+    """Keyed by item, answer hash, judge provider and model, mode, metric and prompt."""
+    key = sha256(json.dumps([item.set, item.item_id, item.answer_hash(), cfg.provider, cfg.model, mode, metric,
+                             prompt_id(metric, prompt_sha)]))[:16]
+    return CACHE_DIR / item.set / f"{item.item_id}__{mode}__{metric}__{key}.json"
 
 
-def pending_metrics(item: Item, rubric_sha: str, cfg: JudgeConfig) -> list[str]:
-    return [m for m in item.metrics if not cache_path(item, m, rubric_sha, cfg).exists()]
+def pending_metrics(item: Item, prompt_sha: str, cfg: JudgeConfig, mode: str) -> list[str]:
+    return [m for m in item.metrics(mode) if not cache_path(item, m, prompt_sha, cfg, mode).exists()]
 
 
 def load_cache() -> list[dict[str, Any]]:
@@ -412,6 +506,22 @@ def judge_metric(metric: str, item: Item, judge: Judge, template: str,
                  ragas: Callable[[], RagasMetrics]) -> dict[str, Any]:
     """Score one metric of one item. Raises BudgetExhausted, or the API error after the retries;
     a reply that doesn't parse is returned as a recorded result, not raised."""
+    if metric == COMBINED:
+        raw = judge.text(fill_prompt(template, item))
+        try:
+            combined = parse_combined(raw, {f.id for f in item.key_facts})
+        except ValueError as exc:
+            return {"status": "parse_error", "error": str(exc)[:300], "raw": raw}
+        out: dict[str, Any] = {
+            "status": "ok", "verdict": combined.rubric.model_dump(),
+            "statements": [{"statement": s, "supported": ok} for s, ok in combined.statements],
+            "generated_question": combined.generated_question, "noncommittal": combined.noncommittal, "raw": raw}
+        if item.set == "benchmark":  # the judge check uses the rubric fields only (protocol 4.7)
+            faith = combined.faithfulness
+            out["faithfulness"] = faith
+            out["faithfulness_status"] = "ok" if faith is not None else "undefined"
+            out["answer_relevancy"] = relevancy(item.question, combined.generated_question, combined.noncommittal)
+        return out
     if metric == RUBRIC:
         raw = judge.text(fill_prompt(template, item))
         try:
@@ -464,7 +574,7 @@ def make_judge(cfg: JudgeConfig, api_key: str, counter: RequestCounter,
     return Judge(openrouter_sender(api_key, cfg.model, counter, served)), lambda: None
 
 
-def run(set_name: str, max_requests: int, env_file: str | None) -> dict[str, Any]:
+def run(set_name: str, max_requests: int, env_file: str | None, mode: str = MODE_COMBINED) -> dict[str, Any]:
     commit = _git("rev-parse", "--short", "HEAD")
     dirty = _git("status", "--porcelain", "--", *JUDGE_INPUTS)
     if dirty:
@@ -474,9 +584,9 @@ def run(set_name: str, max_requests: int, env_file: str | None) -> dict[str, Any
     cfg = judge_config()
     api_key = _api_key(cfg, env_file)
 
-    template = rubric_prompt()
+    template = prompt_for(mode)
     rubric_sha = sha256(template)
-    work = [(item, pending_metrics(item, rubric_sha, cfg)) for item in items_for(set_name)]
+    work = [(item, pending_metrics(item, rubric_sha, cfg, mode)) for item in items_for(set_name)]
     work = [(item, metrics) for item, metrics in work if metrics]
     started = datetime.datetime.now().isoformat(timespec="seconds")
     counter = RequestCounter(max_requests)
@@ -496,7 +606,8 @@ def run(set_name: str, max_requests: int, env_file: str | None) -> dict[str, Any
             if need > counter.remaining:
                 stopped = f"budget: {counter.remaining} request(s) left, the next item needs {need}"
                 break
-            stop = _judge_item(item, metrics, judge, template, rubric_sha, counter, ragas, commit, cfg, served)
+            stop = _judge_item(item, metrics, judge, template, rubric_sha, counter, ragas, commit, cfg, served,
+                               mode)
             if stop:
                 stopped = stop
                 break
@@ -504,7 +615,8 @@ def run(set_name: str, max_requests: int, env_file: str | None) -> dict[str, Any
             print(f"{item.set} {item.item_id}: {', '.join(metrics)} ({counter.sent} requests so far)", flush=True)
     finally:
         uninstall()
-        record = {"started": started, "commit": commit, "set": set_name, "judge_provider": cfg.provider,
+        record = {"started": started, "commit": commit, "set": set_name, "mode": mode,
+                  "judge_provider": cfg.provider,
                   "judge_model": cfg.model, "max_requests": max_requests, "requests_sent": counter.sent,
                   "items_completed": done, "items_pending_at_start": len(work), "stopped": stopped}
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -516,7 +628,7 @@ def run(set_name: str, max_requests: int, env_file: str | None) -> dict[str, Any
 
 def _judge_item(item: Item, metrics: list[str], judge: Judge, template: str, rubric_sha: str,
                 counter: RequestCounter, ragas: Callable[[], RagasMetrics], commit: str, cfg: JudgeConfig,
-                served: list[str]) -> str | None:
+                served: list[str], mode: str) -> str | None:
     """Judge and cache each pending metric of one item; returns why the run must stop, or None."""
     for metric in metrics:
         before, served_before = counter.sent, len(served)
@@ -528,24 +640,24 @@ def _judge_item(item: Item, metrics: list[str], judge: Judge, template: str, rub
             return (f"{type(exc).__name__} during {item.item_id} {metric}: {str(exc)[:200]} "
                     "(not cached, retried next run)")
         entry = {"set": item.set, "item_id": item.item_id, "question_id": item.question_id, "kind": item.kind,
-                 "metric": metric, "judge_provider": cfg.provider, "judge_model": cfg.model,
+                 "metric": metric, "mode": mode, "judge_provider": cfg.provider, "judge_model": cfg.model,
                  "served_by": sorted(set(served[served_before:])), "answer_sha256": item.answer_hash(),
                  "prompt": prompt_id(metric, rubric_sha), "answer_commit": item.commit,
                  "judged_at_commit": commit, "date": datetime.date.today().isoformat(),
                  "requests": counter.sent - before, **result}
-        path = cache_path(item, metric, rubric_sha, cfg)
+        path = cache_path(item, metric, rubric_sha, cfg, mode)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(entry, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return None
 
 
 # --- plan and summary --------------------------------------------------------------------------
-def plan(set_names: list[str], cfg: JudgeConfig) -> dict[str, Any]:
-    rubric_sha = sha256(rubric_prompt())
+def plan(set_names: list[str], cfg: JudgeConfig, mode: str = MODE_COMBINED) -> dict[str, Any]:
+    prompt_sha = sha256(prompt_for(mode))
     out: dict[str, Any] = {}
     for name in set_names:
         items = items_for(name)
-        pending = [(item, pending_metrics(item, rubric_sha, cfg)) for item in items]
+        pending = [(item, pending_metrics(item, prompt_sha, cfg, mode)) for item in items]
         cost = sum(METRIC_REQUESTS[m] for _, metrics in pending for m in metrics)
         out[name] = {"items": len(items), "items_pending": sum(1 for _, m in pending if m),
                      "requests_needed_without_retries": cost}
@@ -587,10 +699,26 @@ def _per_question(answered: list[Item], bench: list[dict[str, Any]]) -> list[dic
     return rows
 
 
-def summarize(cfg: JudgeConfig) -> dict[str, Any]:
-    # Only this judge's results: results from different judges are never pooled.
-    entries = [e for e in load_cache()
-               if e.get("judge_model") == cfg.model and e.get("judge_provider", GEMINI) == cfg.provider]
+def _expand(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    """A combined entry as the three per-metric rows the summary counts; other entries as they are."""
+    if entry["metric"] != COMBINED:
+        return [entry]
+    base = {k: entry[k] for k in ("set", "item_id", "question_id", "kind", "answer_sha256")}
+    if entry["status"] != "ok":
+        return [{**base, "metric": m, "status": entry["status"]} for m in (FAITHFULNESS, RELEVANCY, RUBRIC)]
+    rows = [{**base, "metric": RUBRIC, "status": "ok", "verdict": entry["verdict"]}]
+    if "faithfulness_status" in entry:
+        rows.append({**base, "metric": FAITHFULNESS, "status": entry["faithfulness_status"],
+                     "value": entry["faithfulness"]})
+        rows.append({**base, "metric": RELEVANCY, "status": "ok", "value": entry["answer_relevancy"]})
+    return rows
+
+
+def summarize(cfg: JudgeConfig, mode: str = MODE_COMBINED) -> dict[str, Any]:
+    # Only this judge and mode: results from different judges or modes are never pooled.
+    entries = [row for e in load_cache()
+               if e.get("judge_model") == cfg.model and e.get("judge_provider", GEMINI) == cfg.provider
+               and e.get("mode", MODE_RAGAS) == mode for row in _expand(e)]
     golden = load_golden()
     required = {q["id"]: len(q["key_facts"]) for q in golden["questions"]}
     answered = benchmark_items()
@@ -638,9 +766,13 @@ def summarize(cfg: JudgeConfig) -> dict[str, Any]:
         "generated_by": "python -m eval.judge summarize",
         "protocol": "eval/answer_eval_protocol.md",
         "opinion_of": f"the judge model ({cfg.label}); not ground truth",
-        "judge_provider": cfg.provider, "judge_model": cfg.model, "ragas_version": RAGAS_VERSION,
+        "judge_provider": cfg.provider, "judge_model": cfg.model, "mode": mode,
+        "method": ("one combined judge call per answer; faithfulness and relevancy use RAGAS's formulas on the "
+                   "judge's statements and generated question (protocol deviation of 2026-10-11)"
+                   if mode == MODE_COMBINED else f"RAGAS {RAGAS_VERSION} prompts plus the rubric judge"),
+        "ragas_version": RAGAS_VERSION if mode == MODE_RAGAS else None,
         "relevancy_strictness": RELEVANCY_STRICTNESS,
-        "rubric_prompt_sha256": sha256(rubric_prompt()),
+        "prompt_sha256": sha256(prompt_for(mode)),
         "benchmark": {"answered_rows": len(answered), "faithfulness": ragas_block(FAITHFULNESS),
                       "answer_relevancy": ragas_block(RELEVANCY), "rubric": rubric,
                       "per_question": _per_question(answered, bench)},
@@ -658,25 +790,28 @@ def main(argv: list[str] | None = None) -> int:
     p_plan.add_argument("--set", choices=SETS)
     p_run = sub.add_parser("run", help="judge pending items, within --max-requests")
     p_run.add_argument("--set", choices=SETS, required=True)
+    p_sum = sub.add_parser("summarize", help=f"write {SUMMARY_JSON.relative_to(ROOT).as_posix()} from the cache")
+    for p in (p_plan, p_run, p_sum):
+        p.add_argument("--mode", choices=MODES, default=MODE_COMBINED,
+                       help="combined: one request per answer (default); ragas: the original four")
     p_run.add_argument("--max-requests", type=int, required=True,
                        help="judge requests this run may send, retries included")
     p_run.add_argument("--env-file", help="read the provider's API key from this .env into the process only")
-    sub.add_parser("summarize", help=f"write {SUMMARY_JSON.relative_to(ROOT).as_posix()} from the cache")
     args = parser.parse_args(argv)
     if args.command == "plan":
         cfg = judge_config()
-        result = plan([args.set] if args.set else list(SETS), cfg)
+        result = plan([args.set] if args.set else list(SETS), cfg, args.mode)
         print(json.dumps(result, indent=2))
         total = sum(v["requests_needed_without_retries"] for v in result.values())
         quota = DAILY_QUOTA[cfg.provider]
         print(f"judge: {cfg.label}. {total} request(s) left, about {math.ceil(total / quota)} day(s) at "
               f"{quota} a day (check the provider's current free limits)")
     elif args.command == "run":
-        record = run(args.set, args.max_requests, args.env_file)
+        record = run(args.set, args.max_requests, args.env_file, args.mode)
         return 0 if record["stopped"].startswith(("finished", "budget")) else 1
     else:
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-        SUMMARY_JSON.write_text(json.dumps(summarize(judge_config()), indent=2) + "\n", encoding="utf-8")
+        SUMMARY_JSON.write_text(json.dumps(summarize(judge_config(), args.mode), indent=2) + "\n", encoding="utf-8")
         print(f"wrote {SUMMARY_JSON.relative_to(ROOT)}")
     return 0
 
