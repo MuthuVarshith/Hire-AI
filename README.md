@@ -112,7 +112,7 @@ The weights live in [config.py](config.py). More detail and edge cases are in [s
 ```mermaid
 flowchart LR
     UI["Dashboard<br/>templates/ + static/"] -- "fetch /api/* (session cookie)" --> API["FastAPI<br/>app/main.py + app/routers/*"]
-    API --> AUTH["Auth<br/>app/auth.py (users, hashed sessions)"]
+    API --> AUTH["Auth (stub)<br/>app/auth.py (in-memory)"]
     API --> SCORE["Deterministic scoring<br/>screening.py → scorer.py"]
     API --> ASK["Ask the candidate pool<br/>ask.py, app/ask_stream.py (SSE)"]
     API --> AGENT["LangGraph agent<br/>agent.py (human approval)"]
@@ -224,13 +224,13 @@ To start over with SQLite, stop the server and delete `recruiting_agent.db`. The
 
 ### 4. Create the first admin
 
-There are no default users or passwords. Create an admin once:
+**Current state: login is a development stub.** `app/auth.py` treats every request as a fixed dev admin, and users and sessions are kept in memory with plain SHA-256 password hashes. The argon2 login, the `sessions` table and migration 0006 are not in this version. Use this only on localhost; do not expose it.
 
 ```bash
 python -m app.cli create-admin --username admin
 ```
 
-It asks for the password twice (at least 12 characters). Passwords are hashed with argon2id. A login returns a random token, stored only as a SHA-256 hash in the `sessions` table; it expires after `AUTH_TOKEN_TTL_HOURS` (default 12), and logging out deletes it. The dashboard uses an HttpOnly `SameSite=Strict` cookie, and API clients can send `Authorization: Bearer <token>`. Admins can add recruiters with `POST /api/auth/users`. Approving or rejecting an agent shortlist records the signed-in user.
+The `create-admin` command is available, but in this version the stub accepts all requests anyway. Login endpoints exist and check the in-memory users. Sessions are in-memory tokens that expire after `AUTH_TOKEN_TTL_HOURS` (default 12). The dashboard uses an HttpOnly `SameSite=Strict` cookie, and API clients can send `Authorization: Bearer <token>`. Approving or rejecting an agent shortlist records the reviewer name from the stub user.
 
 ### 5. Run the app
 
@@ -523,6 +523,7 @@ The tests drop and recreate every table, so `TEST_DATABASE_URL` is refused unles
 - **Skill extraction without an API key uses a fixed keyword list.** Skills not on that list, and job descriptions that don't use recognizable section headings, can produce fewer required skills. A job with no extracted required skills gives every candidate a full skill score.
 - **Scoring templates and interview questions are API-only.** Jobs use the default weights unless a template ID is set through the API.
 - **Needs a running server.** The dashboard depends on the API, so static hosting (Vercel, Netlify) won't serve a working app. Cloud Run works; see the deploy guide.
+- **Auth is a development stub.** Every request is an admin. Real login (argon2, a database-backed session table, migration 0006) must be restored before any deployment.
 - **No login rate limiting yet.** Put the app behind a proxy that limits `/api/auth/login`, or add rate limiting before exposing it publicly.
 - **Answer quality is not yet measured.** The golden set, judge and cutoff recalibration are ready; see [docs/how-to-run-eval.md](docs/how-to-run-eval.md).
 
