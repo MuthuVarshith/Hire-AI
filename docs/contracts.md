@@ -209,6 +209,14 @@ The dashboard (C) calls only these, with `credentials: "same-origin"`.
 
 Existing variables are unchanged.
 
-## 8. Gaps found during the build (lead fills in at merge)
+## 8. Gaps found during the build (resolved at merge unless marked open)
 
-_None yet._
+- **Router wiring:** the auth and ask_stream routers are now direct includes in `app/main.py` (lead).
+- **`AUTH_SECRET` is not used.** B stores random session tokens as SHA-256 hashes in `sessions`, so there's nothing to sign. Compose and the Cloud Run guide no longer require it (lead).
+- **Candidate screening field:** the API returns both `screening` (the contract) and Flask's `latest_screening`; the dashboard reads both (A, C). `screening_history` is returned on detail and isn't in the contract (C uses it if present).
+- **Auth internals:** `require_user` also depends on `get_session`, and the session model is `AuthSession`, not `Session` (B).
+- **Streaming:** no 15 s `: ping` keepalive (**open**). A non-JSON body gets 400, as Flask did, not 415 (D).
+- **Tests:** test_agent_api.py and test_agent_api_edges.py weren't ported to the new approve body (`{decision, note}`) and app module (**open**: the owner ports them).
+- **.env.example** now lists POSTGRES_PASSWORD, AUTH_TOKEN_TTL_HOURS, JUDGE_PROVIDER, JUDGE_MODEL and OPENROUTER_API_KEY (lead).
+- **Dashboard:** interview questions and admin user management have no UI (**open**). A job doesn't expose its scoring template id (**open**).
+- **Eval docs:** the ask-batch numbering in docs/how-to-run-eval.md follows the final brief (q02 and q10–q24, then q25–q30 and n01–n03), not the protocol's earlier table (F).

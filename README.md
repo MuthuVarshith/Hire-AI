@@ -1,13 +1,13 @@
 # HireAI — AI Resume Screening & Recruiter Dashboard
 
 [![Python 3](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Backend-Flask-black.svg)](https://flask.palletsprojects.com/)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![Tests](https://img.shields.io/badge/tests-192%20passing-brightgreen.svg)](#testing)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 HireAI screens resumes against a job description, gives every candidate an explainable 0–100 score, and gives recruiters a dashboard to track candidates through the hiring pipeline.
 
-It started as a command-line screening agent. The original parsing and scoring engine is unchanged; a Flask API, a SQLite database, and a web dashboard were built on top of it. The CLI still works.
+It started as a command-line screening agent. The original parsing and scoring engine is unchanged; a FastAPI backend (originally Flask), PostgreSQL with pgvector (SQLite for local use), retrieval-augmented question answering, a recruiting agent with human approval, login, and a web dashboard were built on top of it. The CLI still works.
 
 Repository: https://github.com/MuthuVarshith/Hire-AI
 
@@ -111,43 +111,26 @@ The weights live in [config.py](config.py). More detail and edge cases are in [s
 
 ```mermaid
 flowchart LR
-    UI["Dashboard<br/>frontend.html"] -- "fetch /api/*" --> API["Flask API<br/>app.py"]
-
-    API --> JD["jd_parser.py"]
-    API --> RP["resume_parser.py"]
-    API --> SC["scorer.py"]
-    API --> DD["duplicate_detection.py"]
-    API --> AN["analytics_service.py"]
-    API --> IQ["interview_generator.py"]
-
-    SC --> EMB[("Sentence-Transformers<br/>all-MiniLM-L6-v2")]
-    JD -. optional .-> LLM[("Google Gemini")]
-    RP -. optional .-> LLM
-    IQ -. optional .-> LLM
-
-    API --> IX["indexing.py"]
-    IX --> CH["chunking.py<br/>section-aware chunks"]
-    IX --> EP["embeddings.py<br/>pluggable provider"]
-    EP --> EMB
-    EP -. optional .-> GEMB[("Gemini embeddings")]
-
-    API --> DB[("PostgreSQL + pgvector<br/>or SQLite<br/>models.py · Alembic")]
-    IX --> DB
-    API --> UP[/"uploads/<br/>resume files"/]
+    UI["Dashboard<br/>templates/ + static/"] -- "fetch /api/* (session cookie)" --> API["FastAPI<br/>app/main.py + app/routers/*"]
+    API --> AUTH["Auth<br/>app/auth.py (users, hashed sessions)"]
+    API --> SCORE["Deterministic scoring<br/>screening.py → scorer.py"]
+    API --> ASK["Ask the candidate pool<br/>ask.py, app/ask_stream.py (SSE)"]
+    API --> AGENT["LangGraph agent<br/>agent.py (human approval)"]
+    ASK --> RET["Retrieval<br/>retrieval.py (vector)"]
+    AGENT --> TOOLS["5 read-only tools<br/>agent_tools.py"]
+    TOOLS --> SCORE
+    TOOLS --> RET
+    RET --> DB[("PostgreSQL + pgvector<br/>or SQLite")]
+    SCORE --> DB
+    AUTH --> DB
+    ASK -. "optional, synthetic data only" .-> LLM["Gemini (llm.py)"]
+    AGENT -. "optional" .-> LLM
+    API -. "optional" .-> LF["Langfuse tracing"]
 ```
 
-Flask serves the dashboard at `/` and the API under `/api`. They share an origin, so the browser needs no CORS setup.
-
-**Upload, scoring and indexing flow**
-
-```text
-Upload resume → validate type and size → save to uploads/ under a unique name → parse resume
-  → duplicate check → store candidate → chunk by section → embed → store chunks + vectors
-  → POST /api/screen → score 4 signals → store result with explanation
-  → dashboard, candidates and analytics update
-```
-
-Chunks and embeddings feed retrieval (search and "ask the candidate pool", added next). They never change scores: the score always comes from the deterministic engine in `scorer.py`.
+- **The deterministic score is the source of truth.** The LLM, the agent and retrieval never write or change scores.
+- **Same-origin.** FastAPI serves the dashboard at `/` and `/login`, and the API under `/api`. There is no CORS.
+- **Contracts.** API, auth, streaming and frontend contracts are in [docs/contracts.md](docs/contracts.md).
 
 ---
 
@@ -155,7 +138,7 @@ Chunks and embeddings feed retrieval (search and "ask the candidate pool", added
 
 | Layer | Technology |
 |---|---|
-| Backend | Python, Flask, Flask-CORS |
+| Backend | Python 3.11+, FastAPI, Uvicorn, Pydantic |
 | Database | PostgreSQL 17 with pgvector, or SQLite for local use; SQLAlchemy 2.0 (typed models), Alembic migrations, psycopg 3 |
 | NLP / scoring | Sentence-Transformers (`all-MiniLM-L6-v2`), NumPy |
 | Retrieval prep | Section-aware chunking; embeddings from Sentence-Transformers (default, offline) or the Gemini embedding API |
@@ -199,11 +182,11 @@ Everything works without editing `.env`. The settings you're most likely to chan
 | `ASK_LLM_ENABLED` | `false` | Lets "Ask the candidate pool" send retrieved resume excerpts to Gemini for a written, cited answer. Synthetic data only. When `false`, `/api/ask` returns the cited passages without a summary |
 | `AGENT_LLM_ENABLED` | `false` | Lets the recruiting agent's planner use an LLM, which sees tool results including resume passages. Synthetic data only. When `false`, a rule-based router plans instead |
 | `AGENT_LLM_PROVIDER` | `gemini` | The agent's LLM: `gemini`, `openai`, `anthropic`, `ollama` or `none`. See [Recruiting agent](#recruiting-agent) |
-| `AGENT_CHECKPOINT_DB` | `agent_checkpoints.db` next to `app.py` | SQLite file holding paused agent runs (gitignored). It contains resume passages, so treat it like the database |
+| `AGENT_CHECKPOINT_DB` | `agent_checkpoints.db` in the project folder | SQLite file holding paused agent runs (gitignored). It contains resume passages, so treat it like the database |
 | `LANGFUSE_ENABLED` | `false` | Traces `/api/ask` and agent runs to Langfuse when `true` and `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` and `LANGFUSE_HOST` are all set. Synthetic data only; see [Tracing](#tracing-with-langfuse-optional) |
 | `MAX_RESUME_SIZE_MB` | `10` | Upload size limit |
 | `ALLOWED_RESUME_EXTENSIONS` | `.txt,.pdf,.docx` | Accepted resume file types |
-| `HOST` / `PORT` | `127.0.0.1` / `5000` | Server address, used by `python app.py` |
+| `HOST` / `PORT` | `127.0.0.1` / `8000` | Server address, used by `python start.py` |
 
 Never commit `.env`; it is already in `.gitignore`.
 
@@ -239,19 +222,37 @@ python -m indexing --reindex
 
 To start over with SQLite, stop the server and delete `recruiting_agent.db`. The database and `uploads/` hold candidate personal data and are excluded from Git.
 
-### 4. Run the app
+### 4. Create the first admin
+
+There are no default users or passwords. Create an admin once:
+
+```bash
+python -m app.cli create-admin --username admin
+```
+
+It asks for the password twice (at least 12 characters). Passwords are hashed with argon2id. A login returns a random token, stored only as a SHA-256 hash in the `sessions` table; it expires after `AUTH_TOKEN_TTL_HOURS` (default 12), and logging out deletes it. The dashboard uses an HttpOnly `SameSite=Strict` cookie, and API clients can send `Authorization: Bearer <token>`. Admins can add recruiters with `POST /api/auth/users`. Approving or rejecting an agent shortlist records the signed-in user.
+
+### 5. Run the app
 
 ```bash
 python start.py
 ```
 
-`start.py` loads the embedding model, then starts the server. When you see `Running on http://127.0.0.1:5000`, open:
+Or run `uvicorn app.main:app --host 127.0.0.1 --port 8000`. Then open **http://127.0.0.1:8000** and sign in.
 
-**http://127.0.0.1:5000**
+**With Docker (app plus PostgreSQL with pgvector):**
 
-> **Open the app through that URL, not by double-clicking `frontend.html`.** A page opened from disk (`file://`) is blocked by the browser from calling the local API, so jobs and uploads fail.
+```bash
+cp .env.example .env
+docker compose up --build
+docker compose exec api python -m app.cli create-admin --username admin
+```
 
-> **Auto-reload is off.** When the scoring model loads, Flask's auto-reloader mistakes the import for a code change and restarts the server mid-request, which caused uploaded resumes to go unscored. After editing Python code, restart the server yourself.
+Set `POSTGRES_PASSWORD` in `.env` before running these.
+
+### 6. Deploy (optional)
+
+[docs/deploy-cloud-run.md](docs/deploy-cloud-run.md) covers Google Cloud Run with free Neon PostgreSQL: the commands, Secret Manager, a billing alert, and teardown.
 
 ---
 
@@ -354,7 +355,7 @@ A selected SDK that isn't installed returns 503 with a generic message (details 
 
 **Only Gemini has been tested live** (`gemini-3.8-flash`, synthetic resumes only), and so far only through Ask the candidate pool (`eval/ask_live_batch1.md`); a live check of the agent with Gemini is still to run. The OpenAI, Anthropic and Ollama providers are tested only with mocked SDKs.
 
-**MCP server (optional).** It isn't in `requirements.txt`: install it with `pip install -r requirements-mcp.txt`, preferably in its own virtual environment. `mcp` needs starlette 0.49.1 or newer (through sse-starlette), and FastAPI 0.115 needs starlette below 0.47, so the two can't share one environment. The Flask app and the agent don't import `mcp`. Without it the MCP tests are skipped.
+**MCP server (optional).** It isn't in `requirements.txt`: install it with `pip install -r requirements-mcp.txt`, preferably in its own virtual environment. `mcp` needs starlette 0.49.1 or newer (through sse-starlette); FastAPI 0.143+ accepts that, so it can share the app's environment, but FastAPI 0.115 can't. The app and the agent don't import `mcp`. Without it the MCP tests are skipped.
 
 `python mcp_server.py` serves the five tools over stdio to MCP clients, with the official `mcp` SDK (`MCPServer`, which mcp 2.x renamed from FastMCP). It starts only with `AGENT_LLM_ENABLED=true`, because the client passes the results, which include resume passages, to its own LLM: synthetic data only. It reads `DATABASE_URL`, checks arguments with the same strict models as the agent, marks every tool read-only, and rolls back each call's session. It has no approval tool; approval stays in the web app.
 
@@ -388,15 +389,19 @@ Without the settings or the package, every tracing call is a no-op. An error ins
 **Example calls**
 
 ```bash
-curl -X POST http://127.0.0.1:5000/api/jobs -H "Content-Type: application/json" -d "{\"title\": \"Backend Engineer\", \"description_text\": \"3+ years Python, Django, PostgreSQL. Bachelor's degree.\"}"
+TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/auth/login -H "Content-Type: application/json" -d "{\"username\": \"admin\", \"password\": \"YOUR_PASSWORD\"}" | python -c "import sys, json; print(json.load(sys.stdin)['token'])")
 ```
 
 ```bash
-curl -X POST "http://127.0.0.1:5000/api/candidates?job_id=1" -F "resume=@sample_resumes/resume_01_ananya_patel.txt"
+curl -X POST http://127.0.0.1:8000/api/jobs -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d "{\"title\": \"Backend Engineer\", \"description_text\": \"3+ years Python, Django, PostgreSQL. Bachelor's degree.\"}"
 ```
 
 ```bash
-curl -X POST http://127.0.0.1:5000/api/screen/1/1
+curl -X POST "http://127.0.0.1:8000/api/candidates?job_id=1" -H "Authorization: Bearer $TOKEN" -F "resume=@sample_resumes/resume_01_ananya_patel.txt"
+```
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/screen/1/1 -H "Authorization: Bearer $TOKEN"
 ```
 
 ---
@@ -418,7 +423,7 @@ Neither fusion nor the reranker improved MRR@10 by a statistically reliable marg
 
 So the app uses **vector search**. The full method and per-question results are in [eval/retrieval_results.md](eval/retrieval_results.md), and the not-found threshold in [eval/ask_calibration.md](eval/ask_calibration.md).
 
-### Answer evaluation (set up, not yet measured)
+### Answer evaluation (set up, not yet measured; how to run it: [docs/how-to-run-eval.md](docs/how-to-run-eval.md))
 
 The answers of "Ask the candidate pool" are evaluated under a protocol frozen before any measurement, [eval/answer_eval_protocol.md](eval/answer_eval_protocol.md). Nothing has been measured yet; [eval/report.md](eval/report.md) shows "not yet measured" until it is.
 
@@ -497,12 +502,12 @@ The tests drop and recreate every table, so `TEST_DATABASE_URL` is refused unles
 
 | Problem | Fix |
 |---|---|
-| Create Job or Upload shows "Could not reach the backend" | Start `python start.py` and open http://127.0.0.1:5000, not the HTML file |
+| Create Job or Upload shows "Could not reach the backend" | Start `python start.py` and open http://127.0.0.1:8000 |
 | An uploaded candidate has no score | Click **Score** on that row in Candidates. If it keeps failing, make sure the server was started with `start.py` |
 | First scoring after startup is slow | The embedding model is loading; `start.py` loads it before accepting requests |
 | "has already been added for this job" | Duplicate detection found the same email, phone or name for that job |
 | PDF parses to an empty profile | The PDF is a scanned image with no text layer; use a text-based PDF, DOCX or TXT |
-| Port 5000 is in use | Stop the other process, or set `PORT` in `.env` and run `python app.py` |
+| Port 8000 is in use | Stop the other process, or set `PORT` in `.env` and run `python start.py` |
 
 ---
 
@@ -517,8 +522,9 @@ The tests drop and recreate every table, so `TEST_DATABASE_URL` is refused unles
 - **Chunking relies on recognizable headings.** A resume without standard section headings (or a PDF whose text extraction loses them) is chunked by paragraph without section labels.
 - **Skill extraction without an API key uses a fixed keyword list.** Skills not on that list, and job descriptions that don't use recognizable section headings, can produce fewer required skills. A job with no extracted required skills gives every candidate a full skill score.
 - **Scoring templates and interview questions are API-only.** Jobs use the default weights unless a template ID is set through the API.
-- **Development server.** Flask's built-in server isn't meant for production traffic.
-- **Needs a running server.** The dashboard depends on the Flask backend, so static or serverless hosting (Vercel, Netlify) won't serve a working app.
+- **Needs a running server.** The dashboard depends on the API, so static hosting (Vercel, Netlify) won't serve a working app. Cloud Run works; see the deploy guide.
+- **No login rate limiting yet.** Put the app behind a proxy that limits `/api/auth/login`, or add rate limiting before exposing it publicly.
+- **Answer quality is not yet measured.** The golden set, judge and cutoff recalibration are ready; see [docs/how-to-run-eval.md](docs/how-to-run-eval.md).
 
 ---
 
@@ -540,8 +546,8 @@ HireAI is built to **assist** recruiters, not to make hiring decisions.
 ```text
 Hire-AI/
 ├── start.py                  # Recommended entry point: loads model, starts server
-├── app.py                    # Flask API + serves the dashboard at /
-├── frontend.html             # Recruiter dashboard (Dashboard, Jobs, Candidates, Analytics, Agent)
+├── app/                      # FastAPI app: main.py, routers/, schemas/, auth.py, db.py, cli.py, ask_stream.py
+├── templates/, static/       # Dashboard pages and JS/CSS (login, chat, agent, comparison, ...)
 ├── models.py                 # Typed SQLAlchemy models, incl. ResumeChunk/JobChunk with embeddings
 ├── database.py               # Engine creation; applies Alembic migrations on startup
 ├── chunking.py               # Section-aware chunking with exact source offsets
@@ -549,7 +555,7 @@ Hire-AI/
 ├── indexing.py               # Chunk + embed on save; `python -m indexing --reindex`
 ├── agent.py                  # Recruiting agent: LangGraph graph, approval interrupt, rule-based router
 ├── agent_tools.py            # The agent's five read-only tools (Pydantic models)
-├── agent_api.py              # Request handling for the agent endpoints (typed; app.py routes call it)
+├── agent_api.py              # Request handling for the agent endpoints (typed; app/routers/agent.py calls it)
 ├── agent_llm.py              # Agent LLM providers: gemini, openai, anthropic, ollama, none
 ├── screening.py              # Scorer inputs shared by /api/screen and score_candidate
 ├── mcp_server.py             # Read-only MCP server for the five tools
