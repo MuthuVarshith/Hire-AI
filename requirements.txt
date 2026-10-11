@@ -1,3 +1,7 @@
+# Core runtime dependencies: the only file the production image installs (see Dockerfile).
+# Optional extras live in their own files and are never installed in the image:
+#   requirements-eval.txt (ragas, langfuse), requirements-mcp.txt (the MCP server).
+
 # Scoring
 sentence-transformers>=2.2.0
 numpy>=1.24.0
@@ -9,14 +13,22 @@ python-docx>=1.1.0
 # LLM (optional - the app works without an API key)
 google-genai>=1.0.0
 
-# Web app and database
-flask>=3.0.0
-flask-cors>=4.0.0
+# Web app (FastAPI, served by uvicorn: `uvicorn app.main:app`)
+# fastapi>=0.143.0 accepts starlette>=0.46, so it can share an environment with mcp.
+fastapi>=0.143.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.18    # multipart resume uploads (UploadFile); 0.0.18 fixes CVE-2024-53981
+httpx>=0.27.0               # fastapi.testclient.TestClient
+
+# Authentication (app/auth.py)
+argon2-cffi>=23.1.0         # argon2id password hashes
+pyjwt>=2.8.0                # signed tokens, if AUTH_SECRET signs them
+
+# Database
 sqlalchemy>=2.0.0
 alembic>=1.13.0
 psycopg[binary]>=3.1        # PostgreSQL driver (DATABASE_URL=postgresql+psycopg://...)
 pgvector>=0.3.0             # vector column type for PostgreSQL
-werkzeug>=3.0.0
 python-dotenv>=1.0.0
 
 # Retrieval

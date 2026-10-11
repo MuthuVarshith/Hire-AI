@@ -1,0 +1,67 @@
+# Keep the build context to what the app needs at run time: the Python modules, app/, migrations/,
+# alembic.ini, templates/ and static/. Everything else stays out, above all secrets and candidate data.
+
+# Secrets and local settings
+.env
+.env.*
+*.pem
+*.key
+
+# Version control, CI, editors and agent tooling
+.git
+.gitignore
+.gitattributes
+.github
+.claude
+.vscode
+.idea
+*.swp
+*.swo
+
+# Candidate data: databases (and SQLite's side files), uploaded resumes, agent checkpoints
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+uploads/
+data/
+
+# Caches and build artefacts
+**/__pycache__
+**/*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.cache
+.coverage
+htmlcov
+*.egg-info
+build
+dist
+venv
+.venv
+env
+
+# Not needed at run time: tests, evaluation, docs, sample data, generated output
+tests
+eval
+docs
+sample_resumes
+sample_jd
+output
+scoring_method.md
+README.md
+LICENSE
+
+# Optional extras that the image never installs, and their entry points
+requirements-dev.txt
+requirements-eval.txt
+requirements-mcp.txt
+mcp_server.py
+
+# Deployment files themselves
+Dockerfile
+.dockerignore
+docker-compose*.yml
+compose*.yml
+deploy

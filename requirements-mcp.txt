@@ -1,6 +1,7 @@
-# Optional: the read-only MCP server (mcp_server.py). Install in its own virtual environment:
+# Optional: the read-only MCP server (mcp_server.py). Not installed in the production image.
 #   pip install -r requirements-mcp.txt
-# mcp depends on sse-starlette, which needs starlette>=0.49.1; FastAPI 0.115 needs starlette<0.47, so
-# the two can't share one environment. The Flask app and the agent don't import mcp.
+# mcp depends on sse-starlette, which needs starlette>=0.49.1. requirements.txt asks for
+# fastapi>=0.143.0, which accepts that starlette, so the app and the MCP server can share one
+# environment. The web app and the agent don't import mcp.
 -r requirements.txt
 mcp>=2.3.0                  # 2.x names FastMCP MCPServer
