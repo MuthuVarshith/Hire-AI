@@ -8,7 +8,7 @@
 # - Installs requirements.txt only. requirements-eval.txt and requirements-mcp.txt are never installed.
 # - The embedding model (sentence-transformers/all-MiniLM-L6-v2) is downloaded at build time into
 #   HF_HOME, so the container runs with HF_HUB_OFFLINE=1 and never contacts the Hugging Face Hub.
-# - No secrets are baked in: AUTH_SECRET, DATABASE_URL and GOOGLE_API_KEY come from the environment
+# - No secrets are baked in: DATABASE_URL and GOOGLE_API_KEY come from the environment
 #   at run time (docker-compose.yml reads .env; Cloud Run reads Secret Manager).
 
 ARG PYTHON_IMAGE=python:3.12-slim

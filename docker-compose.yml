@@ -1,6 +1,6 @@
 # Local stack: the API plus PostgreSQL 17 with pgvector.
 #
-#   cp .env.example .env        # then set AUTH_SECRET (and POSTGRES_PASSWORD); GOOGLE_API_KEY is optional
+#   cp .env.example .env        # then set POSTGRES_PASSWORD; GOOGLE_API_KEY is optional
 #   docker compose up -d --build
 #   docker compose exec api python -m app.cli create-admin --username admin
 #   open http://127.0.0.1:8000
@@ -36,7 +36,6 @@ services:
     environment:
       PORT: "8000"
       DATABASE_URL: postgresql+psycopg://hireai:${POSTGRES_PASSWORD}@db:5432/hireai
-      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
       AUTH_TOKEN_TTL_HOURS: ${AUTH_TOKEN_TTL_HOURS:-12}
       # Optional. Synthetic resumes only: the Gemini free tier may use content to improve Google's products.
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}

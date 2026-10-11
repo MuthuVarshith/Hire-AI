@@ -91,7 +91,7 @@ printf '%s' 'postgresql+psycopg://USER:PASSWORD@ep-xxxx.../neondb?sslmode=requir
 printf '%s' 'YOUR_GEMINI_KEY' | gcloud secrets create hireai-google-api-key --data-file=-
 
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
-for s in hireai-auth-secret hireai-database-url hireai-google-api-key; do
+for s in hireai-database-url hireai-google-api-key; do
   gcloud secrets add-iam-policy-binding $s \
     --member="serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
     --role=roles/secretmanager.secretAccessor
@@ -111,7 +111,7 @@ gcloud run deploy hireai \
   --memory=2Gi --cpu=1 \
   --min-instances=0 --max-instances=1 \
   --concurrency=20 --timeout=300 \
-  --set-secrets=AUTH_SECRET=hireai-auth-secret:latest,DATABASE_URL=hireai-database-url:latest \
+  --set-secrets=DATABASE_URL=hireai-database-url:latest \
   --set-env-vars=AUTH_TOKEN_TTL_HOURS=12,HF_HUB_OFFLINE=1,FORWARDED_ALLOW_IPS=*,ASK_LLM_ENABLED=false,AGENT_LLM_ENABLED=false
 ```
 
@@ -125,7 +125,6 @@ gcloud run deploy hireai \
 
 | Variable | Where | Value |
 |---|---|---|
-| `AUTH_SECRET` | Secret Manager | random, 48+ bytes |
 | `DATABASE_URL` | Secret Manager | Neon string, `postgresql+psycopg://...?sslmode=require` |
 | `GOOGLE_API_KEY` | Secret Manager, optional | synthetic data only |
 | `AUTH_TOKEN_TTL_HOURS` | env | `12` |
@@ -155,7 +154,6 @@ It prompts for the password twice (at least 12 characters). Alternatively run it
 ```bash
 gcloud run services delete hireai --region=$REGION
 gcloud artifacts repositories delete $REPO --location=$REGION
-gcloud secrets delete hireai-auth-secret
 gcloud secrets delete hireai-database-url
 gcloud secrets delete hireai-google-api-key
 gcloud billing budgets list --billing-account=XXXXXX-XXXXXX-XXXXXX   # then: gcloud billing budgets delete BUDGET_ID --billing-account=...

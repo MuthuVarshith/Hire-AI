@@ -2,7 +2,6 @@
 
 Run with `uvicorn app.main:app --host 127.0.0.1 --port 8000`.
 """
-import importlib
 import logging
 import os
 from collections.abc import Callable
@@ -19,7 +18,8 @@ from starlette.datastructures import Headers
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from app.routers import agent, analytics, ask, candidates, health, jobs, scoring, templates
+from app.routers import (agent, analytics, ask, ask_stream, auth, candidates, health, jobs, scoring,
+                         templates)
 from app.schemas.common import REQUEST_ERROR
 
 load_dotenv()
@@ -133,16 +133,9 @@ app.add_middleware(BodySizeLimit)
 app.add_middleware(UnhandledErrors)
 # No CORS middleware: the dashboard is same-origin.
 
-for _router in (health.router, jobs.router, candidates.router, scoring.router, templates.router,
-                analytics.router, ask.router, agent.router):
+for _router in (health.router, auth.router, jobs.router, candidates.router, scoring.router, templates.router,
+                analytics.router, ask.router, ask_stream.router, agent.router):
     app.include_router(_router)
-
-# Written by other agents (auth: B, ask_stream: D); the lead makes these direct includes at merge.
-for _name in ("auth", "ask_stream"):
-    try:
-        app.include_router(importlib.import_module(f"app.routers.{_name}").router)
-    except ImportError:
-        logger.info("app.routers.%s not available; skipped", _name)
 
 if (BASE_DIR / "static").is_dir():  # created by agent C
     app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
