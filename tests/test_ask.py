@@ -2,10 +2,14 @@
 import json
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 import ask
+import config
+import embeddings
 import indexing
+from app.routers import ask as ask_router
 from database import create_database_engine
 from models import Candidate, Job
 from tests.test_retrieval import RESUMES, KeywordProvider
@@ -98,16 +102,16 @@ def test_rejects_empty_and_overlong_questions(pool, question):
 
 
 def test_endpoint_validates_input_and_answers(monkeypatch):
-    import legacy_flask_app as app_module
+    import app.main as app_module
 
-    monkeypatch.setattr(app_module.embeddings, "get_provider", lambda: KeywordProvider())
-    client = app_module.app.test_client()
+    monkeypatch.setattr(embeddings, "get_provider", lambda: KeywordProvider())
+    client = TestClient(app_module.app)
     assert client.post("/api/ask", json={}).status_code == 400
     assert client.post("/api/ask", json={"question": "React?", "job_id": "1"}).status_code == 400
     assert client.post("/api/ask", json={"question": "React?", "job_id": 999999}).status_code == 404
     response = client.post("/api/ask", json={"question": "Who knows COBOL?"})
     assert response.status_code == 200
-    assert set(response.get_json()) >= {"question", "found", "answer", "citations", "generated", "summary_unavailable",
+    assert set(response.json()) >= {"question", "found", "answer", "citations", "generated", "summary_unavailable",
                                          "summary_unavailable_reason"}
 
 
@@ -134,15 +138,15 @@ def test_not_found_is_not_flagged_as_summary_unavailable(pool, llm_on):
 
 
 def test_endpoint_reports_summary_unavailable(pool, monkeypatch):
-    import legacy_flask_app as app_module
+    import app.main as app_module
 
     session, provider = pool
     real = ask.answer_question
-    monkeypatch.setattr(app_module.embeddings, "get_provider", lambda: provider)
-    monkeypatch.setattr(app_module.ask, "answer_question",
+    monkeypatch.setattr(embeddings, "get_provider", lambda: provider)
+    monkeypatch.setattr(ask, "answer_question",
                         lambda db, question, prov, **kw: real(session, question, prov, **kw))
     monkeypatch.delenv("ASK_LLM_ENABLED", raising=False)
-    body = app_module.app.test_client().post("/api/ask", json={"question": "Who knows React?"}).get_json()
+    body = TestClient(app_module.app).post("/api/ask", json={"question": "Who knows React?"}).json()
     assert body["found"] is True and body["citations"]
     assert body["summary_unavailable"] is True and body["summary_unavailable_reason"] == "llm_disabled"
     assert body["answer"] == ask.PASSAGES_ONLY
@@ -183,26 +187,25 @@ def test_every_passages_only_path_is_flagged(pool, monkeypatch, path):
 
 
 def _client_on_pool(monkeypatch, pool, generate):
-    import legacy_flask_app as app_module
+    import app.main as app_module
 
     session, provider = pool
     real = ask.answer_question
-    monkeypatch.setattr(app_module.embeddings, "get_provider", lambda: provider)
-    monkeypatch.setattr(app_module.ask, "answer_question",
+    monkeypatch.setattr(embeddings, "get_provider", lambda: provider)
+    monkeypatch.setattr(ask, "answer_question",
                         lambda db, question, prov, **kw: real(session, question, prov, generate=generate, **kw))
-    return app_module.app.test_client()
+    return TestClient(app_module.app)
 
 
 @pytest.mark.parametrize("path", sorted(PASSAGES_ONLY_PATHS))
 def test_endpoint_flags_every_passages_only_path(pool, monkeypatch, path):
-    import legacy_flask_app as app_module
 
     flag, key, generate, reason = PASSAGES_ONLY_PATHS[path]
     monkeypatch.setenv("ASK_LLM_ENABLED", flag)
-    monkeypatch.setattr(app_module.cfg, "get_api_key", lambda: key)
+    monkeypatch.setattr(config, "get_api_key", lambda: key)
     response = _client_on_pool(monkeypatch, pool, generate).post("/api/ask", json={"question": "Who knows React?"})
     assert response.status_code == 200
-    _assert_passages_only(response.get_json(), reason)
+    _assert_passages_only(response.json(), reason)
 
 
 @pytest.mark.parametrize("reply, found", [
@@ -210,12 +213,11 @@ def test_endpoint_flags_every_passages_only_path(pool, monkeypatch, path):
     ({"found": False, "answer": "", "citations": []}, False),                          # LLM says not found
 ])
 def test_endpoint_real_outcomes_are_not_flagged(pool, monkeypatch, reply, found):
-    import legacy_flask_app as app_module
 
     monkeypatch.setenv("ASK_LLM_ENABLED", "true")
-    monkeypatch.setattr(app_module.cfg, "get_api_key", lambda: "k")
+    monkeypatch.setattr(config, "get_api_key", lambda: "k")
     body = _client_on_pool(monkeypatch, pool, fake_llm(reply)).post(
-        "/api/ask", json={"question": "Who knows React?"}).get_json()
+        "/api/ask", json={"question": "Who knows React?"}).json()
     assert body["found"] is found and body["generated"] is True
     _assert_real_outcome(body)
     if not found:
@@ -265,22 +267,22 @@ def test_answer_question_rejects_bad_types(pool, kwargs):
     ["React?"], "React?",                                             # JSON that is not an object
 ])
 def test_endpoint_rejects_bad_input(monkeypatch, payload):
-    import legacy_flask_app as app_module
+    import app.main as app_module
 
     called = []
-    monkeypatch.setattr(app_module.ask, "answer_question", lambda *a, **k: called.append(1))
-    response = app_module.app.test_client().post("/api/ask", json=payload)
-    assert response.status_code == 400 and "error" in response.get_json()
+    monkeypatch.setattr(ask, "answer_question", lambda *a, **k: called.append(1))
+    response = TestClient(app_module.app).post("/api/ask", json=payload)
+    assert response.status_code == 400 and "error" in response.json()
     assert called == []
 
 
 def test_endpoint_rejects_oversize_body(monkeypatch):
-    import legacy_flask_app as app_module
+    import app.main as app_module
 
     called = []
-    monkeypatch.setattr(app_module.ask, "answer_question", lambda *a, **k: called.append(1))
-    big = {"question": "x" * (app_module.ASK_MAX_BODY_BYTES + 1)}
-    response = app_module.app.test_client().post("/api/ask", json=big)
+    monkeypatch.setattr(ask, "answer_question", lambda *a, **k: called.append(1))
+    big = {"question": "x" * (ask_router.ASK_MAX_BODY_BYTES + 1)}
+    response = TestClient(app_module.app).post("/api/ask", json=big)
     assert response.status_code == 413 and called == []
 
 
