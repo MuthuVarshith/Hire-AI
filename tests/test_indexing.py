@@ -1,11 +1,13 @@
 """Resumes and job descriptions are chunked and embedded when saved, and kept in sync."""
-import io
 import logging
 import os
 import uuid
 from pathlib import Path
 
 import pytest
+from fastapi.testclient import TestClient
+
+from app import db
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
@@ -42,7 +44,7 @@ class FakeProvider:
 
 @pytest.fixture
 def app_module():
-    import legacy_flask_app as app_module
+    import app.main as app_module
 
     return app_module
 
@@ -58,28 +60,27 @@ def provider(monkeypatch):
 def client(app_module, tmp_path, monkeypatch):
     from models import Base, create_default_templates
 
-    Base.metadata.drop_all(app_module.engine)
-    Base.metadata.create_all(app_module.engine)
-    with app_module.SessionLocal() as session:
+    Base.metadata.drop_all(db.engine)
+    Base.metadata.create_all(db.engine)
+    with db.SessionLocal() as session:
         create_default_templates(session)
-    monkeypatch.setitem(app_module.app.config, "UPLOAD_FOLDER", str(tmp_path))
+    monkeypatch.setattr(app_module.app.state, "upload_folder", str(tmp_path))
     monkeypatch.setattr(scorer, "load_embedding_model", lambda: None)
-    return app_module.app.test_client()
+    return TestClient(app_module.app)
 
 
 def _job(client, description=SAMPLE_JD):
-    return client.post("/api/jobs", json={"title": "AI Engineer", "description_text": description}).get_json()
+    return client.post("/api/jobs", json={"title": "AI Engineer", "description_text": description}).json()
 
 
 def _upload(client, job_id, path=RESUME):
-    response = client.post(f"/api/candidates?job_id={job_id}", content_type="multipart/form-data",
-                           data={"resume": (io.BytesIO(path.read_bytes()), path.name)})
-    assert response.status_code == 201, response.get_json()
-    return response.get_json()
+    response = client.post(f"/api/candidates?job_id={job_id}", files={"resume": (path.name, path.read_bytes())})
+    assert response.status_code == 201, response.json()
+    return response.json()
 
 
 def _rows(app_module, model, **filters):
-    with app_module.SessionLocal() as session:
+    with db.SessionLocal() as session:
         return session.query(model).filter_by(**filters).order_by(model.chunk_index).all()
 
 
@@ -87,7 +88,7 @@ def test_upload_stores_resume_chunks_with_embeddings(client, app_module, provide
     job = _job(client)
     candidate = _upload(client, job["id"])
     rows = _rows(app_module, ResumeChunk, candidate_id=candidate["id"])
-    with app_module.SessionLocal() as session:
+    with db.SessionLocal() as session:
         resume_text = session.get(Candidate, candidate["id"]).resume_text
 
     assert [r.section for r in rows] == ["header", "summary", "skills", "experience", "education"]
@@ -145,7 +146,7 @@ def test_reindex_fills_gaps_and_never_duplicates(client, app_module, monkeypatch
     candidate = _upload(client, job["id"])
 
     fake = FakeProvider()
-    with app_module.SessionLocal() as session:
+    with db.SessionLocal() as session:
         totals = indexing.reindex_all(session, fake)
         totals_again = indexing.reindex_all(session, fake)
     assert totals == totals_again
@@ -190,7 +191,7 @@ def test_reindex_command(tmp_path, monkeypatch, capsys):
 @pytest.mark.slow
 def test_real_model_embeds_every_chunk_whole(client, app_module, monkeypatch, tmp_path):
     monkeypatch.undo()  # restore the real embedding model (this also undoes the upload folder)
-    monkeypatch.setitem(app_module.app.config, "UPLOAD_FOLDER", str(tmp_path))
+    monkeypatch.setattr(app_module.app.state, "upload_folder", str(tmp_path))
     model = scorer.load_embedding_model()
     if model is None:
         pytest.skip("embedding model unavailable")

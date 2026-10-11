@@ -4,13 +4,15 @@ The screening endpoint used to apply a job's template by overwriting the shared
 config.WEIGHTS dict, scoring, and restoring it. Concurrent requests for jobs with
 different templates could then score a candidate with the other job's weights.
 """
-import io
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
+from fastapi.testclient import TestClient
+
+from app import db
 
 import scorer
 
@@ -24,7 +26,7 @@ ROUNDS = 3
 
 @pytest.fixture
 def app_module():
-    import legacy_flask_app as app_module
+    import app.main as app_module
 
     return app_module
 
@@ -33,11 +35,11 @@ def app_module():
 def client(app_module, tmp_path, monkeypatch):
     from models import Base, create_default_templates
 
-    Base.metadata.drop_all(app_module.engine)
-    Base.metadata.create_all(app_module.engine)
-    with app_module.SessionLocal() as session:
+    Base.metadata.drop_all(db.engine)
+    Base.metadata.create_all(db.engine)
+    with db.SessionLocal() as session:
         create_default_templates(session)
-    monkeypatch.setitem(app_module.app.config, "UPLOAD_FOLDER", str(tmp_path))
+    monkeypatch.setattr(app_module.app.state, "upload_folder", str(tmp_path))
     monkeypatch.setattr(scorer, "load_embedding_model", lambda: None)
 
     real_semantic = scorer.compute_semantic_score
@@ -48,23 +50,22 @@ def client(app_module, tmp_path, monkeypatch):
         return real_semantic(*args, **kwargs)
 
     monkeypatch.setattr(scorer, "compute_semantic_score", slow_semantic)
-    return app_module.app.test_client()
+    return TestClient(app_module.app)
 
 
 def _setup_two_jobs(client):
     jobs = {}
     for label, weights in (("skills", SKILLS_ONLY), ("education", EDUCATION_ONLY)):
-        template = client.post("/api/scoring-templates", json={"name": f"{label} only", **weights}).get_json()
+        template = client.post("/api/scoring-templates", json={"name": f"{label} only", **weights}).json()
         jobs[label] = client.post("/api/jobs", json={"title": f"Job ({label})", "description_text": JD_TEXT,
-                                                    "scoring_template_id": template["id"]}).get_json()["id"]
+                                                    "scoring_template_id": template["id"]}).json()["id"]
     resumes = sorted((REPO / "sample_resumes").glob("*.txt"))
     candidates = {"skills": [], "education": []}
     for i, path in enumerate(resumes):
         label = "skills" if i % 2 == 0 else "education"
-        created = client.post(f"/api/candidates?job_id={jobs[label]}", content_type="multipart/form-data",
-                              data={"resume": (io.BytesIO(path.read_bytes()), path.name)})
-        assert created.status_code == 201, created.get_json()
-        candidates[label].append(created.get_json()["id"])
+        created = client.post(f"/api/candidates?job_id={jobs[label]}", files={"resume": (path.name, path.read_bytes())})
+        assert created.status_code == 201, created.json()
+        candidates[label].append(created.json()["id"])
     return jobs, candidates
 
 
@@ -77,11 +78,11 @@ def test_concurrent_screening_uses_each_jobs_own_weights(client, app_module):
     def screen(item):
         label, cid = item
         if not hasattr(local, "client"):
-            local.client = app_module.app.test_client()
+            local.client = TestClient(app_module.app)
             start.wait()  # release every thread at once
         response = local.client.post(f"/api/screen/{cid}/{jobs[label]}")
-        assert response.status_code == 201, response.get_json()
-        return label, response.get_json()
+        assert response.status_code == 201, response.json()
+        return label, response.json()
 
     with ThreadPoolExecutor(max_workers=THREADS) as pool:
         results = list(pool.map(screen, work))

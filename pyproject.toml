@@ -7,7 +7,6 @@ select = ["E", "F", "W", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 # Long lines here are LLM prompt strings and log messages in pre-existing modules.
-"app.py" = ["E402", "E501"]  # E402: .env is loaded before project modules are imported
 "interview_generator.py" = ["E501"]
 "jd_parser.py" = ["E501"]
 "ranker.py" = ["E501"]
@@ -30,7 +29,7 @@ files = ["*.py", "eval", "app"]
 # SQLAlchemy 1.x-style models, which Phase 1 replaces with typed Mapped[] models.
 [[tool.mypy.overrides]]
 module = [
-    "analytics_service", "legacy_flask_app", "config", "interview_generator",
+    "analytics_service", "config", "interview_generator",
     "jd_parser", "main", "ranker", "resume_parser", "scorer", "start", "utils",
 ]
 ignore_errors = true
