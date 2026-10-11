@@ -27,6 +27,7 @@ import logging
 import re
 import sqlite3
 import uuid
+from datetime import datetime, timedelta, timezone
 from collections.abc import Callable
 from typing import Annotated, Any, Literal, TypedDict, cast
 
@@ -92,6 +93,7 @@ class Decision(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, str_strip_whitespace=True)
     decision: Literal["approve", "reject"]
     reviewer: str = Field(min_length=1, max_length=255)
+    reviewer_id: int | None = None          # users.id of the signed-in reviewer (app/auth.py)
     note: str | None = Field(default=None, max_length=2000)
 
 
@@ -111,6 +113,18 @@ class AgentState(TypedDict, total=False):
 
 
 Planner = Callable[[AgentState], Any]
+
+
+# Step errors are fixed strings: clients see them and the planner reads them, so they never repeat
+# model text (a tool name, argument keys or values). The details go to the log.
+ERR_REFUSED = "the model declined or was cut off"
+ERR_INVALID_REPLY = "the reply was not a valid action"
+ERR_TOOL_LIMIT = "tool-call limit reached"
+ERR_NOT_ALLOWED = "not an allowed tool"
+ERR_INVALID_ARGS = "invalid tool arguments"
+ERR_NOT_FOUND = "the candidate or job was not found"
+ERR_DATABASE = "the tool failed with a database error"
+UNKNOWN_TOOL = "unknown"                # stands in for a tool name that is not on the allow-list
 
 
 def parse_action(raw: Any) -> tuple[CallTool | ProposeShortlist | Finish | None, str]:
@@ -163,7 +177,7 @@ def _order(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def _vet_text(text: str) -> tuple[str, bool]:
     """Model text may not state scores; the scores shown come from score_candidate. Returns (text, removed)."""
-    if _SCORE_TEXT.search(text):
+    if _SCORE_TEXT.search(visible(text)):  # "1​00/100" must not slip past
         return "", True
     return text.strip(), False
 
@@ -389,7 +403,7 @@ def build_graph(ctx: ToolContext, planner: Planner, checkpointer: BaseCheckpoint
             logger.info("Agent planner turn refused or truncated by the model", exc_info=True)
             trace.event("guard.planner_refused", metadata={"turn": turns}, level="WARNING")
             return {"turns": turns, "pending": None,
-                    "steps": [*steps, {"type": "refused", "error": "the model declined or was cut off"}]}
+                    "steps": [*steps, {"type": "refused", "error": ERR_REFUSED}]}
         except Exception:
             logger.warning("Agent planner failed", exc_info=True)
             trace.event("planner.error", metadata={"turn": turns}, level="ERROR")
@@ -398,13 +412,14 @@ def build_graph(ctx: ToolContext, planner: Planner, checkpointer: BaseCheckpoint
                                "or use AGENT_LLM_PROVIDER=none for the rule-based router."}
         action, reason = parse_action(raw)
         if action is None:
+            logger.info("Agent planner reply refused (turn %d): %s", turns, reason)
             trace.event("guard.invalid_action", metadata={"turn": turns, "reason": reason}, level="WARNING")
-            return {"turns": turns, "pending": None, "steps": [*steps, {"type": "refused", "error": reason}]}
+            return {"turns": turns, "pending": None, "steps": [*steps, {"type": "refused", "error": ERR_INVALID_REPLY}]}
         if isinstance(action, CallTool) and state.get("tool_calls", 0) >= MAX_TOOL_CALLS:
             # Out of tool calls: the planner may still propose or finish, but another call ends the run.
             trace.event("guard.tool_call_limit", metadata={"turn": turns, "max_tool_calls": MAX_TOOL_CALLS},
                         level="WARNING")
-            return {**stopped, "steps": [*steps, {"type": "refused", "error": "tool-call limit reached"}]}
+            return {**stopped, "steps": [*steps, {"type": "refused", "error": ERR_TOOL_LIMIT}]}
         trace.event("plan", metadata={"turn": turns, "action": action.model_dump()})
         return {"turns": turns, "pending": action.model_dump()}
 
@@ -424,7 +439,8 @@ def build_graph(ctx: ToolContext, planner: Planner, checkpointer: BaseCheckpoint
         span = trace.span(f"tool.{name}", input=args)
         spec = _resolve_tool(name)
         if spec is None:
-            step["error"] = f"'{name}' is not an allowed tool"
+            logger.info("Agent planner asked for a tool that is not allowed: %r", name)
+            step.update(tool=UNKNOWN_TOOL, args={}, error=ERR_NOT_ALLOWED)  # neither is echoed back
         else:
             try:
                 result = spec.run(ctx, spec.input_model.model_validate(args)).model_dump(mode="json")
@@ -432,13 +448,15 @@ def build_graph(ctx: ToolContext, planner: Planner, checkpointer: BaseCheckpoint
                 if name == "search_candidates":
                     eligible.extend(h["candidate_id"] for h in result["hits"] if h["candidate_id"] not in eligible)
             except ValidationError as exc:
-                step["error"] = f"invalid arguments: {validation_message(exc)}"
+                logger.info("Agent tool %s: invalid arguments: %s", name, validation_message(exc))
+                step.update(args={}, error=ERR_INVALID_ARGS)
             except ToolError as exc:
-                step["error"] = str(exc)
+                logger.info("Agent tool %s: %s", name, exc)
+                step["error"] = ERR_NOT_FOUND
             except SQLAlchemyError:
                 ctx.session.rollback()
                 logger.exception("Database error in agent tool %s", name)
-                step["error"] = "the tool failed with a database error"
+                step["error"] = ERR_DATABASE
         if step["ok"]:
             span.end(output=step["result"])
         else:
@@ -510,7 +528,11 @@ def build_graph(ctx: ToolContext, planner: Planner, checkpointer: BaseCheckpoint
         if not kept:
             return {"status": "candidates_deleted",
                     "message": "Every candidate on the shortlist was deleted before approval, so it was not saved."}
-        row = AgentShortlist(thread_id=config["configurable"]["thread_id"], job_id=job.id, job_title=job.title,
+        thread_id = config["configurable"]["thread_id"]
+        saved = ctx.session.query(AgentShortlist).filter(AgentShortlist.thread_id == thread_id).one_or_none()
+        if saved is not None:  # an earlier attempt saved it, then failed to checkpoint: don't insert twice
+            return {"shortlist_id": saved.id, "message": f"Shortlist approved by {decision['reviewer']}."}
+        row = AgentShortlist(thread_id=thread_id, job_id=job.id, job_title=job.title,
                              request=state["request"], entries=kept, dropped_ids=dropped or None,
                              approved_by=decision["reviewer"], note=decision.get("note"))
         ctx.session.add(row)
@@ -594,22 +616,36 @@ def _forget(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> None:
     checkpointer.delete_thread(thread_id)
 
 
+def _prune_after_error(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> None:
+    """After start_run or resume_run raised: delete the run's checkpoints (resume passages) unless it can
+    still be decided (paused at "approval") or its save retried (waiting at "record"). Never raises."""
+    try:
+        if _waiting_at(checkpointer, thread_id) not in ("approval", "record"):
+            _forget(checkpointer, thread_id)
+    except Exception:
+        logger.exception("Could not prune the checkpoints of agent run %s", thread_id)
+
+
 def start_run(ctx: ToolContext, request: str, planner: Planner, checkpointer: BaseCheckpointSaver[Any],
               job_id: int | None = None, thread_id: str | None = None) -> dict[str, Any]:
     """Run until the agent answers, stops, or pauses for approval (status "pending_approval").
-    Only a paused run keeps its checkpoints."""
+    Only a paused run keeps its checkpoints, also when the run raises."""
     request = validate_request(request, job_id)
     thread_id = thread_id or uuid.uuid4().hex
     planner_kind = "llm" if isinstance(planner, LLMPlanner) else "rule_based"
-    with tracing.trace("agent.run", input={"request": request, "job_id": job_id},
-                       metadata={"thread_id": thread_id, "planner": planner_kind}) as trace:
-        graph = build_graph(ctx, planner, checkpointer, trace)
-        graph.invoke({"request": request, "job_id": job_id, "steps": [], "tool_calls": 0, "turns": 0,
-                      "eligible": named_ids(request),
-                      "proposal": None, "decision": None, "shortlist_id": None, "status": "running", "message": ""},
-                     _config(thread_id))
-        result = _result(ctx, graph, thread_id)
-        trace.end(output=_trace_summary(result))
+    try:
+        with tracing.trace("agent.run", input={"request": request, "job_id": job_id},
+                           metadata={"thread_id": thread_id, "planner": planner_kind}) as trace:
+            graph = build_graph(ctx, planner, checkpointer, trace)
+            graph.invoke({"request": request, "job_id": job_id, "steps": [], "tool_calls": 0, "turns": 0,
+                          "eligible": named_ids(request), "proposal": None, "decision": None,
+                          "shortlist_id": None, "status": "running", "message": ""},
+                         _config(thread_id))
+            result = _result(ctx, graph, thread_id)
+            trace.end(output=_trace_summary(result))
+    except Exception:
+        _prune_after_error(checkpointer, thread_id)
+        raise
     if result["status"] != "pending_approval":
         _forget(checkpointer, thread_id)
     return result
@@ -622,15 +658,31 @@ def _trace_summary(result: dict[str, Any]) -> dict[str, Any]:
             "shortlist_id": (result.get("shortlist") or {}).get("id")}
 
 
-def is_pending(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> bool:
-    """True when the thread exists and is paused at the approval interrupt."""
+def _waiting_at(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> str | None:
+    """The node a checkpointed run runs next: "approval" when paused, "record" when its decision is
+    checkpointed but not saved; None for a finished or unknown run."""
     # Reading state runs no node, so the graph needs no database session.
     graph = build_graph(ToolContext(session=cast(Session, None), provider=None), rule_based_planner, checkpointer)
-    return bool(graph.get_state(_config(thread_id)).next == ("approval",))
+    upcoming = graph.get_state(_config(thread_id)).next
+    return str(upcoming[0]) if upcoming else None
+
+
+def is_pending(checkpointer: BaseCheckpointSaver[Any], thread_id: str) -> bool:
+    """True when the thread exists and is paused at the approval interrupt."""
+    return _waiting_at(checkpointer, thread_id) == "approval"
 
 
 RECORD_FAILED = "record_failed"   # agent_decisions.outcome: decided, but saving the result failed
 RECORD_RETRYING = "record_retrying"
+RELEASING = "releasing"           # being given up; a claim left with it is released by the next decision
+# A claim with no outcome this old belongs to a decision that died or could not update it. Resuming
+# runs only the approval and record steps (no LLM), which take seconds.
+CLAIM_STALE_AFTER = timedelta(minutes=5)
+_UNFINISHED = (None, RECORD_FAILED, RECORD_RETRYING, RELEASING)
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _set_outcome(ctx: ToolContext, claim_id: int, outcome: str, only_if: str | None = None) -> bool:
@@ -643,25 +695,71 @@ def _set_outcome(ctx: ToolContext, claim_id: int, outcome: str, only_if: str | N
     return bool(changed)
 
 
+def _release(ctx: ToolContext, claim_id: int) -> None:
+    """Delete a claim so the paused run can be decided again. It is marked RELEASING first, in its own
+    commit, so if the delete then fails the next decision sees an abandoned claim and releases it."""
+    _set_outcome(ctx, claim_id, RELEASING)
+    ctx.session.query(AgentDecision).filter(AgentDecision.id == claim_id).delete()
+    ctx.session.commit()
+
+
 def _after_failure(ctx: ToolContext, checkpointer: BaseCheckpointSaver[Any], thread_id: str, claim_id: int) -> None:
     """After resuming raised: release the claim if the run is still paused, else mark it for a retry.
 
     Once the approval step has run, its decision is in the checkpoint and the graph waits at "record".
     Releasing the claim then would strand the run (no longer pending, never recorded), so the claim
     stays, marked RECORD_FAILED, and the same decision can retry just the record step.
+    Never raises, so the caller re-raises the original error: if the database is still failing, the
+    claim is left as it is and the next decision on the run recovers it (_recover_claim).
     """
-    ctx.session.rollback()
-    if is_pending(checkpointer, thread_id):
-        ctx.session.query(AgentDecision).filter(AgentDecision.id == claim_id).delete()
+    try:
+        ctx.session.rollback()
+        if is_pending(checkpointer, thread_id):
+            _release(ctx, claim_id)
+        else:
+            _set_outcome(ctx, claim_id, RECORD_FAILED)
+    except Exception:
+        logger.exception("Could not release or mark the decision claim on agent run %s", thread_id)
+        try:
+            ctx.session.rollback()
+        except Exception:
+            logger.exception("Rollback failed after a failed decision on agent run %s", thread_id)
+
+
+def _recover_claim(ctx: ToolContext, claim: AgentDecision, checkpointer: BaseCheckpointSaver[Any]) -> bool:
+    """Repair a claim that a failed or interrupted decision left behind; True when it was released.
+
+    A claim is abandoned when it is marked RELEASING (its delete failed) or has had no outcome for
+    CLAIM_STALE_AFTER (the decision died, or could not even mark it). If the run is still paused, the
+    claim is deleted so the run can be decided again; if the decision was checkpointed (the run waits at
+    "record"), it becomes RECORD_FAILED so the same decision can retry the save. Otherwise it stays.
+    """
+    abandoned = claim.outcome == RELEASING or (
+        claim.outcome is None and _utcnow() - claim.decided_at > CLAIM_STALE_AFTER)
+    if not abandoned:
+        return False
+    current = AgentDecision.outcome.is_(None) if claim.outcome is None else AgentDecision.outcome == claim.outcome
+    mine = ctx.session.query(AgentDecision).filter(AgentDecision.id == claim.id, current)
+    waiting = _waiting_at(checkpointer, claim.thread_id)
+    if waiting == "approval":
+        logger.warning("Releasing an abandoned decision claim on agent run %s", claim.thread_id)
+        mine.delete(synchronize_session="fetch")
         ctx.session.commit()
-    else:
-        _set_outcome(ctx, claim_id, RECORD_FAILED)
+        return True
+    if waiting == "record" and claim.outcome is None:
+        logger.warning("Marking an abandoned decision on agent run %s for a retry", claim.thread_id)
+        mine.update({AgentDecision.outcome: RECORD_FAILED}, synchronize_session="fetch")
+        ctx.session.commit()
+    return False
 
 
 def _retry_record(ctx: ToolContext, claim: AgentDecision, choice: Decision, planner: Planner,
                   checkpointer: BaseCheckpointSaver[Any]) -> dict[str, Any]:
     """Re-run the record step of a run whose decision was checkpointed but not saved."""
     thread_id = claim.thread_id
+    if claim.outcome not in _UNFINISHED:   # decided and finished: drop checkpoints a failed prune left
+        _prune_after_error(checkpointer, thread_id)
+        raise AlreadyDecided(thread_id)
     graph = build_graph(ctx, planner, checkpointer)
     if (claim.outcome != RECORD_FAILED or claim.decision != choice.decision
             or graph.get_state(_config(thread_id)).next != ("record",)):
@@ -670,11 +768,15 @@ def _retry_record(ctx: ToolContext, claim: AgentDecision, choice: Decision, plan
     if not _set_outcome(ctx, claim.id, RECORD_RETRYING, only_if=RECORD_FAILED):
         raise AlreadyDecided(thread_id)
     try:
-        graph.invoke(None, _config(thread_id))  # continue from the checkpoint: runs "record" only
+        try:
+            graph.invoke(None, _config(thread_id))  # continue from the checkpoint: runs "record" only
+        except Exception:
+            _after_failure(ctx, checkpointer, thread_id, claim.id)
+            raise
+        return _finish_decision(ctx, graph, claim.id, thread_id, checkpointer)
     except Exception:
-        _after_failure(ctx, checkpointer, thread_id, claim.id)
+        _prune_after_error(checkpointer, thread_id)
         raise
-    return _finish_decision(ctx, graph, claim.id, thread_id, checkpointer)
 
 
 def _finish_decision(ctx: ToolContext, graph: CompiledStateGraph[AgentState, None, AgentState, AgentState],
@@ -689,14 +791,15 @@ def resume_run(ctx: ToolContext, thread_id: str, decision: dict[str, Any], plann
                checkpointer: BaseCheckpointSaver[Any]) -> dict[str, Any]:
     """Continue a paused run with the human's decision.
 
-    The decision is first inserted into agent_decisions, whose thread_id is UNIQUE: that insert is
-    the claim on the run, so of two decisions sent together exactly one resumes it. If saving the
-    result then fails, the claim is kept and the same decision may be sent again to retry the save.
+    The decision (with the signed-in reviewer's name and id) is first inserted into agent_decisions,
+    whose thread_id is UNIQUE: that insert is the claim on the run, so of two decisions sent together
+    exactly one resumes it. If saving the result then fails, the claim is kept and the same decision may
+    be sent again to retry the save; a claim abandoned by a crash or a failed release is recovered.
     Raises ValidationError for a bad decision, AlreadyDecided, or RunNotPending.
     """
     choice = Decision.model_validate(decision)  # fail before claiming, so a bad body leaves the run paused
     existing = ctx.session.query(AgentDecision).filter(AgentDecision.thread_id == thread_id).first()
-    if existing is not None:
+    if existing is not None and not _recover_claim(ctx, existing, checkpointer):
         return _retry_record(ctx, existing, choice, planner, checkpointer)
     if not is_pending(checkpointer, thread_id):
         raise RunNotPending(thread_id)
@@ -704,7 +807,8 @@ def resume_run(ctx: ToolContext, thread_id: str, decision: dict[str, Any], plann
     paused = _values(graph, thread_id)
     proposal = paused.get("proposal") or {}
     job = ctx.session.get(Job, proposal.get("job_id") or 0)
-    claim = AgentDecision(thread_id=thread_id, decision=choice.decision, reviewer=choice.reviewer, note=choice.note,
+    claim = AgentDecision(thread_id=thread_id, decision=choice.decision, reviewer=choice.reviewer,
+                          reviewer_id=choice.reviewer_id, note=choice.note,
                           job_id=job.id if job else None, job_title=job.title if job else None,
                           request=paused.get("request"), entries=proposal.get("entries"))
     ctx.session.add(claim)
@@ -712,15 +816,21 @@ def resume_run(ctx: ToolContext, thread_id: str, decision: dict[str, Any], plann
         ctx.session.commit()
     except IntegrityError:
         ctx.session.rollback()
+        if ctx.session.query(AgentDecision.id).filter(AgentDecision.thread_id == thread_id).first() is None:
+            raise   # not the UNIQUE claim (e.g. a reviewer_id with no user): a real error
         raise AlreadyDecided(thread_id) from None
     claim_id = claim.id
-    with tracing.trace("agent.decision", input={"decision": choice.decision, "reviewer": choice.reviewer},
-                       metadata={"thread_id": thread_id}) as trace:
-        try:
-            graph.invoke(Command(resume=choice.model_dump()), _config(thread_id))
-        except Exception:
-            _after_failure(ctx, checkpointer, thread_id, claim_id)
-            raise
-        result = _finish_decision(ctx, graph, claim_id, thread_id, checkpointer)
-        trace.end(output=_trace_summary(result))
+    try:
+        with tracing.trace("agent.decision", input={"decision": choice.decision, "reviewer": choice.reviewer},
+                           metadata={"thread_id": thread_id}) as trace:
+            try:
+                graph.invoke(Command(resume=choice.model_dump()), _config(thread_id))
+            except Exception:
+                _after_failure(ctx, checkpointer, thread_id, claim_id)
+                raise
+            result = _finish_decision(ctx, graph, claim_id, thread_id, checkpointer)
+            trace.end(output=_trace_summary(result))
+    except Exception:
+        _prune_after_error(checkpointer, thread_id)
+        raise
     return result

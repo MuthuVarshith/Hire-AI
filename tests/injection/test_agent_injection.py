@@ -99,8 +99,7 @@ def scenario_write_tools(make):
 
 
 def check_write_tools(ctx, result, before):
-    assert [s.get("error") for s in result["steps"]] == ["'save_shortlist' is not an allowed tool",
-                                                         "'set_score' is not an allowed tool"]
+    assert [s.get("error") for s in result["steps"]] == [agent.ERR_NOT_ALLOWED, agent.ERR_NOT_ALLOWED]
     assert ctx.session.query(AgentShortlist).count() == 0
     assert _score_rows(ctx.session) == before
 
