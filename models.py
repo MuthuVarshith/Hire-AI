@@ -3,8 +3,8 @@ import enum
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from sqlalchemy import (JSON, Boolean, Enum, Float, ForeignKey, Integer, String, Text, UniqueConstraint,
-                        create_engine)
+from sqlalchemy import (JSON, Boolean, CheckConstraint, Enum, Float, ForeignKey, Integer, String, Text,
+                        UniqueConstraint, create_engine)
 from sqlalchemy.engine import Dialect, Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator, TypeEngine
@@ -342,6 +342,40 @@ class AgentDecision(Base):
     request: Mapped[Optional[str]] = mapped_column(Text)
     entries: Mapped[Optional[list[dict[str, Any]]]] = mapped_column(JSON)  # the proposal as the reviewer saw it
     outcome: Mapped[Optional[str]] = mapped_column(String(32))
+    # The signed-in user who decided (migration 0006); NULL for decisions made before auth or a deleted user.
+    reviewer_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL", name="fk_agent_decisions_reviewer_id"), index=True)
+
+
+class User(Base):
+    """A person who can sign in (app/auth.py). Passwords are stored only as argon2id hashes."""
+    __tablename__ = "users"
+    __table_args__ = (CheckConstraint("role IN ('admin', 'recruiter')", name="ck_users_role"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=_utcnow)
+
+    sessions: Mapped[list["AuthSession"]] = relationship(back_populates="user", cascade="all, delete-orphan",
+                                                         passive_deletes=True)
+
+
+class AuthSession(Base):
+    """A sign-in: the SHA-256 hash of a random bearer token (never the token itself) and when it expires.
+    Logging out deletes the row. Named AuthSession because models.py already uses sqlalchemy's Session."""
+    __tablename__ = "sessions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
+                                         index=True)
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=_utcnow)
+    expires_at: Mapped[datetime] = mapped_column(nullable=False)
+
+    user: Mapped[User] = relationship(back_populates="sessions")
+
 
 def init_db(database_url: str) -> Engine:
     """Initialize database and create all tables."""
