@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="same-origin">
+    <title>HireAI · Recruiter Dashboard</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+    <!-- Classic deferred scripts run in this order after parsing; app.js starts the router. -->
+    <script defer src="/static/js/core.js"></script>
+    <script defer src="/static/js/dashboard.js"></script>
+    <script defer src="/static/js/jobs.js"></script>
+    <script defer src="/static/js/candidates.js"></script>
+    <script defer src="/static/js/compare.js"></script>
+    <script defer src="/static/js/chat.js"></script>
+    <script defer src="/static/js/agent.js"></script>
+    <script defer src="/static/js/analytics.js"></script>
+    <script defer src="/static/js/scoring.js"></script>
+    <script defer src="/static/js/app.js"></script>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar" aria-label="Main">
+            <div class="logo">🤖 HireAI</div>
+            <ul class="nav">
+                <li><a class="nav-link" href="#dashboard" data-view="dashboard">📊 Dashboard</a></li>
+                <li><a class="nav-link" href="#jobs" data-view="jobs">💼 Jobs</a></li>
+                <li><a class="nav-link" href="#candidates" data-view="candidates">👥 Candidates</a></li>
+                <li><a class="nav-link" href="#compare" data-view="compare">⚖️ Compare</a></li>
+                <li><a class="nav-link" href="#ask" data-view="ask">💬 Ask the pool</a></li>
+                <li><a class="nav-link" href="#agent" data-view="agent">🧭 Agent</a></li>
+                <li><a class="nav-link" href="#analytics" data-view="analytics">📈 Analytics</a></li>
+                <li><a class="nav-link" href="#scoring" data-view="scoring">⚙️ Scoring templates</a></li>
+            </ul>
+        </nav>
+
+        <div class="main">
+            <header class="header">
+                <h1 class="header-title" id="page-title">Dashboard</h1>
+                <div class="header-actions">
+                    <button type="button" class="btn btn-primary" id="hdr-new-job">+ New Job</button>
+                    <button type="button" class="btn btn-primary" id="hdr-upload">📤 Upload Resume</button>
+                    <div class="user-box" id="user-box">
+                        <span class="user-name" id="user-name">Signing in…</span>
+                        <span class="badge muted hidden" id="user-role"></span>
+                        <button type="button" class="btn btn-secondary btn-sm" id="logout-btn">Log out</button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="content" id="main" tabindex="-1">
+                <!-- Dashboard -->
+                <section id="view-dashboard" class="view" aria-labelledby="page-title">
+                    <div class="metrics-grid" id="metrics-container">
+                        <div class="loading">Loading…</div>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">Recruiter Summary</h2>
+                        <p id="recruiter-summary" class="text-muted">Loading…</p>
+                    </div>
+                    <div class="two-col">
+                        <div class="card">
+                            <h2 class="card-title">Recent Candidates</h2>
+                            <div class="table-wrap">
+                                <table>
+                                    <thead><tr><th>Name</th><th>Applied Job</th><th>Status</th><th>Score</th></tr></thead>
+                                    <tbody id="recent-candidates"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2 class="card-title">Active Jobs</h2>
+                            <div class="table-wrap">
+                                <table>
+                                    <thead><tr><th>Title</th><th>Candidates</th><th>Status</th></tr></thead>
+                                    <tbody id="dashboard-jobs"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Jobs -->
+                <section id="view-jobs" class="view">
+                    <div class="card">
+                        <div class="section-head">
+                            <h2 class="card-title">All Jobs</h2>
+                            <button type="button" class="btn btn-primary" id="jobs-new-btn">+ Create New Job</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr><th>Title</th><th>Description</th><th>Candidates</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody id="jobs-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Candidates -->
+                <section id="view-candidates" class="view">
+                    <div class="card">
+                        <div class="section-head">
+                            <h2 class="card-title">All Candidates</h2>
+                            <button type="button" class="btn btn-primary" id="cand-upload-btn">📤 Upload Resume</button>
+                        </div>
+                        <div class="filter-bar">
+                            <input type="search" id="cand-search" placeholder="Search name, email or skill…" aria-label="Search candidates">
+                            <select id="cand-job-filter" aria-label="Filter by job"><option value="">All jobs</option></select>
+                            <select id="cand-status-filter" aria-label="Filter by status">
+                                <option value="">All statuses</option>
+                                <option value="Screened">Screened</option>
+                                <option value="Shortlisted">Shortlisted</option>
+                                <option value="Interview">Interview</option>
+                                <option value="Offer">Offer</option>
+                                <option value="Hired">Hired</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                            <select id="cand-sort" aria-label="Sort candidates">
+                                <option value="score">Sort: Score (high → low)</option>
+                                <option value="name">Sort: Name (A → Z)</option>
+                                <option value="recent">Sort: Most recent</option>
+                            </select>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr><th>Name</th><th>Email</th><th>Applied Job</th><th>Score</th><th>Status</th><th>Matched Skills</th><th>Missing Skills</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody id="candidates-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Compare -->
+                <section id="view-compare" class="view">
+                    <div class="card">
+                        <h2 class="card-title">Compare candidates</h2>
+                        <div class="form-group">
+                            <label for="cmp-job">Job</label>
+                            <select id="cmp-job"><option value="">Choose a job…</option></select>
+                        </div>
+                        <div id="cmp-picker" class="hidden">
+                            <div class="section-head">
+                                <span class="text-muted small" id="cmp-pick-hint">Choose 2 to 4 candidates.</span>
+                                <div class="row-gap">
+                                    <button type="button" class="btn btn-secondary btn-sm" id="cmp-top">Pick the top 3 by score</button>
+                                    <button type="button" class="btn btn-primary" id="cmp-go" disabled>Compare</button>
+                                </div>
+                            </div>
+                            <div class="pick-list" id="cmp-candidates"></div>
+                        </div>
+                        <div id="cmp-error" class="alert alert-error hidden"></div>
+                    </div>
+                    <div class="card hidden" id="cmp-result-card">
+                        <h2 class="card-title" id="cmp-result-title">Side by side</h2>
+                        <div class="table-wrap" id="cmp-result"></div>
+                    </div>
+                </section>
+
+                <!-- Ask the candidate pool (streaming chat) -->
+                <section id="view-ask" class="view">
+                    <div class="card">
+                        <h2 class="card-title">Ask the candidate pool</h2>
+                        <p class="text-muted small">Answers come only from resume passages, and every claim cites the passage it came from. Click a number like <span class="cite" aria-hidden="true">[1]</span> to read the exact passage.</p>
+                        <form id="ask-form" class="chat-form mt" novalidate>
+                            <div class="form-group">
+                                <label for="ask-job">Search in</label>
+                                <select id="ask-job"><option value="">All jobs</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ask-question">Question</label>
+                                <textarea id="ask-question" rows="2" maxlength="500"
+                                          placeholder="e.g., Who has led a team that shipped a Kubernetes migration?"></textarea>
+                                <div class="hint">Enter to send, Shift+Enter for a new line. Up to 500 characters.</div>
+                                <div class="suggestions" id="ask-suggestions">
+                                    <button type="button" class="btn btn-secondary" data-question="Who has production experience with Python and Docker?">Python and Docker in production</button>
+                                    <button type="button" class="btn btn-secondary" data-question="Which candidates have led a team?">Team leads</button>
+                                    <button type="button" class="btn btn-secondary" data-question="Who has worked with AWS or GCP?">Cloud experience</button>
+                                </div>
+                            </div>
+                            <div class="row-gap">
+                                <button type="submit" class="btn btn-primary" id="ask-send">Ask</button>
+                                <button type="button" class="btn btn-secondary hidden" id="ask-stop">Stop</button>
+                                <button type="button" class="btn btn-secondary" id="ask-clear">Clear conversation</button>
+                            </div>
+                            <div id="ask-error" class="alert alert-error hidden mt" role="alert"></div>
+                        </form>
+                    </div>
+                    <div class="chat-log" id="ask-log" aria-live="polite"></div>
+                </section>
+
+                <!-- Agent: ask, review the proposed shortlist, approve or reject -->
+                <section id="view-agent" class="view">
+                    <div class="card">
+                        <h2 class="card-title">Ask the agent</h2>
+                        <p class="text-muted small">The agent searches resumes and can propose a shortlist. Nothing is saved until a recruiter approves it.</p>
+                        <form id="agent-form" novalidate class="mt">
+                            <div class="form-group">
+                                <label for="agent-job">Job (needed for a shortlist)</label>
+                                <select id="agent-job"><option value="">No job</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="agent-request">Request</label>
+                                <textarea id="agent-request" rows="2" maxlength="500"
+                                          placeholder="e.g., Shortlist the top 3 candidates with Python and Docker"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="agent-run">Run</button>
+                        </form>
+                        <div id="agent-error" class="alert alert-error hidden mt" role="alert"></div>
+                    </div>
+                    <div id="agent-result" class="hidden"></div>
+                </section>
+
+                <!-- Analytics -->
+                <section id="view-analytics" class="view">
+                    <div class="filter-bar">
+                        <select id="an-job" aria-label="Analytics for job"><option value="">All jobs</option></select>
+                    </div>
+                    <div class="metrics-grid" id="analytics-metrics"><div class="loading">Loading…</div></div>
+                    <div class="two-col">
+                        <div class="card">
+                            <h2 class="card-title">Score Distribution</h2>
+                            <div id="an-score-dist"></div>
+                        </div>
+                        <div class="card">
+                            <h2 class="card-title">Pipeline Distribution</h2>
+                            <div id="an-pipeline"></div>
+                        </div>
+                        <div class="card">
+                            <h2 class="card-title">Candidates by Job</h2>
+                            <div id="an-by-job"></div>
+                        </div>
+                        <div class="card">
+                            <h2 class="card-title">Most Common Skill Gaps</h2>
+                            <div id="an-skill-gaps"></div>
+                        </div>
+                        <div class="card">
+                            <h2 class="card-title">Most Common Matched Skills</h2>
+                            <div id="an-top-skills"></div>
+                        </div>
+                        <div class="card hidden" id="an-timeline-card">
+                            <h2 class="card-title">Screenings in the Last 30 Days</h2>
+                            <div id="an-timeline"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Scoring templates -->
+                <section id="view-scoring" class="view">
+                    <div class="card">
+                        <div class="section-head">
+                            <h2 class="card-title">Scoring templates</h2>
+                            <button type="button" class="btn btn-primary" id="tpl-new-btn">+ New Template</button>
+                        </div>
+                        <p class="text-muted small">A template sets how much each signal counts toward a candidate's overall score. Assign one to a job when you create or edit it.</p>
+                        <div class="table-wrap mt">
+                            <table>
+                                <thead>
+                                    <tr><th>Name</th><th>Description</th><th>Semantic</th><th>Skills</th><th>Experience</th><th>Education</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody id="tpl-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Create / edit job -->
+    <div id="job-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="job-modal-title">
+        <form class="modal-content" id="job-form" novalidate>
+            <h2 class="modal-header" id="job-modal-title">Create New Job</h2>
+            <div class="form-group">
+                <label for="job-title-input">Job Title</label>
+                <input type="text" id="job-title-input" maxlength="255" placeholder="e.g., Senior Backend Engineer">
+            </div>
+            <div class="form-group">
+                <label for="job-desc-input">Job Description</label>
+                <textarea id="job-desc-input" rows="8" placeholder="Paste the full job description here..."></textarea>
+                <div class="hint">Required skills, preferred skills, experience and education are extracted from this text.</div>
+            </div>
+            <div class="form-group">
+                <label for="job-template-input">Scoring template</label>
+                <select id="job-template-input"><option value="">Default weights</option></select>
+            </div>
+            <div id="job-form-error" class="alert alert-error hidden" role="alert"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" data-close-modal="job-modal" id="job-cancel-btn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="job-submit-btn">Create Job</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Job details -->
+    <div id="job-detail-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="job-detail-title">
+        <div class="modal-content wide">
+            <h2 class="modal-header" id="job-detail-title">Job</h2>
+            <div id="job-detail"></div>
+            <div class="modal-actions" id="job-detail-actions"></div>
+        </div>
+    </div>
+
+    <!-- Upload resume -->
+    <div id="upload-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="upload-modal-title">
+        <form class="modal-content" id="upload-form" novalidate>
+            <h2 class="modal-header" id="upload-modal-title">Upload Resume</h2>
+            <div class="form-group">
+                <label for="upload-job-select">Select Job</label>
+                <select id="upload-job-select"><option value="">Loading…</option></select>
+            </div>
+            <div class="form-group">
+                <label for="resume-file-input">Resume File</label>
+                <input type="file" id="resume-file-input" accept=".txt,.pdf,.docx">
+                <div class="hint">.txt, .pdf or .docx, up to 10 MB. The resume is scored against the job after upload.</div>
+            </div>
+            <div id="upload-form-error" class="alert alert-error hidden" role="alert"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" data-close-modal="upload-modal" id="upload-cancel-btn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="upload-submit-btn">Upload</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Candidate profile -->
+    <div id="candidate-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="candidate-modal-title">
+        <div class="modal-content wide">
+            <h2 class="modal-header" id="candidate-modal-title">Candidate Profile</h2>
+            <div id="candidate-detail"><div class="loading">Loading…</div></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" data-close-modal="candidate-modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scoring template create / edit -->
+    <div id="template-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="template-modal-title">
+        <form class="modal-content" id="template-form" novalidate>
+            <h2 class="modal-header" id="template-modal-title">New Scoring Template</h2>
+            <div class="form-group">
+                <label for="tpl-name">Name</label>
+                <input type="text" id="tpl-name" maxlength="255" placeholder="e.g., Senior engineer">
+            </div>
+            <div class="form-group">
+                <label for="tpl-desc">Description</label>
+                <input type="text" id="tpl-desc" maxlength="1000" placeholder="When to use this template">
+            </div>
+            <div class="form-group">
+                <label>Weights (percent, must add up to 100)</label>
+                <div class="weights-grid">
+                    <div><label for="tpl-w-semantic" class="small">Semantic</label><input type="number" id="tpl-w-semantic" min="0" max="100" step="1"></div>
+                    <div><label for="tpl-w-skill" class="small">Skills</label><input type="number" id="tpl-w-skill" min="0" max="100" step="1"></div>
+                    <div><label for="tpl-w-experience" class="small">Experience</label><input type="number" id="tpl-w-experience" min="0" max="100" step="1"></div>
+                    <div><label for="tpl-w-education" class="small">Education</label><input type="number" id="tpl-w-education" min="0" max="100" step="1"></div>
+                </div>
+                <div class="hint" id="tpl-sum" aria-live="polite"></div>
+            </div>
+            <div id="template-form-error" class="alert alert-error hidden" role="alert"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" data-close-modal="template-modal" id="tpl-cancel-btn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="tpl-submit-btn">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Resume passage viewer (chat and agent citations) -->
+    <div id="passage-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="passage-title">
+        <div class="modal-content wide">
+            <h2 class="modal-header" id="passage-title">Resume passage</h2>
+            <div id="passage-detail"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" data-close-modal="passage-modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>
