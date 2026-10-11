@@ -19,6 +19,7 @@ from starlette.datastructures import Headers
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from app.routers import agent, analytics, ask, candidates, health, jobs, scoring, templates
 from app.schemas.common import REQUEST_ERROR
 
 load_dotenv()
@@ -132,14 +133,9 @@ app.add_middleware(BodySizeLimit)
 app.add_middleware(UnhandledErrors)
 # No CORS middleware: the dashboard is same-origin.
 
-for _name in ("health", "jobs", "candidates", "scoring", "templates", "analytics", "ask", "agent"):
-    try:
-        _module = importlib.import_module(f"app.routers.{_name}")
-    except ModuleNotFoundError as _exc:
-        if _exc.name != f"app.routers.{_name}":
-            raise
-        continue  # TODO(agent A): becomes a direct include once every router exists
-    app.include_router(_module.router)
+for _router in (health.router, jobs.router, candidates.router, scoring.router, templates.router,
+                analytics.router, ask.router, agent.router):
+    app.include_router(_router)
 
 # Written by other agents (auth: B, ask_stream: D); the lead makes these direct includes at merge.
 for _name in ("auth", "ask_stream"):
