@@ -109,6 +109,36 @@ as an unexpected pass or a failing limit test that should then be updated.
    Recommendation: weight skills by evidence in experience bullets, or flag skill lists that
    repeat the JD verbatim.
 
+## Fixes made since (Phases 3 and 4)
+
+Line references above are from `de11f27`, when the Flask app was `app.py`; the routes move to `app/routers/` in the final phase.
+
+| Fix | Commit | What it does |
+|---|---|---|
+| Stranded approval run | `cc4c071` | If saving an approval fails after the decision is claimed, the decision row is kept as `record_failed` and the same decision retries only the save, claimed atomically. A failure before the decision is checkpointed still releases the claim |
+| Invisible characters in delimiter tags | `ea360fc` | `text_guard.visible()` (NFKC, then zero-width, bidi, tag and control characters stripped) runs inside `_defang` before the delimiter check, in the agent, ask and resume-parser prompts. A zero-width space can no longer hide `</excerpts>` from the pattern |
+| MCP strictness | Phase 3, `db6f215` | `mcp_server.py` exposes only the five read-only tools, validates raw arguments strictly, and refuses to start unless `AGENT_LLM_ENABLED=true`, since it hands resume passages to the client's model. `mcp` is an optional extra (`requirements-mcp.txt`) |
+
+## Planned fixes (Agent B, final phase; verify at merge)
+
+From `docs/contracts.md` sections 0 and 3. **Final phase; verify at merge.** None is confirmed here.
+
+| Planned fix | Closes |
+|---|---|
+| Real authentication (argon2id passwords, session cookie or bearer token); the approve route records the signed-in user (`reviewer`, `reviewer_id`) and ignores a `reviewer` field in the body | Anyone who could reach the server could approve under any name |
+| `steps[].error` in agent responses never echoes model text | Model text, possibly steered by a resume, reaching the client through error messages |
+| Claim-release recovery | A run refused with 409 for good when releasing a claim fails, or stuck at "record" after a failed checkpoint save |
+| Checkpoint pruning when a run raises | Resume passages left in `agent_checkpoints.db` after errors |
+
+## Open limits
+
+- Gaps 4, 6, 7 and 8 above are still open: a valid citation doesn't prove the claim, LLM free text is stored verbatim, the name line reaches prompts, and keyword stuffing raises scores.
+- Delimiter defanging covers only the tags; a fake `SYSTEM:` line still reaches the model inside the data block. Every prompt guard is advisory.
+- `agent_decisions.entries` keeps resume passages, rejected runs included; pruning checkpoints doesn't remove them.
+- Bare numbers such as "Ada (97)" pass the score-text check; displayed scores still come from the scorer.
+- Until Agent B's fixes are verified at merge, treat the four planned items as open.
+- The evaluation sends the synthetic resumes to Gemini (answers) and to OpenRouter's free models (judge), whose providers may log or train on prompts. Never run it on real resumes.
+
 Not covered: the JD parser (`jd_parser.py:17-32`), because the JD comes from the recruiter,
 not the candidate; PDF/DOCX tricks such as white or tiny text, which reach the same paths as
 plain text once extracted.
