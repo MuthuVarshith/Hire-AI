@@ -9,6 +9,7 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 
+import embeddings
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -124,8 +125,11 @@ async def validation_error(request: Request, exc: Exception) -> Response:
     return JSONResponse({"error": validation_message(list(exc.errors()))}, status_code=400)
 
 
+DEFAULT_AGENT_CHECKPOINT_DB = os.path.join(BASE_DIR, "agent_checkpoints.db")
 app = FastAPI(title="Hire AI", version="2.0.0")
 app.state.upload_folder = os.getenv("UPLOAD_FOLDER", "uploads")
+app.embeddings = embeddings
+app.DEFAULT_AGENT_CHECKPOINT_DB = DEFAULT_AGENT_CHECKPOINT_DB
 os.makedirs(app.state.upload_folder, exist_ok=True)
 app.add_exception_handler(StarletteHTTPException, http_error)
 app.add_exception_handler(RequestValidationError, validation_error)
