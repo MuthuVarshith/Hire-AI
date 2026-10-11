@@ -1,12 +1,8 @@
 """GET /api/health and GET /api/info (public)."""
-import re
-
 from fastapi import APIRouter, Request
-from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
 router = APIRouter(tags=["health"])
-_CONVERTOR = re.compile(r":\w+}")  # {job_id:int} -> {job_id}
 
 
 class HealthOut(BaseModel):
@@ -27,8 +23,7 @@ def health_check() -> HealthOut:
 
 @router.get("/api/info")
 def info(request: Request) -> InfoOut:
-    endpoints = [f"{method} {_CONVERTOR.sub('}', route.path)}"
-                 for route in request.app.routes
-                 if isinstance(route, APIRoute) and route.path.startswith("/api/")
-                 for method in sorted(route.methods)]
+    # The OpenAPI paths: every included router's routes, already without {name:int} convertors.
+    endpoints = [f"{method.upper()} {path}" for path, ops in request.app.openapi()["paths"].items()
+                 if path.startswith("/api/") for method in ops]
     return InfoOut(name="AI Resume Screening Agent", version=request.app.version, endpoints=endpoints)
