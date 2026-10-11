@@ -2,7 +2,8 @@
 
     python -m eval.ask_live [--env-file PATH]
 
-Goes through the real route: POST /api/ask on the Flask test client, against an app whose
+Goes through the real route: POST /api/ask on FastAPI's TestClient (app.main:app), with
+app.auth.require_user overridden by a local evaluation user, against an app whose
 DATABASE_URL is a throwaway SQLite file. The 26 synthetic benchmark resumes (eval.benchmark.corpus_files)
 are indexed with indexing.index_candidate exactly as eval/pool.py does, ASK_LLM_ENABLED=true is set in
 this process only, and questions run sequentially with at least PACING_SECONDS between them (free tier).
@@ -30,7 +31,10 @@ PACING_SECONDS = 6.0
 RESULTS_JSON = ROOT / "eval" / "ask_live_results.json"
 # The code POST /api/ask runs. A run refuses to start if any of these has uncommitted changes, so
 # the commit recorded at the start is the code that answered every question.
-ASK_PATH = ["legacy_flask_app.py", "ask.py", "llm.py", "retrieval.py", "embeddings.py", "chunking.py", "indexing.py",
+# app.py and legacy_flask_app.py are the route's earlier homes (batch 1 ran on app.py); listing them
+# lets eval/evaluate.py's provenance diff show the move. They no longer exist in the working tree.
+ASK_PATH = ["app", "app.py", "legacy_flask_app.py", "ask.py", "llm.py", "retrieval.py", "embeddings.py",
+            "chunking.py", "indexing.py",
             "database.py", "models.py", "config.py", "migrations", "text_guard.py", "tracing.py",
             # The run's inputs too: questions, labels, the corpus and how it is indexed.
             "eval/ask_live.py", "eval/benchmark.py", "eval/pool.py", "eval/retrieval_benchmark.json",
@@ -41,13 +45,18 @@ def _git(*args: str) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
 
 
-def _load_key(env_file: str | None) -> None:
-    if os.environ.get("GOOGLE_API_KEY") or not env_file:
+def load_env_var(env_file: str | None, var: str) -> None:
+    """Copy `var` from an .env file into this process's environment, unless it is already set."""
+    if os.environ.get(var) or not env_file:
         return
     for line in Path(env_file).read_text(encoding="utf-8").splitlines():
         name, sep, value = line.partition("=")
-        if sep and name.strip() == "GOOGLE_API_KEY":
-            os.environ["GOOGLE_API_KEY"] = value.strip().strip('"').strip("'")
+        if sep and name.strip() == var:
+            os.environ[var] = value.strip().strip('"').strip("'")
+
+
+def _load_key(env_file: str | None) -> None:
+    load_env_var(env_file, "GOOGLE_API_KEY")
 
 
 def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
@@ -62,13 +71,18 @@ def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
     os.environ["EMBEDDING_PROVIDER"] = "sentence-transformers"  # the frozen retrieval choice
     _load_key(env_file)
 
-    import legacy_flask_app as app_module  # noqa: E402  (DATABASE_URL must be set first)
+    # DATABASE_URL must be set before app.db creates its engine. Needs Agent A's app/main.py.
+    from fastapi.testclient import TestClient
+
+    import app.auth
+    import app.db
     import ask
     import config
     import embeddings
     import indexing
     import llm
     from eval.pool import labelled_chunk_ids
+    from app.main import app as fastapi_app
     from models import Candidate, Job, ResumeChunk
 
     if not config.get_api_key():
@@ -99,7 +113,7 @@ def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
     _api_client.BaseApiClient._request_once = counting_request_once  # type: ignore[method-assign]
 
     provider = embeddings.get_provider()
-    session = app_module.SessionLocal()
+    session = app.db.SessionLocal()
     job = Job(title="Benchmark pool", description_text="(benchmark)")
     session.add(job)
     for path in corpus_files():
@@ -119,7 +133,11 @@ def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
         if unknown:
             raise SystemExit(f"unknown question ids: {', '.join(sorted(unknown))}")
         questions = [q for q in questions if q["id"] in ids]
-    client = app_module.app.test_client()
+    # A local evaluation user; the throwaway database has no users and nothing leaves this process.
+    def eval_user() -> app.auth.User:
+        return app.auth.User(id=0, name="ask-live-eval", role="recruiter")
+    fastapi_app.dependency_overrides[app.auth.require_user] = eval_user
+    client = TestClient(fastapi_app)
     rows = []
     last = 0.0
     for q in questions:
@@ -132,7 +150,7 @@ def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
         before = requests_made[0]
         resp = client.post("/api/ask", json={"question": q["question"]})
         last = time.monotonic()
-        body = resp.get_json() or {}
+        body = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
         cits = [{"number": c["number"], "candidate": c["candidate_name"], "section": c["section"],
                  "char_start": c["char_start"], "char_end": c["char_end"], "similarity": c["similarity"],
                  "labelled": (c["candidate_id"], c["char_start"], c["char_end"]) in labelled,
@@ -150,13 +168,14 @@ def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
         print(f"{q['id']}: status={resp.status_code} found={body.get('found')} generated={body.get('generated')} "
               f"reason={body.get('summary_unavailable_reason')} errors={len(errors)}", flush=True)
     session.close()
+    fastapi_app.dependency_overrides.pop(app.auth.require_user, None)
 
     return {
         "model": config.GEMINI_MODEL,
         "date": datetime.date.today().isoformat(),
         "commit": commit,  # recorded at the start; the /api/ask code was clean at that commit
         "gemini_requests_total": requests_made[0],
-        "route": "POST /api/ask (Flask test client, throwaway SQLite)",
+        "route": "POST /api/ask (FastAPI TestClient, local eval user, throwaway SQLite)",
         "candidates_indexed": n_candidates, "pacing_seconds": PACING_SECONDS,
         "threshold": ask.NOT_FOUND_THRESHOLD, "results": rows,
     }

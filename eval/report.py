@@ -62,8 +62,11 @@ OPINION = "*Opinion of the judge model ({model}), not ground truth.*"
 
 
 def build(evaluate: dict[str, Any] | None, cutoff: dict[str, Any] | None, judge: dict[str, Any] | None) -> str:
-    model = get(judge, "judge_model") or "gemini-3.8-flash"
+    model = get(judge, "judge_model") or "the configured judge"
+    if get(judge, "judge_provider"):
+        model = f"{model} via {get(judge, 'judge_provider')}"
     opinion = OPINION.format(model=model)
+    combined = get(judge, "mode") == "combined"
     lines = [
         "# Answer evaluation report",
         "",
@@ -154,7 +157,11 @@ def build(evaluate: dict[str, Any] | None, cutoff: dict[str, Any] | None, judge:
         lines += table(["Set, cutoff", "Value", "Answerable refused", "Unanswerable refused"], rows)
 
     bench = get(judge, "benchmark")
-    lines += ["", "## 6. RAGAS faithfulness and answer relevancy", "", opinion, ""]
+    lines += ["", "## 6. Faithfulness and answer relevancy", "", opinion, ""]
+    if judge is not None:
+        lines += [f"Method: {get(judge, 'method')}."
+                  + (" RAGAS's formulas on one combined judge call, not RAGAS's own prompts." if combined else ""),
+                  ""]
     lines += table(["Metric", "Mean", "Scored", "Undefined", "Parse errors", "Answered rows"],
                    [[label, num(get(bench, key, "mean")), num(get(bench, key, "n_scored")),
                      num(get(bench, key, "undefined")), num(get(bench, key, "parse_errors")),
@@ -209,7 +216,7 @@ def build(evaluate: dict[str, Any] | None, cutoff: dict[str, Any] | None, judge:
     else:
         lines.append(NOT_YET)
 
-    lines += ["", "## 10. Gemini requests", ""]
+    lines += ["", "## 10. Judge requests", ""]
     lines += table(["Judge runs", "Requests sent, retries included"],
                    [[num(get(judge, "requests", "runs")), num(get(judge, "requests", "sent"))]])
     return "\n".join(lines) + "\n"
