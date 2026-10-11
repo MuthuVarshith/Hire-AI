@@ -5,6 +5,7 @@ client and the provider can be swapped later without touching them.
 """
 import json
 import time
+from collections.abc import Iterator
 from functools import lru_cache
 from typing import Any
 
@@ -70,6 +71,57 @@ def generate_text(prompt: str, api_key: str) -> str:
                     raise
                 server_retries += 1
             time.sleep(delay)
+    raise AssertionError("unreachable")
+
+
+class IncompleteResponse(RuntimeError):
+    """The model stopped early (token limit, safety block): the streamed text is partial."""
+
+
+def _finish_reason(chunk: Any) -> str | None:
+    candidates = getattr(chunk, "candidates", None) or []
+    reason = getattr(candidates[0], "finish_reason", None) if candidates else None
+    return None if reason is None else str(getattr(reason, "name", reason))
+
+
+def generate_text_stream(prompt: str, api_key: str) -> Iterator[str]:
+    """Stream the configured Gemini model's answer as pieces of text.
+
+    Until the first piece is yielded, errors follow generate_text's retry rules (transient only, server
+    errors at most MAX_SERVER_ERROR_RETRIES times, an exhausted daily quota fails fast). After that nothing
+    is retried, since the caller has already shown the text: any error is raised. A stream that ends with
+    a finish reason other than STOP raises IncompleteResponse, so a cut-off answer is never taken as whole.
+    """
+    server_retries = 0
+    for delay in (*RETRY_DELAYS, None):
+        started = False
+        chunks: Iterator[Any] = iter(())
+        try:
+            chunks = iter(_client(api_key).models.generate_content_stream(model=config.GEMINI_MODEL,
+                                                                           contents=prompt))
+            last: Any = None
+            for chunk in chunks:
+                last = chunk
+                text = getattr(chunk, "text", None)
+                if text:
+                    started = True
+                    yield text
+            reason = _finish_reason(last)
+            if reason not in (None, "STOP", "FINISH_REASON_UNSPECIFIED"):
+                raise IncompleteResponse(f"Gemini stopped early: {reason}")
+            return
+        except Exception as exc:
+            if started or delay is None or not _is_transient(exc):
+                raise
+            if getattr(exc, "code", 0) >= 500:
+                if server_retries >= MAX_SERVER_ERROR_RETRIES:
+                    raise
+                server_retries += 1
+            time.sleep(delay)
+        finally:
+            close = getattr(chunks, "close", None)
+            if callable(close):
+                close()
     raise AssertionError("unreachable")
 
 
