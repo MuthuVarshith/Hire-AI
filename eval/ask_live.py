@@ -41,13 +41,18 @@ def _git(*args: str) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
 
 
-def _load_key(env_file: str | None) -> None:
-    if os.environ.get("GOOGLE_API_KEY") or not env_file:
+def load_env_var(env_file: str | None, var: str) -> None:
+    """Copy `var` from an .env file into this process's environment, unless it is already set."""
+    if os.environ.get(var) or not env_file:
         return
     for line in Path(env_file).read_text(encoding="utf-8").splitlines():
         name, sep, value = line.partition("=")
-        if sep and name.strip() == "GOOGLE_API_KEY":
-            os.environ["GOOGLE_API_KEY"] = value.strip().strip('"').strip("'")
+        if sep and name.strip() == var:
+            os.environ[var] = value.strip().strip('"').strip("'")
+
+
+def _load_key(env_file: str | None) -> None:
+    load_env_var(env_file, "GOOGLE_API_KEY")
 
 
 def run(env_file: str | None, ids: set[str] | None = None) -> dict[str, Any]:
