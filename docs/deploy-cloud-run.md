@@ -83,8 +83,6 @@ Alternative without local Docker: `gcloud builds submit --tag $IMAGE .` (uses Cl
 ## 5. Secrets in Secret Manager
 
 ```bash
-python -c "import secrets; print(secrets.token_urlsafe(48))" | tr -d '\n' | \
-  gcloud secrets create hireai-auth-secret --data-file=-
 printf '%s' 'postgresql+psycopg://USER:PASSWORD@ep-xxxx.../neondb?sslmode=require' | \
   gcloud secrets create hireai-database-url --data-file=-
 # Optional, synthetic data only:
