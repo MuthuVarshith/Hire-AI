@@ -15,12 +15,16 @@ cited passages without a generated summary. Candidate scores are never read or c
 
 With Langfuse tracing configured (tracing.py, synthetic data only), each answer is traced:
 retrieval, the LLM call, citations and the guards that fired. Tracing never changes the answer.
+
+The steps are public so the streaming endpoint (app/ask_stream.py) runs exactly the same checks:
+validate_input -> find_passages (retrieval and the similarity floor) -> usable_api_key ->
+build_prompt -> the LLM -> grounded_answer (citation numbers checked against the passages given).
 """
 import json
 import logging
 import os
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Collection, Iterable
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -93,6 +97,14 @@ class Answer:
         return asdict(self)
 
 
+@dataclass(frozen=True)
+class Passages:
+    """What retrieval found for a question. `citations` are the numbered passages the LLM may use,
+    empty when nothing cleared the similarity floor; `top_similarity` is None when there were no hits."""
+    citations: list[Citation]
+    top_similarity: float | None
+
+
 def llm_enabled() -> bool:
     return os.getenv("ASK_LLM_ENABLED", "false").strip().lower() == "true"
 
@@ -112,45 +124,28 @@ def _excerpts(citations: list[Citation]) -> str:
                        for c in citations)
 
 
-def _parse(raw: str, allowed: set[int]) -> tuple[bool, str, list[int]]:
-    """Read the model's JSON; a malformed reply counts as not found rather than an error."""
-    try:
-        data = llm.parse_json_response(raw)
-        found, text, cited = data["found"], data["answer"], data.get("citations", [])
-    except (ValueError, KeyError, TypeError, AttributeError, json.JSONDecodeError):
-        return False, "", []
-    # Strict types: the string "false" must not count as found, and JSON true must not count as citation 1.
-    if found is not True or not isinstance(text, str) or not isinstance(cited, list):
-        return False, "", []
-    numbers = sorted({n for n in cited if type(n) is int and n in allowed})
-    return True, text.strip(), numbers
+# --- Steps shared by answer_question and the streaming endpoint -----------------------------------
 
-
-def answer_question(session: Session, question: str, provider: EmbeddingProvider,
-                    job_id: int | None = None, api_key: str | None = None,
-                    generate: Callable[[str, str], str] | None = None,
-                    threshold: float = NOT_FOUND_THRESHOLD) -> Answer:
+def validate_input(question: object, job_id: object = None) -> tuple[str, int | None]:
+    """The question with its whitespace collapsed, and the job id. Raises ValueError, with a message
+    fit for a 400 response, for a non-string, empty or overlong question or a non-integer job id."""
     if not isinstance(question, str):
         raise ValueError("question must be a string")
-    if job_id is not None and (isinstance(job_id, bool) or not isinstance(job_id, int)):
+    # bool is a subclass of int, so True would otherwise be read as job 1.
+    if not (job_id is None or (isinstance(job_id, int) and not isinstance(job_id, bool))):
         raise ValueError("job_id must be an integer")
     question = " ".join(question.split())
     if not question:
         raise ValueError("question is empty")
     if len(question) > MAX_QUESTION_CHARS:
         raise ValueError(f"question is longer than {MAX_QUESTION_CHARS} characters")
-
-    with tracing.trace("ask", input={"question": question, "job_id": job_id}) as span:
-        answer = _answer(span, session, question, provider, job_id, api_key, generate, threshold)
-        span.end(output={"found": answer.found, "generated": answer.generated, "answer": answer.answer,
-                         "citations": [c.number for c in answer.citations],
-                         "summary_unavailable_reason": answer.summary_unavailable_reason})
-        return answer
+    return question, job_id
 
 
-def _answer(span: tracing.Span, session: Session, question: str, provider: EmbeddingProvider,
-            job_id: int | None, api_key: str | None, generate: Callable[[str, str], str] | None,
-            threshold: float) -> Answer:
+def find_passages(session: Session, question: str, provider: EmbeddingProvider, job_id: int | None = None, *,
+                  threshold: float = NOT_FOUND_THRESHOLD, span: tracing.Span = tracing.NOOP) -> Passages:
+    """Retrieve the top chunks and apply the similarity floor. Below the floor (or with no hits) the
+    passages are empty and the caller answers NOT_FOUND without calling the LLM."""
     retrieval = span.span("retrieval", input={"question": question, "job_id": job_id, "k": CHOSEN_CONFIG.k})
     hits: list[Hit] = Retriever(session, provider).search(question, CHOSEN_CONFIG, job_id=job_id)
     top = hits[0].score if hits else None
@@ -159,36 +154,126 @@ def _answer(span: tracing.Span, session: Session, question: str, provider: Embed
          "char_start": h.char_start, "char_end": h.char_end} for h in hits]})
     if top is None or top < threshold:
         span.event("guard.similarity_floor", metadata={"top_similarity": top, "threshold": threshold})
-        return Answer(question, False, NOT_FOUND, top_similarity=top)
+        return Passages([], top)
 
     rows = session.query(Candidate.id, Candidate.name).filter(Candidate.id.in_({h.candidate_id for h in hits}))
     names: dict[int, str] = {cid: name for cid, name in rows}
     citations = [Citation(i, h.candidate_id, names.get(h.candidate_id, f"Candidate {h.candidate_id}"),
                           h.section, h.text, h.char_start, h.char_end, round(h.score, 4))
                  for i, h in enumerate(hits, start=1)]
+    return Passages(citations, top)
 
-    if not (api_key and llm_enabled()):
-        span.event("guard.llm_disabled", metadata={"reason": "ASK_LLM_ENABLED is off or there is no API key"})
-        return Answer(question, True, PASSAGES_ONLY, citations, generated=False, top_similarity=top,
-                      summary_unavailable=True, summary_unavailable_reason="llm_disabled")
+
+def usable_api_key(api_key: str | None, span: tracing.Span = tracing.NOOP) -> str | None:
+    """The key to send resume text to Gemini with, or None when ASK_LLM_ENABLED is off or there is
+    no key (recorded as the llm_disabled guard)."""
+    if api_key and llm_enabled():
+        return api_key
+    span.event("guard.llm_disabled", metadata={"reason": "ASK_LLM_ENABLED is off or there is no API key"})
+    return None
+
+
+def build_prompt(question: str, citations: list[Citation], template: str = PROMPT) -> str:
+    """Fill a prompt template's {question} and {excerpts}. Both are defanged, so neither the question nor
+    a resume can close the <excerpts> data block the template wraps them in."""
+    return template.format(question=_defang(question), excerpts=_excerpts(citations))
+
+
+def split_citations(cited: Iterable[object], allowed: Collection[int]) -> tuple[list[int], list[object]]:
+    """The distinct valid citation numbers (sorted) and everything else that was cited. Valid means an
+    int that is one of the passages given. Strict types: JSON true is not citation 1, and 1.0 is not 1."""
+    valid: set[int] = set()
+    invalid: list[object] = []
+    for n in cited:
+        if type(n) is int and n in allowed:
+            valid.add(n)
+        else:
+            invalid.append(n)
+    return sorted(valid), invalid
+
+
+def not_found(question: str, top_similarity: float | None, *, generated: bool = False) -> Answer:
+    return Answer(question, False, NOT_FOUND, generated=generated, top_similarity=top_similarity)
+
+
+def passages_only(question: str, passages: Passages, reason: str) -> Answer:
+    """The passages without a summary: `reason` is "llm_disabled" or "llm_error"."""
+    return Answer(question, True, PASSAGES_ONLY, passages.citations, generated=False,
+                  top_similarity=passages.top_similarity, summary_unavailable=True, summary_unavailable_reason=reason)
+
+
+def grounded_answer(question: str, passages: Passages, found: bool, text: str, cited: Iterable[object], *,
+                    every_citation_valid: bool = False, span: tracing.Span = tracing.NOOP) -> Answer:
+    """The LLM's answer if it is grounded, otherwise NOT_FOUND (generated=True either way).
+
+    Grounded: the model said it found an answer, wrote text, and cited at least one passage it was given.
+    Citations to anything else are dropped; with every_citation_valid (the stream, where the [n] markers
+    are part of the displayed text) a single one of them rejects the whole answer instead."""
+    valid, invalid = split_citations(cited, {c.number for c in passages.citations})
+    span.event("citations", metadata={"excerpts": len(passages.citations), "found": found, "valid_citations": valid,
+                                      "invalid_citations": invalid})
+    if not (found and text and valid) or (every_citation_valid and invalid):
+        span.event("guard.grounding", metadata={"found": found, "has_text": bool(text), "valid_citations": valid,
+                                                "invalid_citations": invalid}, level="WARNING")
+        return not_found(question, passages.top_similarity, generated=True)
+    return Answer(question, True, text, [c for c in passages.citations if c.number in valid],
+                  generated=True, top_similarity=passages.top_similarity)
+
+
+def trace_output(answer: Answer) -> dict[str, Any]:
+    """What a trace records as an answer's outcome."""
+    return {"found": answer.found, "generated": answer.generated, "answer": answer.answer,
+            "citations": [c.number for c in answer.citations],
+            "summary_unavailable_reason": answer.summary_unavailable_reason}
+
+
+# --- Non-streaming answers (POST /api/ask) ---------------------------------------------------------
+
+def _parse(raw: str) -> tuple[bool, str, list[object]]:
+    """Read the model's JSON reply as (found, answer text, cited numbers as given). A malformed reply
+    counts as not found rather than an error; grounded_answer checks the numbers."""
+    try:
+        data = llm.parse_json_response(raw)
+        found, text, cited = data["found"], data["answer"], data.get("citations", [])
+    except (ValueError, KeyError, TypeError, AttributeError, json.JSONDecodeError):
+        return False, "", []
+    # Strict types: the string "false" must not count as found.
+    if found is not True or not isinstance(text, str) or not isinstance(cited, list):
+        return False, "", []
+    return True, text.strip(), cited
+
+
+def answer_question(session: Session, question: str, provider: EmbeddingProvider,
+                    job_id: int | None = None, api_key: str | None = None,
+                    generate: Callable[[str, str], str] | None = None,
+                    threshold: float = NOT_FOUND_THRESHOLD) -> Answer:
+    question, job_id = validate_input(question, job_id)
+    with tracing.trace("ask", input={"question": question, "job_id": job_id}) as span:
+        answer = _answer(span, session, question, provider, job_id, api_key, generate, threshold)
+        span.end(output=trace_output(answer))
+        return answer
+
+
+def _answer(span: tracing.Span, session: Session, question: str, provider: EmbeddingProvider,
+            job_id: int | None, api_key: str | None, generate: Callable[[str, str], str] | None,
+            threshold: float) -> Answer:
+    passages = find_passages(session, question, provider, job_id, threshold=threshold, span=span)
+    if not passages.citations:
+        return not_found(question, passages.top_similarity)
+    key = usable_api_key(api_key, span)
+    if key is None:
+        return passages_only(question, passages, "llm_disabled")
 
     generation = tracing.NOOP
     try:
-        prompt = PROMPT.format(question=_defang(question), excerpts=_excerpts(citations))
+        prompt = build_prompt(question, passages.citations)
         generation = span.generation("llm", model=config.GEMINI_MODEL, input=prompt)
-        raw = (generate or llm.generate_text)(prompt, api_key)
+        raw = (generate or llm.generate_text)(prompt, key)
     except Exception as exc:
         # Gemini down or rate-limited after retries: the passages are still useful on their own.
         logger.warning("LLM unavailable for /api/ask; returning passages only", exc_info=True)
         generation.end(level="ERROR", status_message=type(exc).__name__)
-        return Answer(question, True, PASSAGES_ONLY, citations, generated=False, top_similarity=top,
-                      summary_unavailable=True, summary_unavailable_reason="llm_error")
+        return passages_only(question, passages, "llm_error")
     generation.end(output=raw)
-    found, text, numbers = _parse(raw, {c.number for c in citations})
-    span.event("citations", metadata={"excerpts": len(citations), "found": found, "valid_citations": numbers})
-    if not (found and text and numbers):
-        span.event("guard.grounding", metadata={"found": found, "has_text": bool(text), "valid_citations": numbers},
-                   level="WARNING")
-        return Answer(question, False, NOT_FOUND, generated=True, top_similarity=top)
-    return Answer(question, True, text, [c for c in citations if c.number in numbers],
-                  generated=True, top_similarity=top)
+    found, text, cited = _parse(raw)
+    return grounded_answer(question, passages, found, text, cited, span=span)
