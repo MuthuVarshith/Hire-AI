@@ -1,0 +1,55 @@
+# Local stack: the API plus PostgreSQL 17 with pgvector.
+#
+#   cp .env.example .env        # then set AUTH_SECRET (and POSTGRES_PASSWORD); GOOGLE_API_KEY is optional
+#   docker compose up -d --build
+#   docker compose exec api python -m app.cli create-admin --username admin
+#   open http://127.0.0.1:8000
+#
+# Secrets come from .env at run time and are never baked into the image.
+# Migrations run on startup, when app/db.py creates the engine.
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hireai
+      POSTGRES_DB: hireai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hireai -d hireai"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: .
+    image: hireai:local
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    environment:
+      PORT: "8000"
+      DATABASE_URL: postgresql+psycopg://hireai:${POSTGRES_PASSWORD}@db:5432/hireai
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      AUTH_TOKEN_TTL_HOURS: ${AUTH_TOKEN_TTL_HOURS:-12}
+      # Optional. Synthetic resumes only: the Gemini free tier may use content to improve Google's products.
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      ASK_LLM_ENABLED: ${ASK_LLM_ENABLED:-false}
+      AGENT_LLM_ENABLED: ${AGENT_LLM_ENABLED:-false}
+      HF_HUB_OFFLINE: "1"
+    volumes:
+      - uploads:/app/uploads
+      - appdata:/app/data          # agent checkpoints
+      - hf-cache:/opt/hf-cache     # seeded from the image's pre-downloaded model on first start
+
+volumes:
+  pgdata:
+  uploads:
+  appdata:
+  hf-cache:
